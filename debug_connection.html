@@ -1,0 +1,163 @@
+<!DOCTYPE html>
+<html lang="ja">
+
+<head>
+    <meta charset="UTF-8">
+    <title>Connection Debugger</title>
+    <!-- Use the version we think works -->
+    <script src="https://unpkg.com/peerjs@1.5.2/dist/peerjs.min.js"></script>
+    <style>
+        body {
+            font-family: sans-serif;
+            padding: 20px;
+        }
+
+        .box {
+            border: 1px solid #ccc;
+            padding: 10px;
+            margin-bottom: 20px;
+        }
+
+        #logs {
+            background: #eee;
+            height: 300px;
+            overflow-y: scroll;
+            padding: 10px;
+            border: 1px solid #999;
+        }
+
+        button {
+            padding: 10px 20px;
+            font-size: 1.2rem;
+            cursor: pointer;
+        }
+
+        input {
+            padding: 10px;
+            font-size: 1.2rem;
+        }
+    </style>
+</head>
+
+<body>
+    <h1>Atomic Poker Connection Debugger</h1>
+    <p>これは通信機能だけをテストする画面です。</p>
+
+    <div class="box">
+        <h3>Role: <span id="my-role">None</span></h3>
+        <p>My Peer ID: <span id="my-id" style="font-weight:bold; color:blue;">---</span></p>
+    </div>
+
+    <div class="box">
+        <p>Environment: <strong id="env-info">Loading...</strong></p>
+        <button onclick="startHost()">ホストになる (Host)</button>
+        <hr>
+        <input type="text" id="target-id" placeholder="ホストのIDを入力">
+        <button onclick="startClient(true)">参加 (Robust)</button>
+        <button onclick="startClient(false)">参加 (Simple)</button>
+    </div>
+
+    <div id="logs"></div>
+
+    <script>
+        // Check Environment
+        document.getElementById('env-info').textContent = window.location.protocol + " // " + navigator.userAgent;
+
+        // CONFIG
+        const ROBUST_CONFIG = {
+            key: 'peerjs',
+            debug: 2,
+            config: {
+                iceServers: [
+                    { urls: 'stun:stun.l.google.com:19302' },
+                    { urls: 'stun:stun1.l.google.com:19302' }
+                ]
+            }
+        };
+
+        const SIMPLE_CONFIG = { debug: 2 };
+
+        let peer = null;
+        let conn = null;
+
+        function log(msg) {
+            const el = document.getElementById('logs');
+            const d = new Date();
+            const time = `${d.getHours()}:${d.getMinutes()}:${d.getSeconds()}`;
+            el.innerHTML += `<div>[${time}] ${msg}</div>`;
+            el.scrollTop = el.scrollHeight;
+            console.log(msg);
+        }
+
+        // --- HOST ---
+        function startHost() {
+            if (peer) peer.destroy();
+
+            // Random ID A + 4 chars
+            const id = 'A' + Math.random().toString(36).substring(2, 6).toUpperCase();
+            log(`Starting Host with ID: ${id}...`);
+
+            // Use SIMPLE for Host to be safe/standard
+            peer = new Peer(id, SIMPLE_CONFIG);
+
+            peer.on('open', (id) => {
+                log(`✅ Host Peer Opened! ID: ${id}`);
+                document.getElementById('my-id').textContent = id;
+                document.getElementById('my-role').textContent = 'HOST';
+            });
+
+            peer.on('connection', (c) => {
+                log(`📩 Incoming connection from ${c.peer}...`);
+                c.on('open', () => {
+                    log(`✅ Connection ESTABLISHED with ${c.peer}`);
+                    c.send("Hello from Host!");
+                });
+                c.on('data', (d) => log(`📨 Received data: ${d}`));
+                c.on('error', (e) => log(`❌ Connection Error: ${e}`));
+            });
+
+            peer.on('error', (e) => log(`❌ Peer Error: ${e}`));
+            peer.on('disconnected', () => log(`⚠️ Peer Disconnected`));
+        }
+
+        // --- CLIENT ---
+        function startClient(isRobust) {
+            const target = document.getElementById('target-id').value.trim().toUpperCase();
+            if (!target) return alert("ID needed");
+
+            if (peer) peer.destroy();
+
+            const config = isRobust ? ROBUST_CONFIG : SIMPLE_CONFIG;
+            const modeName = isRobust ? "Robust" : "Simple";
+
+            log(`Starting Client (${modeName})...`);
+
+            peer = new Peer(undefined, config);
+
+            peer.on('open', (id) => {
+                log(`✅ Client Peer Opened! My ID: ${id}`);
+                document.getElementById('my-id').textContent = id;
+                document.getElementById('my-role').textContent = 'CLIENT';
+
+                log(`🚀 Connecting to Host: ${target}...`);
+
+                // Use options only if Robust
+                const connOpts = isRobust ? { serialization: 'json', reliable: true } : undefined;
+                conn = peer.connect(target, connOpts);
+
+                conn.on('open', () => {
+                    log(`✅ Connection ESTABLISHED with Host!`);
+                    conn.send("Hello from Client!");
+                });
+
+                conn.on('data', (d) => log(`📨 Received data: ${d}`));
+                conn.on('error', (e) => log(`❌ Connection Error: ${e}`));
+                conn.on('close', () => log(`⚠️ Connection Closed`));
+            });
+
+            peer.on('error', (e) => log(`❌ Peer Error: ${e}`));
+        }
+    </script>
+</body>
+
+</html>
