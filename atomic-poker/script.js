@@ -1,5 +1,17 @@
 const GAS_URL = 'https://script.google.com/macros/s/AKfycbyoPJnTzenD0Af8Fg0F7xUA2UW9-gIKepeGiG2ouQ0MGBSq8k7_ZFDXjwKV3TbIAbpEWA/exec';
 
+// PeerJS Configuration - Robust Setup
+const PEER_CONFIG = {
+    key: 'peerjs',
+    debug: 2,
+    config: {
+        iceServers: [
+            { urls: 'stun:stun.l.google.com:19302' },
+            { urls: 'stun:stun1.l.google.com:19302' }
+        ]
+    }
+};
+
 // PeerJS Setup
 let peer = null;
 let conn = null; // For client: connection to host
@@ -62,9 +74,13 @@ function log(msg) {
 }
 
 function createRoom() {
+    if (peer) {
+        peer.destroy();
+        peer = null;
+    }
     role = 'host';
     log('Creating Room...');
-    peer = new Peer(generateShortId(), { debug: 2 });
+    peer = new Peer(generateShortId(), PEER_CONFIG);
 
     peer.on('open', (id) => {
         log(`Host Peer Opened: ${id}`);
@@ -104,11 +120,16 @@ function joinRoom() {
     // Auto-convert to UpperCase just in case user types lower
     inputId = inputId.toUpperCase();
 
+    if (peer) {
+        peer.destroy();
+        peer = null;
+    }
+
     role = 'client';
     hostId = inputId;
     log(`Joining Room: ${hostId}...`);
 
-    peer = new Peer(undefined, { debug: 2 }); // Auto ID
+    peer = new Peer(undefined, PEER_CONFIG); // Auto ID
 
     peer.on('open', (id) => {
         log(`Client Peer Opened: ${id}`);
@@ -116,7 +137,8 @@ function joinRoom() {
         joinStatusEl.textContent = '接続中... (ID: ' + id + ')';
 
         log(`Connecting to Host: ${hostId}`);
-        conn = peer.connect(hostId);
+        // Ensure reliable data transfer with JSON serialization
+        conn = peer.connect(hostId, { serialization: 'json', reliable: true });
 
         conn.on('open', () => {
             log('Connected to Host!');
@@ -139,8 +161,8 @@ function joinRoom() {
 }
 
 function generateShortId() {
-    // Generate a random 4-char string for easier typing
-    return Math.random().toString(36).substring(2, 6).toUpperCase();
+    // Generate a random 4-char string, prefixed with 'A' to ensure it starts with letter
+    return 'A' + Math.random().toString(36).substring(2, 6).toUpperCase();
 }
 
 function updateLobbyUI() {
