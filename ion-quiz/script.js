@@ -485,9 +485,8 @@ function renderLocalHistory() {
     }
 }
 
-btn.disabled = false;
-btn.textContent = '登録';
-};
+
+// End of Script
 
 async function renderRankingList(rankingsData = null) {
     const listEl = document.getElementById('ranking-list');

@@ -446,7 +446,11 @@ async function renderRankingList(rankingsData = null) {
         <tr>
             <td>${i + 1}</td>
             <td>${r.name}</td>
-```
+            <td>${Number(r.score).toFixed(2)}s</td>
+            <td>${formatDate(r.date)}</td>
+        </tr>
+    `).join('');
+
     // Also render local history
     renderLocalHistory();
 
