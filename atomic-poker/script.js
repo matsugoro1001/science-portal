@@ -47,70 +47,94 @@ const discardPoolEl = document.getElementById('discard-pool');
 
 const usernameInput = document.getElementById('username-input');
 
+
+function log(msg) {
+    console.log(msg);
+    const debugArea = document.getElementById('debug-area');
+    const logs = document.getElementById('debug-logs');
+    if (debugArea && logs) {
+        debugArea.style.display = 'block';
+        const d = new Date();
+        const time = `${d.getHours()}:${d.getMinutes()}:${d.getSeconds()}`;
+        logs.innerHTML += `<div>[${time}] ${msg}</div>`;
+        debugArea.scrollTop = debugArea.scrollHeight;
+    }
+}
+
 function createRoom() {
     role = 'host';
-    // Initialize Peer
-    peer = new Peer(generateShortId());
+    log('Creating Room...');
+    peer = new Peer(generateShortId(), { debug: 2 });
 
     peer.on('open', (id) => {
+        log(`Host Peer Opened: ${id}`);
         myId = id;
         myRoomIdEl.textContent = id;
         hostInfo.classList.remove('hidden');
-        // Add self to players
         gameState.players = [{ id: myId, name: 'Player 1', isDone: false, score: 0 }];
         updateLobbyUI();
     });
 
     peer.on('connection', (c) => {
-        // Incoming connection
+        log(`Incoming connection from ${c.peer}...`);
         c.on('open', () => {
-            console.log('Peer connected:', c.peer);
+            log(`Connection opened with ${c.peer}`);
             connections.push(c);
-
-            // Auto-assign name
             const name = `Player ${gameState.players.length + 1}`;
             gameState.players.push({ id: c.peer, name: name, isDone: false, score: 0 });
-
-            // Send current lobby state
             broadcastState();
             updateLobbyUI();
-
-            // Listen for data
             c.on('data', (data) => handleHostData(c.peer, data));
+            c.on('close', () => log(`Connection closed: ${c.peer}`));
+            c.on('error', (e) => log(`Connection Error: ${e}`));
         });
+        c.on('error', (e) => log(`Handshake Error: ${e}`));
+    });
+
+    peer.on('error', (err) => {
+        log(`Host Error: ${err}`);
+        alert('部屋作成エラー: ' + err);
     });
 }
 
 function joinRoom() {
-    const inputId = document.getElementById('join-id').value.trim();
+    let inputId = document.getElementById('join-id').value.trim();
+    if (!inputId) return;
 
-    if (!inputId) {
-        joinStatusEl.textContent = 'IDを入力してください';
-        return;
-    }
+    // Auto-convert to UpperCase just in case user types lower
+    inputId = inputId.toUpperCase();
 
     role = 'client';
     hostId = inputId;
-    peer = new Peer(); // Auto ID
+    log(`Joining Room: ${hostId}...`);
+
+    peer = new Peer(undefined, { debug: 2 }); // Auto ID
 
     peer.on('open', (id) => {
+        log(`Client Peer Opened: ${id}`);
         myId = id;
-        joinStatusEl.textContent = '接続中...';
+        joinStatusEl.textContent = '接続中... (ID: ' + id + ')';
 
-        // Connect with metadata
+        log(`Connecting to Host: ${hostId}`);
         conn = peer.connect(hostId);
 
         conn.on('open', () => {
-            joinStatusEl.textContent = '接続成功！ホストの開始を待っています...';
-            // Disable inputs
+            log('Connected to Host!');
+            joinStatusEl.textContent = '接続成功！待機中...';
             document.querySelector('.lobby-card button').disabled = true;
         });
 
         conn.on('data', (data) => handleClientData(data));
-
+        conn.on('close', () => log('Connection closed by Host'));
         conn.on('error', (err) => {
+            log(`Connection Error: ${err}`);
             joinStatusEl.textContent = '接続エラー: ' + err;
         });
+    });
+
+    peer.on('error', (err) => {
+        log(`Client Peer Error: ${err}`);
+        joinStatusEl.textContent = 'エラー: ' + err;
     });
 }
 
