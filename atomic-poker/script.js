@@ -15,7 +15,9 @@ let gameState = {
     deck: [],
     discards: [], // Array of symbols
     players: [], // [ {id, name, hand, formedSets, score, isDone} ]
-    startTime: 0
+    startTime: 0,
+    // Note: turnIndex is no longer used for exchange phases in simultaneous mode
+    // We rely on players[i].isDone to track progress
 };
 
 let myHand = [];
@@ -131,7 +133,8 @@ function startGameHost() {
     // Initialize Game
     gameState.deck = generateDeck();
     gameState.phase = 'exchange1';
-    gameState.turnIndex = 0; // Start with first player
+    gameState.turnIndex = 0; // Legacy / Reserved
+
 
     // Deal hands
     gameState.players.forEach(p => {
@@ -152,11 +155,12 @@ function handleHostData(peerId, data) {
     if (playerIndex === -1) return;
     const player = gameState.players[playerIndex];
 
-    // Enforce Turn Order for Exchange Phases
+    // Simultaneous Turn Logic:
+    // Any player can act if they haven't done so yet for this phase.
     if (gameState.phase.startsWith('exchange')) {
-        if (gameState.turnIndex !== playerIndex) {
-            console.warn(`Not ${player.name}'s turn!`);
-            return; // Ignore if not their turn
+        if (player.isDone) {
+            console.warn(`${player.name} already acted this phase.`);
+            return;
         }
 
         if (data.type === 'action_exchange') {
@@ -169,7 +173,8 @@ function handleHostData(peerId, data) {
             player.hand = [...keptCards, ...newCards];
 
             // Turn Complete for this player
-            advanceTurn();
+            player.isDone = true;
+            checkPhaseProgression();
         }
     } else if (data.type === 'action_finish_form') {
         // Form phase is simultaneous (or we can make it sequential too? User said "discarding is sequential").
@@ -202,11 +207,17 @@ function advanceTurn() {
 }
 
 function checkPhaseProgression() {
-    // For Form Phase
     const allDone = gameState.players.every(p => p.isDone);
 
     if (allDone) {
-        if (gameState.phase === 'form') {
+        // Reset isDone for next phase
+        gameState.players.forEach(p => p.isDone = false);
+
+        if (gameState.phase === 'exchange1') {
+            gameState.phase = 'exchange2';
+        } else if (gameState.phase === 'exchange2') {
+            gameState.phase = 'form';
+        } else if (gameState.phase === 'form') {
             gameState.phase = 'result';
         }
         broadcastState();
@@ -332,12 +343,11 @@ function handleStateUpdate(newState) {
     let waitingText = '';
 
     if (gameState.phase.startsWith('exchange')) {
-        // Sequential Turn
-        const activePlayer = gameState.players[gameState.turnIndex];
-        if (activePlayer && activePlayer.id === myId) {
+        // Simultaneous
+        if (!me.isDone) {
             isMyTurn = true;
-        } else if (activePlayer) {
-            waitingText = `${activePlayer.name} の番です...`;
+        } else {
+            waitingText = '他のプレイヤーを待っています...';
         }
     } else if (gameState.phase === 'form') {
         // Simultaneous
@@ -350,7 +360,8 @@ function handleStateUpdate(newState) {
         renderHand(true); // Interactive
         updateInstruction();
         if (statusHeader) {
-            statusHeader.textContent = `あなたの番です！ (${getPhaseName(gameState.phase)})`;
+            // Simplify text for simultaneous play
+            statusHeader.textContent = `アクションを選択してください (${getPhaseName(gameState.phase)})`;
             statusHeader.style.backgroundColor = '#dbeafe'; // Light blue
             statusHeader.style.color = '#0369a1';
         }
@@ -539,9 +550,9 @@ function renderHand(interactive) {
 function handlePlayerAction() {
     // Safety Check for Turn
     if (gameState.phase.startsWith('exchange')) {
-        const activePlayer = gameState.players[gameState.turnIndex];
-        if (!activePlayer || activePlayer.id !== myId) {
-            alert('まだあなたの番ではありません');
+        const me = gameState.players.find(p => p.id === myId);
+        if (me && me.isDone) {
+            alert('他のプレイヤーを待っています');
             return;
         }
     }

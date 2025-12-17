@@ -44,5 +44,5 @@ const SCORING_RULES = [
     { formula: 'O2', name: '酸素', points: 2, atoms: { 'O': 2 } },
     { formula: 'H2', name: '水素', points: 1, atoms: { 'H': 2 } },
     // Special
-    { formula: 'C (Diamond)', name: 'ダイヤモンド', points: 30, atoms: { 'C': 6 } }
+    { formula: 'C (Diamond)', name: 'ダイヤモンド (7枚)', points: 30, atoms: { 'C': 7 } }
 ];
