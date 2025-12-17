@@ -1,0 +1,114 @@
+<!DOCTYPE html>
+<html lang="ja">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>イオン結合パズル</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link
+        href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;800&family=Noto+Sans+JP:wght@400;700&display=swap"
+        rel="stylesheet">
+    <link rel="stylesheet" href="style.css">
+    <script src="matter.min.js"></script>
+    <script src="data.js"></script>
+    <script src="script.js" defer></script>
+</head>
+
+<body>
+    <div class="game-container">
+        <!-- Header / Prompt -->
+        <div class="header">
+            <div class="score-board">
+                <span>Clear: <span id="score">0</span>/10</span>
+            </div>
+            <div class="prompt-container">
+                <p class="prompt-label">次の物質を作れ！</p>
+                <h1 id="target-compound">???</h1>
+            </div>
+            <div class="timer">Time: <span id="timer">00:00</span></div>
+        </div>
+
+        <!-- Game Area (Canvas overlay) -->
+        <div id="game-area">
+            <!-- Physics canvas will be injected here by Matter.js -->
+            <!-- DOM Elements for cards will be floating here -->
+        </div>
+
+        <!-- Feedback Overlay -->
+        <div id="feedback-overlay" class="hidden">
+            <h2 id="feedback-text">Correct!</h2>
+            <div id="feedback-formula" class="formula-display"></div>
+        </div>
+
+        <!-- Result Screen -->
+        <div id="result-screen" class="hidden">
+            <h1 class="title">Game Clear!</h1>
+            <div class="result-content">
+                <div class="final-time">Time: <span id="final-time">00:00</span></div>
+
+                <div class="ranking-flex-container"
+                    style="display: flex; gap: 20px; justify-content: center; flex-wrap: wrap;">
+                    <div class="ranking-section">
+                        <!-- New Record Input -->
+                        <div id="new-record-form" class="hidden">
+                            <h3>🎉 New Record! 🎉</h3>
+                            <div class="input-group">
+                                <input type="text" id="player-name" placeholder="Enter Name" maxlength="10">
+                                <button class="btn small" onclick="submitScore()">Save</button>
+                            </div>
+                        </div>
+
+                        <!-- Ranking Table -->
+                        <div class="ranking-display">
+                            <h3>🏆 Global Ranking (Top 10)</h3>
+                            <table class="ranking-table">
+                                <thead>
+                                    <tr>
+                                        <th>Rank</th>
+                                        <th>Name</th>
+                                        <th>Time</th>
+                                        <th>Date</th>
+                                    </tr>
+                                </thead>
+                                <tbody id="ranking-list">
+                                    <!-- Rankings injected here -->
+                                </tbody>
+                            </table>
+                        </div>
+                    </div>
+
+                    <!-- Local History Section -->
+                    <div class="history-section" style="flex: 1; min-width: 300px; max-width: 400px;">
+                        <h3>📅 My History (Last 5)</h3>
+                        <div class="ranking-display">
+                            <table class="ranking-table">
+                                <thead>
+                                    <tr>
+                                        <th>Run</th>
+                                        <th>Time</th>
+                                        <th>Date</th>
+                                    </tr>
+                                </thead>
+                                <tbody id="history-list">
+                                    <!-- History injected here -->
+                                </tbody>
+                            </table>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="action-buttons">
+                    <button class="btn" onclick="location.reload()">Play Again</button>
+                    <a href="../index.html" class="btn secondary">Back to Menu</a>
+                </div>
+            </div>
+        </div>
+
+        <!-- Start/Game Over Screen (Removed as per request) -->
+        <!-- <div id="menu-screen" class="active">...</div> -->
+    </div>
+</body>
+
+</html>

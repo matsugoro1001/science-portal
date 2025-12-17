@@ -1,0 +1,424 @@
+:root {
+    --primary-color: #4ecca3;
+    --secondary-color: #393e46;
+    --bg-color: #232931;
+    --text-color: #eeeeee;
+    --accent-color: #e94560;
+    --card-bg: #eeeeee;
+}
+
+* {
+    box-sizing: border-box;
+    margin: 0;
+    padding: 0;
+    user-select: none;
+    /* Prevent text selection during drag */
+}
+
+body {
+    font-family: 'Inter', 'Noto Sans JP', sans-serif;
+    background-color: var(--bg-color);
+    color: var(--text-color);
+    display: flex;
+    justify-content: center;
+    min-height: 100vh;
+    overflow: hidden;
+    /* Prevent scroll */
+}
+
+.game-container {
+    width: 100%;
+    max-width: 1000px;
+    padding: 10px;
+    display: flex;
+    flex-direction: column;
+    height: 100vh;
+    overflow-y: auto;
+    /* Allow scroll if needed on small vertical screens */
+}
+
+/* 1. Header */
+.header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 10px 20px;
+    background: rgba(255, 255, 255, 0.05);
+    border-radius: 15px;
+    margin-bottom: 20px;
+}
+
+.prompt h2 {
+    font-size: 1.5rem;
+    color: var(--primary-color);
+}
+
+/* 2. Balance Section */
+.balance-section {
+    flex: 2;
+    display: flex;
+    justify-content: center;
+    align-items: flex-end;
+    /* Align bottom of pans */
+    position: relative;
+    margin-bottom: 10px;
+    width: 100%;
+}
+
+.balance-scale {
+    position: relative;
+    width: 100%;
+    max-width: 600px;
+    /* Max width for desktop */
+    aspect-ratio: 2 / 1;
+    /* Maintain aspect ratio */
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+}
+
+.balance-arm {
+    width: 100%;
+    height: 10px;
+    background: #ccc;
+    position: relative;
+    top: 15%;
+    /* Relative positioning */
+    transition: transform 0.5s cubic-bezier(0.25, 1, 0.5, 1);
+    /* Smooth tilt */
+    transform-origin: center;
+    border-radius: 5px;
+}
+
+.pan {
+    position: absolute;
+    top: 0;
+    /* Attached to arm */
+    width: 30%;
+    /* Relative width */
+    height: 200px;
+    /* Fixed height for now, or make relative? */
+    max-height: 60vh;
+    display: flex;
+    flex-direction: column;
+    justify-content: flex-end;
+    /* Items stack from bottom */
+    align-items: center;
+}
+
+.left-pan {
+    left: 0;
+    border-left: 2px solid #888;
+    border-right: 2px solid #888;
+    border-bottom: 4px solid #888;
+    border-radius: 0 0 20px 20px;
+    background: rgba(255, 255, 255, 0.05);
+}
+
+.right-pan {
+    right: 0;
+    border-left: 2px solid #888;
+    border-right: 2px solid #888;
+    border-bottom: 4px solid #888;
+    border-radius: 0 0 20px 20px;
+    background: rgba(255, 255, 255, 0.05);
+}
+
+/* Pan Content Area (Where molecules sit) */
+.pan-content {
+    width: 100%;
+    height: 100%;
+    display: flex;
+    flex-wrap: wrap-reverse;
+    /* Stack from bottom up */
+    justify-content: center;
+    align-content: flex-start;
+    padding: 10px;
+    gap: 5px;
+}
+
+.pivot {
+    position: absolute;
+    top: calc(15% + 10px);
+    /* Just below arm */
+    left: 50%;
+    transform: translateX(-50%);
+    width: 0;
+    height: 0;
+    border-left: 20px solid transparent;
+    border-right: 20px solid transparent;
+    border-bottom: 40px solid #555;
+    display: flex;
+    justify-content: center;
+    align-items: flex-end;
+}
+
+.digital-display {
+    position: absolute;
+    top: calc(15% + 50px);
+    /* Below pivot */
+    background: #000;
+    color: #0f0;
+    font-family: 'Courier New', monospace;
+    padding: 5px 10px;
+    border: 2px solid #333;
+    border-radius: 5px;
+    font-size: 1.2rem;
+    white-space: nowrap;
+}
+
+.digital-display.error {
+    color: #f00;
+    animation: blink 1s infinite;
+}
+
+@keyframes blink {
+    50% {
+        opacity: 0.5;
+    }
+}
+
+.balance-base {
+    width: 200px;
+    height: 20px;
+    background: #444;
+    border-radius: 10px;
+    position: absolute;
+    bottom: 0;
+}
+
+/* Atom Counters */
+.atom-counter {
+    position: absolute;
+    top: 0;
+    font-family: monospace;
+    font-size: 1rem;
+    background: rgba(0, 0, 0, 0.5);
+    padding: 5px;
+    border-radius: 5px;
+}
+
+.left-counter {
+    left: 0;
+}
+
+.right-counter {
+    right: 0;
+}
+
+.match {
+    color: #4ecca3;
+}
+
+.mismatch {
+    color: #e94560;
+}
+
+/* 3. Equation Section */
+.equation-section {
+    flex: 1;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    font-size: 2rem;
+    background: rgba(255, 255, 255, 0.05);
+    border-radius: 15px;
+    margin-bottom: 20px;
+    padding: 10px;
+}
+
+.equation-part {
+    display: flex;
+    align-items: center;
+    margin: 0 10px;
+}
+
+.coeff {
+    font-weight: bold;
+    color: var(--primary-color);
+    margin-right: 5px;
+    min-width: 1.5rem;
+    text-align: center;
+}
+
+.coeff.zero {
+    color: #555;
+    /* Dimmed for 0 */
+}
+
+/* 4. Stock Section */
+.stock-section {
+    flex: 1;
+    background: rgba(255, 255, 255, 0.05);
+    border-radius: 15px;
+    padding: 10px;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+}
+
+.stock-label {
+    margin-bottom: 10px;
+    font-size: 0.9rem;
+    opacity: 0.7;
+}
+
+.stock-container {
+    display: flex;
+    gap: 20px;
+    flex-wrap: wrap;
+    justify-content: center;
+}
+
+/* Molecule Objects (Visuals) */
+.molecule-object {
+    background: rgba(255, 255, 255, 0.1);
+    border-radius: 10px;
+    padding: 5px;
+    cursor: grab;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    transition: transform 0.1s;
+}
+
+.molecule-object:active {
+    cursor: grabbing;
+    transform: scale(0.95);
+}
+
+.molecule-visual {
+    display: flex;
+    flex-wrap: wrap;
+    justify-content: center;
+    gap: 2px;
+    pointer-events: none;
+    /* Let clicks pass to container */
+}
+
+.atom-circle {
+    width: 20px;
+    height: 20px;
+    border-radius: 50%;
+    border: 1px solid rgba(0, 0, 0, 0.3);
+    box-shadow: inset -2px -2px 5px rgba(0, 0, 0, 0.2);
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    font-size: 0.6rem;
+    color: #333;
+    font-weight: bold;
+}
+
+.molecule-name {
+    font-size: 0.8rem;
+    margin-top: 2px;
+    pointer-events: none;
+}
+
+/* Win Overlay */
+#win-overlay {
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background: rgba(0, 0, 0, 0.85);
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    z-index: 200;
+    animation: fadeIn 0.3s ease-out;
+}
+
+.win-content {
+    text-align: center;
+    animation: popIn 0.5s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+}
+
+.win-title {
+    font-size: 4rem;
+    color: var(--primary-color);
+    margin-bottom: 2rem;
+    text-shadow: 0 0 20px var(--primary-color);
+    font-weight: 800;
+}
+
+.win-equation {
+    font-size: 3rem;
+    color: #fff;
+    background: rgba(255, 255, 255, 0.1);
+    padding: 2rem 4rem;
+    border-radius: 20px;
+    border: 2px solid var(--primary-color);
+}
+
+@keyframes fadeIn {
+    from {
+        opacity: 0;
+    }
+
+    to {
+        opacity: 1;
+    }
+}
+
+@keyframes popIn {
+    from {
+        transform: scale(0.5);
+        opacity: 0;
+    }
+
+    to {
+        transform: scale(1);
+        opacity: 1;
+    }
+}
+
+/* Result Screen */
+#result-screen {
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background: rgba(0, 0, 0, 0.9);
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    align-items: center;
+    z-index: 100;
+}
+
+.hidden {
+    display: none !important;
+}
+
+.title {
+    font-size: 3rem;
+    color: var(--primary-color);
+    margin-bottom: 2rem;
+    text-shadow: 0 0 20px var(--primary-color);
+}
+
+.btn {
+    padding: 1rem 2rem;
+    font-size: 1.2rem;
+    background: var(--primary-color);
+    color: #fff;
+    border: none;
+    border-radius: 50px;
+    cursor: pointer;
+    transition: transform 0.2s;
+    margin: 10px;
+    text-decoration: none;
+    display: inline-block;
+}
+
+.btn:hover {
+    transform: scale(1.1);
+}
+
+.btn.secondary {
+    background: var(--secondary-color);
+}
