@@ -1,17 +1,5 @@
 const GAS_URL = 'https://script.google.com/macros/s/AKfycbyoPJnTzenD0Af8Fg0F7xUA2UW9-gIKepeGiG2ouQ0MGBSq8k7_ZFDXjwKV3TbIAbpEWA/exec';
 
-// PeerJS Configuration - Robust Setup
-const PEER_CONFIG = {
-    key: 'peerjs',
-    debug: 2,
-    config: {
-        iceServers: [
-            { urls: 'stun:stun.l.google.com:19302' },
-            { urls: 'stun:stun1.l.google.com:19302' }
-        ]
-    }
-};
-
 // PeerJS Setup
 let peer = null;
 let conn = null; // For client: connection to host
@@ -27,9 +15,7 @@ let gameState = {
     deck: [],
     discards: [], // Array of symbols
     players: [], // [ {id, name, hand, formedSets, score, isDone} ]
-    startTime: 0,
-    // Note: turnIndex is no longer used for exchange phases in simultaneous mode
-    // We rely on players[i].isDone to track progress
+    startTime: 0
 };
 
 let myHand = [];
@@ -59,110 +45,76 @@ const discardPoolEl = document.getElementById('discard-pool');
 
 const usernameInput = document.getElementById('username-input');
 
-
-function log(msg) {
-    console.log(msg);
-    const debugArea = document.getElementById('debug-area');
-    const logs = document.getElementById('debug-logs');
-    if (debugArea && logs) {
-        debugArea.style.display = 'block';
-        const d = new Date();
-        const time = `${d.getHours()}:${d.getMinutes()}:${d.getSeconds()}`;
-        logs.innerHTML += `<div>[${time}] ${msg}</div>`;
-        debugArea.scrollTop = debugArea.scrollHeight;
-    }
-}
-
 function createRoom() {
-    if (peer) {
-        peer.destroy();
-        peer = null;
-    }
     role = 'host';
-    log('Creating Room...');
-    peer = new Peer(generateShortId(), PEER_CONFIG);
+    // Initialize Peer
+    peer = new Peer(generateShortId());
 
     peer.on('open', (id) => {
-        log(`Host Peer Opened: ${id}`);
         myId = id;
         myRoomIdEl.textContent = id;
         hostInfo.classList.remove('hidden');
+        // Add self to players
         gameState.players = [{ id: myId, name: 'Player 1', isDone: false, score: 0 }];
         updateLobbyUI();
     });
 
     peer.on('connection', (c) => {
-        log(`Incoming connection from ${c.peer}...`);
+        // Incoming connection
         c.on('open', () => {
-            log(`Connection opened with ${c.peer}`);
+            console.log('Peer connected:', c.peer);
             connections.push(c);
+
+            // Auto-assign name
             const name = `Player ${gameState.players.length + 1}`;
             gameState.players.push({ id: c.peer, name: name, isDone: false, score: 0 });
+
+            // Send current lobby state
             broadcastState();
             updateLobbyUI();
-            c.on('data', (data) => handleHostData(c.peer, data));
-            c.on('close', () => log(`Connection closed: ${c.peer}`));
-            c.on('error', (e) => log(`Connection Error: ${e}`));
-        });
-        c.on('error', (e) => log(`Handshake Error: ${e}`));
-    });
 
-    peer.on('error', (err) => {
-        log(`Host Error: ${err}`);
-        alert('部屋作成エラー: ' + err);
+            // Listen for data
+            c.on('data', (data) => handleHostData(c.peer, data));
+        });
     });
 }
 
 function joinRoom() {
-    let inputId = document.getElementById('join-id').value.trim();
-    if (!inputId) return;
+    const inputId = document.getElementById('join-id').value.trim();
 
-    // Auto-convert to UpperCase just in case user types lower
-    inputId = inputId.toUpperCase();
-
-    if (peer) {
-        peer.destroy();
-        peer = null;
+    if (!inputId) {
+        joinStatusEl.textContent = 'IDを入力してください';
+        return;
     }
 
     role = 'client';
     hostId = inputId;
-    log(`Joining Room: ${hostId}...`);
-
-    peer = new Peer(undefined, PEER_CONFIG); // Auto ID
+    peer = new Peer(); // Auto ID
 
     peer.on('open', (id) => {
-        log(`Client Peer Opened: ${id}`);
         myId = id;
-        joinStatusEl.textContent = '接続中... (ID: ' + id + ')';
+        joinStatusEl.textContent = '接続中...';
 
-        log(`Connecting to Host: ${hostId}`);
-        // Ensure reliable data transfer with JSON serialization
-        conn = peer.connect(hostId, { serialization: 'json', reliable: true });
+        // Connect with metadata
+        conn = peer.connect(hostId);
 
         conn.on('open', () => {
-            log('Connected to Host!');
-            joinStatusEl.textContent = '接続成功！待機中...';
+            joinStatusEl.textContent = '接続成功！ホストの開始を待っています...';
+            // Disable inputs
             document.querySelector('.lobby-card button').disabled = true;
         });
 
         conn.on('data', (data) => handleClientData(data));
-        conn.on('close', () => log('Connection closed by Host'));
+
         conn.on('error', (err) => {
-            log(`Connection Error: ${err}`);
             joinStatusEl.textContent = '接続エラー: ' + err;
         });
-    });
-
-    peer.on('error', (err) => {
-        log(`Client Peer Error: ${err}`);
-        joinStatusEl.textContent = 'エラー: ' + err;
     });
 }
 
 function generateShortId() {
-    // Generate a random 4-char string, prefixed with 'A' to ensure it starts with letter
-    return 'A' + Math.random().toString(36).substring(2, 6).toUpperCase();
+    // Generate a random 4-char string for easier typing
+    return Math.random().toString(36).substring(2, 6).toUpperCase();
 }
 
 function updateLobbyUI() {
@@ -179,8 +131,7 @@ function startGameHost() {
     // Initialize Game
     gameState.deck = generateDeck();
     gameState.phase = 'exchange1';
-    gameState.turnIndex = 0; // Legacy / Reserved
-
+    gameState.turnIndex = 0; // Start with first player
 
     // Deal hands
     gameState.players.forEach(p => {
@@ -201,12 +152,11 @@ function handleHostData(peerId, data) {
     if (playerIndex === -1) return;
     const player = gameState.players[playerIndex];
 
-    // Simultaneous Turn Logic:
-    // Any player can act if they haven't done so yet for this phase.
+    // Enforce Turn Order for Exchange Phases
     if (gameState.phase.startsWith('exchange')) {
-        if (player.isDone) {
-            console.warn(`${player.name} already acted this phase.`);
-            return;
+        if (gameState.turnIndex !== playerIndex) {
+            console.warn(`Not ${player.name}'s turn!`);
+            return; // Ignore if not their turn
         }
 
         if (data.type === 'action_exchange') {
@@ -219,8 +169,7 @@ function handleHostData(peerId, data) {
             player.hand = [...keptCards, ...newCards];
 
             // Turn Complete for this player
-            player.isDone = true;
-            checkPhaseProgression();
+            advanceTurn();
         }
     } else if (data.type === 'action_finish_form') {
         // Form phase is simultaneous (or we can make it sequential too? User said "discarding is sequential").
@@ -253,17 +202,11 @@ function advanceTurn() {
 }
 
 function checkPhaseProgression() {
+    // For Form Phase
     const allDone = gameState.players.every(p => p.isDone);
 
     if (allDone) {
-        // Reset isDone for next phase
-        gameState.players.forEach(p => p.isDone = false);
-
-        if (gameState.phase === 'exchange1') {
-            gameState.phase = 'exchange2';
-        } else if (gameState.phase === 'exchange2') {
-            gameState.phase = 'form';
-        } else if (gameState.phase === 'form') {
+        if (gameState.phase === 'form') {
             gameState.phase = 'result';
         }
         broadcastState();
@@ -389,11 +332,12 @@ function handleStateUpdate(newState) {
     let waitingText = '';
 
     if (gameState.phase.startsWith('exchange')) {
-        // Simultaneous
-        if (!me.isDone) {
+        // Sequential Turn
+        const activePlayer = gameState.players[gameState.turnIndex];
+        if (activePlayer && activePlayer.id === myId) {
             isMyTurn = true;
-        } else {
-            waitingText = '他のプレイヤーを待っています...';
+        } else if (activePlayer) {
+            waitingText = `${activePlayer.name} の番です...`;
         }
     } else if (gameState.phase === 'form') {
         // Simultaneous
@@ -406,8 +350,7 @@ function handleStateUpdate(newState) {
         renderHand(true); // Interactive
         updateInstruction();
         if (statusHeader) {
-            // Simplify text for simultaneous play
-            statusHeader.textContent = `アクションを選択してください (${getPhaseName(gameState.phase)})`;
+            statusHeader.textContent = `あなたの番です！ (${getPhaseName(gameState.phase)})`;
             statusHeader.style.backgroundColor = '#dbeafe'; // Light blue
             statusHeader.style.color = '#0369a1';
         }
@@ -596,9 +539,9 @@ function renderHand(interactive) {
 function handlePlayerAction() {
     // Safety Check for Turn
     if (gameState.phase.startsWith('exchange')) {
-        const me = gameState.players.find(p => p.id === myId);
-        if (me && me.isDone) {
-            alert('他のプレイヤーを待っています');
+        const activePlayer = gameState.players[gameState.turnIndex];
+        if (!activePlayer || activePlayer.id !== myId) {
+            alert('まだあなたの番ではありません');
             return;
         }
     }

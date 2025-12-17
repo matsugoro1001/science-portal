@@ -145,32 +145,31 @@
                 <button class="btn" onclick="location.reload()">もう一度遊ぶ</button>
             </div>
 
-
-        </div>
-
-        <!-- Yaku List Modal -->
-        <div id="yaku-modal" class="modal hidden">
-            <div class="modal-content">
-                <div class="modal-header">
-                    <h3>役一覧 (Combinations)</h3>
-                    <button class="close-btn" onclick="closeYakuModal()">×</button>
-                </div>
-                <div class="modal-body">
-                    <table class="yaku-table">
-                        <thead>
-                            <tr>
-                                <th>化学式</th>
-                                <th>名称</th>
-                                <th>点数</th>
-                            </tr>
-                        </thead>
-                        <tbody id="yaku-list-body">
-                            <!-- Injected by script -->
-                        </tbody>
-                    </table>
+            <!-- Yaku List Modal -->
+            <div id="yaku-modal" class="modal hidden">
+                <div class="modal-content">
+                    <div class="modal-header">
+                        <h3>役一覧 (Combinations)</h3>
+                        <button class="close-btn" onclick="closeYakuModal()">×</button>
+                    </div>
+                    <div class="modal-body">
+                        <table class="yaku-table">
+                            <thead>
+                                <tr>
+                                    <th>化学式</th>
+                                    <th>名称</th>
+                                    <th>点数</th>
+                                </tr>
+                            </thead>
+                            <tbody id="yaku-list-body">
+                                <!-- Injected by script -->
+                            </tbody>
+                        </table>
+                    </div>
                 </div>
             </div>
         </div>
+
     </div>
 
     <script src="data.js?v=yaku1"></script>
