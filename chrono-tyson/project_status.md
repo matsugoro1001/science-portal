@@ -1,0 +1,162 @@
+# Periodic Table Quiz App
+
+- [ ] Planning
+    - [ ] Create implementation plan <!-- id: 0 -->
+- [x] Implementation <!-- id: 1 -->
+    - [x] Create project structure (HTML, CSS, JS) <!-- id: 2 -->
+    - [x] Implement data module (Elements 1-20 in JP/CN) <!-- id: 3 -->
+    - [x] Implement game logic (Language selection, Quiz loop, Distractors) <!-- id: 4 -->
+    - [x] Implement UI/UX (Start screen, Quiz screen, Certificate) <!-- id: 5 -->
+- [x] Ion Quiz Refinement <!-- id: 40 -->
+    - [x] Fix Formula Wrapping (Allow Name Wrap) <!-- id: 41 -->
+    - [x] Restrict Choice Mode to Name->Formula <!-- id: 42 -->
+    - [x] Implement Tricky Distractors (Wrong Charge/Symbol) <!-- id: 43 -->
+    - [x] Localize certificate to Japanese <!-- id: 10 -->
+    - [x] Prevent duplicate questions (Deck system) <!-- id: 11 -->
+- [x] Verification <!-- id: 6 -->
+    - [x] Verify game flow and winning condition <!-- id: 7 -->
+- [x] Improvements <!-- id: 8 -->
+    - [x] Implement tricky distractors (e.g. Ca -> Ka, K, C) <!-- id: 9 -->
+    - [x] Localize certificate to Japanese <!-- id: 10 -->
+    - [x] Prevent duplicate questions (Deck system) <!-- id: 11 -->
+- [x] Deployment <!-- id: 12 -->
+    - [x] Deploy to public URL (Surge/Netlify) <!-- id: 13 -->
+- [x] Time Attack Mode <!-- id: 14 -->
+    - [x] Update UI for Timer and Question Counter (1/20) <!-- id: 15 -->
+    - [x] Implement Time Attack Logic (Timer, Penalty, 20 Qs limit) <!-- id: 16 -->
+    - [x] Update Result Screen (Show Final Time) <!-- id: 17 -->
+- [x] Extra Elements <!-- id: 18 -->
+    - [x] Add Fe, Ag, Cu, Zn, Ba to data.js <!-- id: 19 -->
+    - [x] Update total question count to 25 <!-- id: 20 -->
+- [x] Enhancements (Chemical Quiz Parity) <!-- id: 21 -->
+    - [x] Language Selection (JP/CN) <!-- id: 22 -->
+    - [x] Reduced Question Count (20 Qs) <!-- id: 23 -->
+    - [x] Matching Mode (Karuta Style) <!-- id: 24 -->
+- [x] Ranking System <!-- id: 25 -->
+    - [x] Local Leaderboard (Top 5) for Chemical Quiz <!-- id: 26 -->
+    - [x] Local Leaderboard (Top 5) for Periodic Table Quiz <!-- id: 27 -->
+- [x] Project Restructuring <!-- id: 28 -->
+    - [x] Create Portal Page (index.html) <!-- id: 29 -->
+- [x] Ion Quiz <!-- id: 31 -->
+    - [x] Create Ion Quiz (18 ions) <!-- id: 32 -->
+    - [x] Implement HTML rendering for formulas <!-- id: 33 -->
+    - [x] Add to Portal Page <!-- id: 34 -->
+- [ ] UI & Difficulty Adjustments <!-- id: 35 -->
+    - [x] Reduce Matching Pairs to 15 <!-- id: 36 -->
+    - [x] Adjust Font Size for Formulas <!-- id: 37 -->
+    - [x] Unify Button Design (Language/Mode) <!-- id: 38 -->
+    - [x] Fix Ion Formula Wrapping <!-- id: 39 -->
+- [x] Ion Combination Puzzle (AntiGravity) <!-- id: 44 -->
+    - [x] Setup Project (HTML/CSS/Matter.js) <!-- id: 45 -->
+    - [x] Implement Physics (Floating, Repulsion) <!-- id: 46 -->
+    - [x] Implement Game Logic (Spawning, Selection, Matching) <!-- id: 47 -->
+    - [x] Implement UI (Prompt, Feedback, Clear Screen) <!-- id: 48 -->
+    - [x] Add to Portal Page <!-- id: 49 -->
+- [x] Ion Puzzle Refinement <!-- id: 50 -->
+    - [x] Implement Deck System (No Duplicates) <!-- id: 51 -->
+    - [x] Clear Board Between Rounds <!-- id: 52 -->
+    - [x] Implement Immediate Feedback (Sudden Death) <!-- id: 53 -->
+    - [x] Increase Difficulty (More Distractors) <!-- id: 54 -->
+    - [x] Implement Ranking System <!-- id: 55 -->
+        - [x] Add Result Screen HTML/CSS <!-- id: 56 -->
+    - [x] Ranking Refinement <!-- id: 131 -->
+        - [x] Integrate Google Sheets Backend <!-- id: 132 -->
+        - [x] Implement Optimistic Updates <!-- id: 133 -->
+        - [x] Implement Cache Busting <!-- id: 134 -->
+    - [x] Implement Cache Busting <!-- id: 134 -->
+        - [x] Update UI to Top 10 <!-- id: 135 -->
+- [ ] Quiz Refinement (User Request) <!-- id: 136 -->
+    - [ ] Reduce Matching to 10 Pairs (Top 20 cards) <!-- id: 137 -->
+    - [x] 5x4 Grid Layout for Matching <!-- id: 138 -->
+    - [ ] Standardize Choice Quiz to 10 Questions <!-- id: 139 -->
+    - [ ] Fix Question Counter Displays <!-- id: 140 -->
+- [x] Atomic Poker Multiplayer <!-- id: 141 -->
+    - [x] Import PeerJS & Create Lobby UI <!-- id: 142 -->
+    - [x] Implement Host/Peer Logic <!-- id: 143 -->
+    - [x] Implement "Exchange Twice" Rule <!-- id: 144 -->
+    - [x] Sync Game State & Ranking <!-- id: 145 -->
+    - [x] Drag & Drop Hand Sorting <!-- id: 146 -->
+    - [x] Mahjong-Style Table Layout <!-- id: 147 -->
+    - [x] Refine Distractors <!-- id: 58 -->
+        - [x] Balance Cations/Anions (4 each) <!-- id: 59 -->
+        - [x] Fix Color Coding (Type Detection) <!-- id: 60 -->
+    - [x] Add Complex Compounds (Non-1:1 Ratios) <!-- id: 61 -->
+- [x] 原子ポーカー (Atomic Poker)
+    - [x] Remove "Blank" cards
+    - [x] Implement Mahjong-style layout (Deck count, Discard pool)
+    - [x] Implement Drag & Drop for hand sorting
+    - [x] Implement Multiplayer Logic
+        - [x] Turn-based card exchange (Sequential)
+        - [x] Synchronized State (Deck, Discards, Scores)
+        - [x] Auto-submit Score to GAS
+    - [x] UI/UX Improvements
+        - [x] "Your Turn" indicators
+        - [x] Current Score display
+        - [x] Separate "Bond" and "Finish" buttons for safety
+        - [x] Rank display in results
+        - [x] Remove "Class Competition" text from Ranking <!-- id: 148 -->
+        - [x] Remove "Class Competition" text from Portal <!-- id: 149 -->
+        - [x] Fix Voltaic Cell Equation (Correct H+ reaction) <!-- id: 153 -->
+
+- [ ] Chemical Reaction Balance Puzzle (New) <!-- id: 70 -->
+    - [x] Scaffold Project (reaction-puzzle directory) <!-- id: 71 -->
+    - [x] Implement Core Logic (Equation Parsing & Balancing) <!-- id: 72 -->
+    - [x] Implement UI (Electronic Balance, Drag & Drop) <!-- id: 73 -->
+    - [x] Implement UI (Electronic Balance, Drag & Drop) <!-- id: 73 -->
+    - [x] Add Feedback & Effects <!-- id: 74 -->
+
+- [x] Refine Ion Puzzle UI <!-- id: 75 -->
+    - [x] Prevent Header Overlap (Adjust Spawn Area) <!-- id: 76 -->
+    - [x] Remove "AntiGravity Edition" Text <!-- id: 77 -->
+
+- [x] Fix Reaction Puzzle Issues <!-- id: 78 -->
+    - [x] Fix Atom Counting (Data Subscripts) <!-- id: 79 -->
+    - [x] Fix Initial State (Empty Balance) <!-- id: 80 -->
+    - [x] Fix Atom Visual Position (On Plate) <!-- id: 81 -->
+
+- [x] Molecule Drag Mechanic Refactor <!-- id: 82 -->
+    - [x] Replace Number Deck with Molecule Deck <!-- id: 83 -->
+    - [x] Implement Drag Molecule to Pan Logic <!-- id: 84 -->
+    - [x] Implement Click to Decrement Logic <!-- id: 85 -->
+
+- [x] Molecule Particle Visuals <!-- id: 86 -->
+    - [x] Implement renderMoleculeVisual Helper <!-- id: 87 -->
+    - [x] Update Deck to Show Particles <!-- id: 88 -->
+    - [x] Style Particle Visuals <!-- id: 89 -->
+
+- [x] Molecule Deck Position Refactor <!-- id: 90 -->
+    - [x] Move Deck Area in HTML <!-- id: 91 -->
+- [x] Rebuild: Molecular Scale Balancer <!-- id: 93 -->
+    - [x] Rewrite HTML Structure (Balance -> Equation -> Stock) <!-- id: 94 -->
+    - [x] Rewrite CSS (Molecule Objects, Layout) <!-- id: 95 -->
+    - [x] Rewrite JS (Drag Logic, Balance Physics, Win Condition) <!-- id: 96 -->
+    - [x] Verify Gameplay (Water Generation) <!-- id: 97 -->
+
+- [x] Update Chemical Equations Data <!-- id: 98 -->
+    - [x] Add 12 User-Provided Equations <!-- id: 99 -->
+    - [x] Implement Random Shuffle <!-- id: 100 -->
+
+- [x] Refine Coefficient Display (Hide 1) <!-- id: 101 -->
+    - [x] Show '0' for Zero, '' for One <!-- id: 102 -->
+
+- [x] Game Flow Refinements <!-- id: 103 -->
+    - [x] Remove Timer UI and Logic <!-- id: 104 -->
+    - [x] Limit to 10 Questions <!-- id: 105 -->
+    - [x] Update Score Display (/10) <!-- id: 106 -->
+    - [x] Implement Big Equation Win Overlay <!-- id: 107 -->
+
+- [ ] Matching Mode Layout Optimization <!-- id: 108 -->
+    - [ ] 5x6 Grid Layout (Single Screen) for Chemical Quiz <!-- id: 109 -->
+    - [ ] 5x6 Grid Layout (Single Screen) for Ion Quiz <!-- id: 110 -->
+    - [ ] 5x6 Grid Layout (Single Screen) for Periodic Table Quiz <!-- id: 111 -->
+- [ ] Ion Drop Refinements <!-- id: 112 -->
+    - [x] Implement Salt Accumulation (Solid Blocks) (REVERTED) <!-- id: 113 -->
+    - [x] Implement Mission System (Target Compound to Level Up) <!-- id: 116 -->
+    - [x] Implement Strict Mission Logic (Non-targets become Debris) <!-- id: 119 -->
+    - [x] Add Debris Clearing on Target Completion <!-- id: 120 -->
+    - [x] Define Mission List (H2O -> NaCl -> ... -> Complex) <!-- id: 117 -->
+    - [x] Update UI to show Target Compound <!-- id: 118 -->
+    - [x] Difficulty Adjustment (Speed Up, Heavier Debris, Smaller Explosion) <!-- id: 121 -->
+    - [x] Implement Pair Dropping (Spawn 2 ions) (REVERTED) <!-- id: 122 -->
+    - [x] Implement Rotation Mechanic (Click to Rotate) (REVERTED) <!-- id: 123 -->
+    - [x] Update Physics/Control for Pairs (REVERTED) <!-- id: 124 -->
