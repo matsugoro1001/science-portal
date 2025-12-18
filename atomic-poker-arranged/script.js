@@ -32,8 +32,7 @@ const playerCountEl = document.getElementById('player-count');
 const memberListEl = document.getElementById('member-list');
 const startBtn = document.getElementById('start-btn');
 const joinStatusEl = document.getElementById('join-status');
-const lobbyInstructionEl = document.getElementById('lobby-instruction'); // For Lobby
-const gameInstructionEl = document.getElementById('game-instruction'); // For Game
+const waitingEl = document.getElementById('instruction'); // Status message
 const handEl = document.getElementById('player-hand');
 const opponentsContainer = document.getElementById('opponents-container');
 const phaseDisplay = document.getElementById('phase-display');
@@ -46,42 +45,17 @@ const discardPoolEl = document.getElementById('discard-pool');
 
 const usernameInput = document.getElementById('username-input');
 
-// --- PeerJS Config (Hybrid Optimized: Original Game + Robust Connection) ---
-const PEER_OPTS = {
-    key: 'peerjs',
-    debug: 2,
-    config: {
-        iceServers: [
-            { urls: 'stun:stun.l.google.com:19302' },
-            { urls: 'stun:stun1.l.google.com:19302' }
-        ]
-    }
-};
-
-const CONNECT_OPTS = {
-    reliable: true
-};
-
-function getPlayerName() {
-    const el = document.getElementById('username-input');
-    return (el && el.value.trim()) ? el.value.trim() : `Player`;
-}
-
-
-
 function createRoom() {
     role = 'host';
-    // Initialize Peer with Short ID and Robust Config
-    peer = new Peer(generateShortId(), PEER_OPTS);
+    // Initialize Peer
+    peer = new Peer(generateShortId());
 
     peer.on('open', (id) => {
         myId = id;
         myRoomIdEl.textContent = id;
         hostInfo.classList.remove('hidden');
-        hostInfo.classList.remove('hidden');
         // Add self to players
-        const myName = getPlayerName() === 'Player' ? 'Player 1 (Host)' : getPlayerName();
-        gameState.players = [{ id: myId, name: myName, isDone: false, score: 0 }];
+        gameState.players = [{ id: myId, name: 'Player 1', isDone: false, score: 0 }];
         updateLobbyUI();
     });
 
@@ -91,10 +65,8 @@ function createRoom() {
             console.log('Peer connected:', c.peer);
             connections.push(c);
 
-            // Auto-assign name or use Metadata
-            let name = c.metadata && c.metadata.name ? c.metadata.name : `Player ${gameState.players.length + 1}`;
-            // Prevent duplicate names? (Optional simple logic: append ID if duplicate... skipping for simplicity)
-
+            // Auto-assign name
+            const name = `Player ${gameState.players.length + 1}`;
             gameState.players.push({ id: c.peer, name: name, isDone: false, score: 0 });
 
             // Send current lobby state
@@ -104,85 +76,40 @@ function createRoom() {
             // Listen for data
             c.on('data', (data) => handleHostData(c.peer, data));
         });
-
-        c.on('error', (err) => console.error('Connection Error:', err));
     });
-
-    peer.on('error', (err) => console.error('Peer Error:', err));
 }
 
 function joinRoom() {
-    const roomId = document.getElementById('join-id').value.trim().toUpperCase(); // Correct ID
-    const nickname = document.getElementById('username-input').value || 'Player'; // Correct ID
-    const joinBtn = document.getElementById('join-btn'); // Get button
+    const inputId = document.getElementById('join-id').value.trim();
 
-    if (!roomId) {
-        alert('部屋IDを入力してください');
-        if (joinBtn) {
-            joinBtn.disabled = false;
-            joinBtn.textContent = '参加する';
-        }
+    if (!inputId) {
+        joinStatusEl.textContent = 'IDを入力してください';
         return;
     }
 
-    // Disable button to prevent double clicks
-    if (joinBtn) {
-        joinBtn.disabled = true;
-        joinBtn.textContent = '接続中...';
-    }
-
     role = 'client';
-    hostId = roomId; // Changed inputId to roomId
-
-    // Client also uses Short ID + Robust Config
-    peer = new Peer(generateShortId(), PEER_OPTS);
+    hostId = inputId;
+    peer = new Peer(); // Auto ID
 
     peer.on('open', (id) => {
         myId = id;
-        joinStatusEl.textContent = '接続中... (15秒待ちます)';
+        joinStatusEl.textContent = '接続中...';
 
         // Connect with metadata
-        const connectOptions = { ...CONNECT_OPTS, metadata: { name: getPlayerName() } };
-        conn = peer.connect(hostId, connectOptions);
-
-        // Timeout Safety
-        const connectionTimeout = setTimeout(() => {
-            if (!conn || !conn.open) {
-                joinStatusEl.textContent = 'タイムアウト: 接続できませんでした';
-                if (conn) conn.close();
-            }
-        }, 15000);
+        conn = peer.connect(hostId);
 
         conn.on('open', () => {
-            clearTimeout(connectionTimeout);
-            joinStatusEl.textContent = '接続成功！ (Connected)';
-            joinStatusEl.style.color = 'green';
-
-            // Show waiting message in LOBBY
-            if (lobbyInstructionEl) {
-                lobbyInstructionEl.textContent = "ホストがゲームを開始するのを待っています...";
-                lobbyInstructionEl.classList.remove('hidden');
-            }
-
-            // Lock UI
-            document.getElementById('join-id').disabled = true;
+            joinStatusEl.textContent = '接続成功！ホストの開始を待っています...';
+            // Disable inputs
             document.querySelector('.lobby-card button').disabled = true;
-
-            // Do NOT hide lobbyScreen here. Wait for state update to switch to game.
         });
 
         conn.on('data', (data) => handleClientData(data));
+
         conn.on('error', (err) => {
-            console.error('Conn Error:', err);
-            joinStatusEl.textContent = '通信エラー発生';
+            joinStatusEl.textContent = '接続エラー: ' + err;
         });
     });
-
-    peer.on('error', (err) => {
-        console.error('Peer Error:', err);
-        joinStatusEl.textContent = 'ID作成エラー';
-    });
-
 }
 
 function generateShortId() {
@@ -204,8 +131,7 @@ function startGameHost() {
     // Initialize Game
     gameState.deck = generateDeck();
     gameState.phase = 'exchange1';
-    gameState.phase = 'exchange1';
-    // gameState.turnIndex = 0; // Removed for Simultaneous Play
+    gameState.turnIndex = 0; // Start with first player
 
     // Deal hands
     gameState.players.forEach(p => {
@@ -226,68 +152,70 @@ function handleHostData(peerId, data) {
     if (playerIndex === -1) return;
     const player = gameState.players[playerIndex];
 
+    // Enforce Turn Order for Exchange Phases
     if (gameState.phase.startsWith('exchange')) {
-        // Allow simultaneous actions
-
+        if (gameState.turnIndex !== playerIndex) {
+            console.warn(`Not ${player.name}'s turn!`);
+            return; // Ignore if not their turn
+        }
 
         if (data.type === 'action_exchange') {
-            // Simultaneous Processing: Just update hand and mark done
+            // Processing Exchange
             const keptCards = data.kept;
             const discardedCards = data.discarded;
 
             gameState.discards.push(...discardedCards);
             const newCards = drawFromDeck(discardedCards.length);
             player.hand = [...keptCards, ...newCards];
-            player.isDone = true; // Mark as done for this phase
 
-            // Broadcast immediately so others see "Thinking" -> "Done"
-            broadcastState();
-
-            // Check if everyone is done
-            checkRoundCompletion();
+            // Turn Complete for this player
+            advanceTurn();
         }
     } else if (data.type === 'action_finish_form') {
-        // Form phase is simultaneous
+        // Form phase is simultaneous (or we can make it sequential too? User said "discarding is sequential").
+        // Let's keep Form phase simultaneous for now as it's just submitting results.
         player.score = data.score;
         player.formedSets = data.formedSets;
         player.isDone = true;
 
-        // Broadcast immediately so status updates
-        broadcastState();
-
-        checkRoundCompletion();
+        checkPhaseProgression();
     }
 }
 
-function checkRoundCompletion() {
+function advanceTurn() {
+    gameState.turnIndex++;
+
+    // Check if round is over
+    if (gameState.turnIndex >= gameState.players.length) {
+        // End of this exchange round
+        gameState.turnIndex = 0; // Reset for next phase
+
+        if (gameState.phase === 'exchange1') {
+            gameState.phase = 'exchange2';
+        } else if (gameState.phase === 'exchange2') {
+            gameState.phase = 'form';
+        }
+    }
+
+    broadcastState();
+    handleStateUpdate(gameState);
+}
+
+function checkPhaseProgression() {
+    // For Form Phase
     const allDone = gameState.players.every(p => p.isDone);
 
     if (allDone) {
-        // Move to next phase
-        if (gameState.phase === 'exchange1') {
-            gameState.phase = 'exchange2';
-            resetPlayerStatus();
-        } else if (gameState.phase === 'exchange2') {
-            gameState.phase = 'form';
-            resetPlayerStatus();
-        } else if (gameState.phase === 'form') {
+        if (gameState.phase === 'form') {
             gameState.phase = 'result';
-            // result phase doesn't need status reset per se, but good practice
         }
-
         broadcastState();
         handleStateUpdate(gameState);
     } else {
-        // Just update state (already broadcast inside handleHostData for individual updates)
+        broadcastState();
         handleStateUpdate(gameState);
     }
 }
-
-function resetPlayerStatus() {
-    gameState.players.forEach(p => p.isDone = false);
-}
-
-
 
 function broadcastState() {
     const stateStr = JSON.stringify(gameState);
@@ -308,24 +236,7 @@ function handleClientData(data) {
     if (data.type === 'state_update') {
         const newState = JSON.parse(data.state);
         handleStateUpdate(newState);
-    } else if (data.type === 'force_restart') {
-        console.log("Received Force Restart command");
-        const newState = JSON.parse(data.state);
-        resetLocalGame();
-        handleStateUpdate(newState);
     }
-}
-
-function resetLocalGame() {
-    myScore = 0;
-    myFormedSets = [];
-    mySelectedIndices = [];
-    scoreSubmitted = false;
-    document.getElementById('formed-sets-container').innerHTML =
-        '<div style="width: 100%; text-align: center; color: #64748b; font-size: 0.9rem;">作った化学式がここに置かれます</div>';
-
-    // Explicitly hide result screen to ensure transition
-    document.getElementById('result-screen').classList.add('hidden');
 }
 
 function sendAction(actionData) {
@@ -339,7 +250,32 @@ function sendAction(actionData) {
 
 // --- Common Game Logic ---
 
+// --- Common Game Logic ---
 
+let lastPhase = 'lobby';
+
+function handleStateUpdate(newState) {
+    // Detect Game Start / Reset
+    if (lastPhase === 'result' && newState.phase === 'exchange1') {
+        // Reset local state
+        myScore = 0;
+        myFormedSets = [];
+        mySelectedIndices = [];
+        scoreSubmitted = false;
+        console.log('Local state reset for new game');
+    }
+    // Also reset if coming from lobby
+    if (lastPhase === 'lobby' && newState.phase === 'exchange1') {
+        myScore = 0;
+        myFormedSets = [];
+        mySelectedIndices = [];
+        scoreSubmitted = false;
+    }
+
+    lastPhase = gameState.phase; // Update history (Wait, gameState is updated below, so save old phase first?)
+    // Actually handleStateUpdate receives newState. gameState is old state? No, logic below sets gameState = newState.
+    // So distinct oldState vs newState.
+}
 
 function handleStateUpdate(newState) {
     const oldPhase = gameState.phase;
@@ -396,16 +332,16 @@ function handleStateUpdate(newState) {
     let waitingText = '';
 
     if (gameState.phase.startsWith('exchange')) {
-        // Simultaneous Turn
-        // Use 'me' found above
-        if (me && !me.isDone) {
+        // Sequential Turn
+        const activePlayer = gameState.players[gameState.turnIndex];
+        if (activePlayer && activePlayer.id === myId) {
             isMyTurn = true;
-        } else {
-            waitingText = '他のプレイヤーの完了待ち...';
+        } else if (activePlayer) {
+            waitingText = `${activePlayer.name} の番です...`;
         }
     } else if (gameState.phase === 'form') {
         // Simultaneous
-        if (me && !me.isDone) isMyTurn = true;
+        if (!me.isDone) isMyTurn = true;
         else waitingText = '他のプレイヤーの完了待ち...';
     }
 
@@ -414,7 +350,7 @@ function handleStateUpdate(newState) {
         renderHand(true); // Interactive
         updateInstruction();
         if (statusHeader) {
-            statusHeader.textContent = `${getPhaseName(gameState.phase)}`; // Neutral text
+            statusHeader.textContent = `あなたの番です！ (${getPhaseName(gameState.phase)})`;
             statusHeader.style.backgroundColor = '#dbeafe'; // Light blue
             statusHeader.style.color = '#0369a1';
         }
@@ -428,7 +364,7 @@ function handleStateUpdate(newState) {
             statusHeader.style.color = '#4b5563';
         }
 
-        if (gameInstructionEl) gameInstructionEl.textContent = waitingText;
+        if (waitingEl) waitingEl.textContent = waitingText;
 
         // Hide action button or disable
         const btn = document.getElementById('action-btn');
@@ -439,14 +375,7 @@ function handleStateUpdate(newState) {
     }
 
     if (gameState.phase === 'result') {
-        lobbyScreen.classList.add('hidden');
-        gameScreen.classList.add('hidden');
         showResultScreen();
-    } else if (gameState.phase !== 'lobby') {
-        // Game active
-        document.getElementById('result-screen').classList.add('hidden');
-        gameScreen.classList.remove('hidden');
-        // ...
     }
 }
 
@@ -479,7 +408,7 @@ function updateInstruction() {
     }
 
     if (gameState.phase.startsWith('exchange')) {
-        if (gameInstructionEl) gameInstructionEl.textContent = 'いらないカードを選んで「交換」を押してください';
+        waitingEl.textContent = 'いらないカードを選んで「交換」を押してください';
         btn.textContent = 'これらを捨てる (交換)';
         btn.className = 'btn danger';
 
@@ -489,7 +418,7 @@ function updateInstruction() {
             btn.className = 'btn primary';
         }
     } else if (gameState.phase === 'form') {
-        if (gameInstructionEl) gameInstructionEl.textContent = '手札を選んで「結合」！ 終わったら「終了」ボタン';
+        waitingEl.textContent = '手札を選んで「結合」！ 終わったら「終了」ボタン';
         btn.textContent = '結合！ (Bond)';
         btn.className = 'btn accent'; // Make it stand out more
         btn.disabled = false; // Always enabled
@@ -515,17 +444,6 @@ function handleFinishTurn() {
         score: myScore,
         formedSets: myFormedSets
     });
-
-    // UI Update for Waiting
-    const finishBtn = document.getElementById('finish-btn');
-    if (finishBtn) {
-        finishBtn.textContent = '役作り完了！ 他のプレイヤーを待っています...';
-        finishBtn.disabled = true;
-        finishBtn.classList.remove('secondary');
-        finishBtn.classList.add('disabled-look'); // styling
-        finishBtn.style.backgroundColor = '#ccc';
-        finishBtn.style.cursor = 'not-allowed';
-    }
 }
 
 function renderOpponents() {
@@ -619,6 +537,15 @@ function renderHand(interactive) {
 }
 
 function handlePlayerAction() {
+    // Safety Check for Turn
+    if (gameState.phase.startsWith('exchange')) {
+        const activePlayer = gameState.players[gameState.turnIndex];
+        if (!activePlayer || activePlayer.id !== myId) {
+            alert('まだあなたの番ではありません');
+            return;
+        }
+    }
+
     if (gameState.phase.startsWith('exchange')) {
         // Identify kept and discarded based on current local hand
         const keptCards = myHand.filter((_, i) => !mySelectedIndices.includes(i));
@@ -712,122 +639,46 @@ function generateDeck() {
 function showResultScreen() {
     const me = gameState.players.find(p => p.id === myId);
 
+    // Calculate Rank
+    const sortedPlayers = [...gameState.players].sort((a, b) => b.score - a.score);
+    const myRank = sortedPlayers.findIndex(p => p.id === myId) + 1;
+
     // Auto submit if not done yet
     if (me && !scoreSubmitted) {
         submitScoreToGas(me.name, me.score);
         scoreSubmitted = true;
     }
 
-    const resultScreen = document.getElementById('result-screen');
-    const rankingList = document.getElementById('ranking-list');
-    const finalScoreEl = document.getElementById('final-score');
+    gameScreen.innerHTML = `
+        <div style="text-align: center;">
+            <h2>最終結果</h2>
+            
+            <div style="font-size: 1.5rem; color: #666; font-weight: bold; margin-bottom: 0.5rem;">
+                第 ${myRank} 位
+            </div>
 
-    // Update Score
-    if (finalScoreEl) finalScoreEl.textContent = me ? me.score : 0;
-
-    // Calculate Rank for display (optional, can be done inside map)
-    const sortedPlayers = [...gameState.players].sort((a, b) => b.score - a.score);
-    const myRank = sortedPlayers.findIndex(p => p.id === myId) + 1;
-
-    // Update Ranking Table
-    if (rankingList) {
-        rankingList.innerHTML = gameState.players.sort((a, b) => b.score - a.score).map((p, i) => `
-            <tr class="${p.id === myId ? 'highlight-row' : ''}">
-                <td>${i + 1}</td>
-                <td>${p.name}</td>
-                <td>
-                    <div style="font-weight:bold;">${p.score}</div>
-                    <div style="font-size:0.8rem; color:#64748b;">${formatPlayerSets(p.formedSets)}</div>
-                </td>
-            </tr>
-        `).join('');
-    }
-
-    // Make sure Replay button exists for Host
-    // In index.html, the structure is static. We might need to inject the button if it's not there.
-    // Let's check index.html. It has a 'action-bar' div (line 146).
-    // We can inject buttons there.
-    const actionBar = resultScreen.querySelector('.action-bar');
-    if (actionBar) {
-        actionBar.innerHTML = `
-            ${role === 'host' ? `<button class="btn primary" onclick="restartGameHost()">同じメンバーで再戦</button>` : ''}
-            <button class="btn" onclick="location.reload()">部屋から退出 (Topへ)</button>
-        `;
-    }
-
-    resultScreen.classList.remove('hidden');
-    gameScreen.classList.add('hidden');
-}
-
-function formatPlayerSets(sets) {
-    if (!sets || sets.length === 0) return 'なし';
-    return sets.map(s => `${toSubscript(s.formula)}`).join(', ');
-}
-
-function restartGameHost() {
-    try {
-        console.log("Restarting game...");
-        if (role !== 'host') {
-            alert("Error: You are not host (" + role + ")");
-            return;
-        }
-
-        // Create new state based on current simplified structure
-        // We create a NEW object so handleStateUpdate can see the difference in 'oldPhase'
-        const nextState = JSON.parse(JSON.stringify(gameState));
-
-        nextState.deck = generateDeck();
-        nextState.phase = 'exchange1';
-        nextState.discards = [];
-
-        nextState.players.forEach(p => {
-            p.hand = drawFromDeck(7); // Note: drawFromDeck uses global gameState.deck? 
-            // drawFromDeck modifies gameState.deck. We need to be careful.
-            // Let's manually implement draw for nextState to avoid side effects on current global state 
-            // until we switch.
-        });
-
-        // Actually, simpler:
-        // 1. Manually reset UI because we know we are restarting.
-        // 2. Then just update state.
-
-        // Let's do the Copy method correctly.
-        // However, drawFromDeck relies on 'gameState.deck'.
-
-        // Better Fix:
-        // Update global deck first (it's internal state).
-        gameState.deck = generateDeck();
-
-        // Create the 'new state' snapshot for players
-        const players = gameState.players.map(p => ({
-            ...p,
-            hand: drawFromDeck(7), // Modifies gameState.deck
-            isDone: false,
-            formedSets: [],
-            score: 0
-        }));
-
-        const newState = {
-            phase: 'exchange1',
-            deck: gameState.deck, // Remaining deck
-            discards: [],
-            players: players,
-            startTime: Date.now()
-        };
-
-        // Broadcast
-        console.log("Broadcasting FORCE RESTART...");
-        const stateStr = JSON.stringify(newState);
-        connections.forEach(c => c.send({ type: 'force_restart', state: stateStr }));
-
-        // Local Update
-        resetLocalGame(); // Host also resets local
-        handleStateUpdate(newState);
-        console.log("Game restarted successfully.");
-    } catch (e) {
-        console.error("Error restarting game:", e);
-        alert("再戦エラー: " + e.message);
-    }
+            <div style="font-size: 3rem; margin-bottom:1rem;">
+                ${me ? me.score : 0} <span style="font-size:1rem;">Points</span>
+            </div>
+            
+            <div class="ranking-display">
+                <table class="ranking-table">
+                    <thead><tr><th>Rank</th><th>Name</th><th>Score</th></tr></thead>
+                    <tbody>
+                        ${gameState.players.sort((a, b) => b.score - a.score).map((p, i) => `
+                            <tr class="${p.id === myId ? 'highlight-row' : ''}">
+                                <td>${i + 1}</td>
+                                <td>${p.name}</td>
+                                <td>${p.score}</td>
+                            </tr>
+                        `).join('')}
+                    </tbody>
+                </table>
+            </div>
+            <button class="btn" onclick="location.reload()">もう一度</button>
+        </div>
+    `;
+    gameScreen.classList.remove('hidden');
 }
 
 async function submitScoreToGas(name, score) {
@@ -835,6 +686,7 @@ async function submitScoreToGas(name, score) {
     const url = `${GAS_URL}?type=原子ポーカー&action=save&gameMode=multi&name=${encodeURIComponent(name)}&score=${score}`;
     fetch(url).then(res => res.json()).then(data => console.log(data)).catch(e => console.error(e));
 }
+
 
 // Alias for HTML button
 function handleAction() {
@@ -871,7 +723,6 @@ function renderTable() {
 // Make global for button onclick
 window.openYakuModal = openYakuModal;
 window.closeYakuModal = closeYakuModal;
-window.restartGameHost = restartGameHost;
 
 function openYakuModal() {
     document.getElementById('yaku-modal').classList.remove('hidden');
@@ -894,7 +745,6 @@ function renderYakuList() {
                 ${formatFormulaScoring(rule.formula)}
             </td>
             <td>${rule.name || '-'}</td>
-            <td style="font-size: 0.9rem; color: #555;">${rule.components || ''}</td>
             <td style="font-weight:bold; color:#10b981; white-space: nowrap;">${rule.points} pts</td>
         </tr>
     `).join('');
@@ -911,7 +761,3 @@ document.getElementById('yaku-modal')?.addEventListener('click', (e) => {
         closeYakuModal();
     }
 });
-
-// --- Yaku Modal Logic (Restored) ---
-// Duplicate removed. Using original openYakuModal defined above.
-

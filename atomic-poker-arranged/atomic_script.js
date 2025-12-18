@@ -114,7 +114,7 @@ function createRoom() {
 function joinRoom() {
     const roomId = document.getElementById('join-id').value.trim().toUpperCase(); // Correct ID
     const nickname = document.getElementById('username-input').value || 'Player'; // Correct ID
-    const joinBtn = document.getElementById('join-btn'); // Get button
+    const joinBtn = document.getElementById('join-btn'); // Now exists in HTML
 
     if (!roomId) {
         alert('部屋IDを入力してください');
@@ -132,7 +132,7 @@ function joinRoom() {
     }
 
     role = 'client';
-    hostId = roomId; // Changed inputId to roomId
+    hostId = roomId; // Use roomId here
 
     // Client also uses Short ID + Robust Config
     peer = new Peer(generateShortId(), PEER_OPTS);
@@ -236,7 +236,13 @@ function handleHostData(peerId, data) {
             const discardedCards = data.discarded;
 
             gameState.discards.push(...discardedCards);
-            const newCards = drawFromDeck(discardedCards.length);
+
+            // Logic Change for Arranged Version (Target 7)
+            const currentHeld = keptCards.length;
+            const targetSize = 7;
+            const needed = Math.max(0, targetSize - currentHeld);
+
+            const newCards = drawFromDeck(needed);
             player.hand = [...keptCards, ...newCards];
             player.isDone = true; // Mark as done for this phase
 
@@ -246,14 +252,45 @@ function handleHostData(peerId, data) {
             // Check if everyone is done
             checkRoundCompletion();
         }
+    } else if (data.type === 'action_scavenge') {
+        // Handle picking up cards
+        const targetSymbol = data.symbol;
+        const indexInDiscards = gameState.discards.indexOf(targetSymbol);
+
+        if (indexInDiscards !== -1) {
+            // Check limit
+            if (!player.scavengedCount) player.scavengedCount = 0;
+            if (player.scavengedCount < 2) {
+                // Success
+                // gameState.discards.splice(indexInDiscards, 1); // Old: Shift
+                gameState.discards[indexInDiscards] = null; // New: Placeholder
+                player.hand.push(targetSymbol);
+                player.scavengedCount++;
+
+                // Auto-advance if max reached
+                if (player.scavengedCount >= 2) {
+                    player.isDone = true;
+                    checkRoundCompletion();
+                }
+
+                // Broadcast update
+                broadcastState();
+                // Fix: Update host local UI immediately
+                handleStateUpdate(gameState);
+            }
+        }
+    } else if (data.type === 'action_scavenge_done') {
+        player.isDone = true;
+        checkRoundCompletion();
     } else if (data.type === 'action_finish_form') {
         // Form phase is simultaneous
         player.score = data.score;
         player.formedSets = data.formedSets;
         player.isDone = true;
 
-        // Broadcast immediately so status updates
+        // Fix: Broadcast so everyone sees "Done" status
         broadcastState();
+        handleStateUpdate(gameState);
 
         checkRoundCompletion();
     }
@@ -265,6 +302,15 @@ function checkRoundCompletion() {
     if (allDone) {
         // Move to next phase
         if (gameState.phase === 'exchange1') {
+            gameState.phase = 'scavenge';
+            // Scavenge doesn't need 'isDone' reset per se, but we need to track picked count.
+            // Let's reset isDone to reuse it for "Done Scavenging" button (optional)
+            // For now, let's say Scavenge ends when everyone clicks "Done" or time limit?
+            // Simpler: Players click "Next" when they are done picking up (0, 1, or 2 cards).
+            resetPlayerStatus();
+            // Reset scavenged counts
+            gameState.players.forEach(p => p.scavengedCount = 0);
+        } else if (gameState.phase === 'scavenge') {
             gameState.phase = 'exchange2';
             resetPlayerStatus();
         } else if (gameState.phase === 'exchange2') {
@@ -360,7 +406,16 @@ function handleStateUpdate(newState) {
     if (me) {
         // Only sync hand if NOT in form phase (preserve local edits)
         // OR if it's the very start of form phase (transition)
-        if (gameState.phase !== 'form') {
+        // Only sync hand if:
+        // 1. Not in Form phase (unless starting)
+        // 2. Not in Exchange phase IF I am still thinking (preserve selection)
+        if (gameState.phase.startsWith('exchange') && !me.isDone) {
+            // Do NOT overwrite myHand while I am selecting cards
+            // BUT: If myHand is empty (initial load), we MUST sync
+            if (!myHand || myHand.length === 0) {
+                myHand = me.hand;
+            }
+        } else if (gameState.phase !== 'form') {
             myHand = me.hand;
         } else if (oldPhase !== 'form' && gameState.phase === 'form') {
             // Initial sync for form phase
@@ -403,9 +458,13 @@ function handleStateUpdate(newState) {
         } else {
             waitingText = '他のプレイヤーの完了待ち...';
         }
+    } else if (gameState.phase === 'scavenge') {
+        if (me && !me.isDone) isMyTurn = true;
+        else waitingText = '他のプレイヤーの完了待ち...';
     } else if (gameState.phase === 'form') {
         // Simultaneous
         if (me && !me.isDone) isMyTurn = true;
+        else if (me && me.isDone) waitingText = '役作り完了！ 他のプレイヤーを待っています...';
         else waitingText = '他のプレイヤーの完了待ち...';
     }
 
@@ -454,6 +513,7 @@ let scoreSubmitted = false;
 
 function getPhaseName(p) {
     if (p === 'exchange1') return 'カード交換 1回目';
+    if (p === 'scavenge') return '捨て札を拾う (最大2枚)';
     if (p === 'exchange2') return 'カード交換 2回目';
     if (p === 'form') return '役作り（結合）';
     return '';
@@ -462,6 +522,7 @@ function getPhaseName(p) {
 function updatePhaseDisplay() {
     document.querySelectorAll('.step').forEach(el => el.classList.remove('active'));
     if (gameState.phase === 'exchange1') document.getElementById('step-ex1').classList.add('active');
+    if (gameState.phase === 'scavenge') document.getElementById('step-scavenge').classList.add('active');
     if (gameState.phase === 'exchange2') document.getElementById('step-ex2').classList.add('active');
     if (gameState.phase === 'form') document.getElementById('step-form').classList.add('active');
     if (gameState.phase === 'result') document.getElementById('step-result').classList.add('active');
@@ -502,6 +563,12 @@ function updateInstruction() {
             finishBtn.style.backgroundColor = '#64748b';
             finishBtn.style.color = 'white';
         }
+    } else if (gameState.phase === 'scavenge') {
+        if (gameInstructionEl) gameInstructionEl.textContent = '欲しいカードがあればタップ！ (早い者勝ち, 最大2枚)';
+        btn.textContent = '選択終了 (次へ)';
+        btn.className = 'btn primary';
+        btn.disabled = false;
+        // The discard pool should be clickable now.
     }
 }
 
@@ -624,6 +691,16 @@ function handlePlayerAction() {
         const keptCards = myHand.filter((_, i) => !mySelectedIndices.includes(i));
         const discardedCards = myHand.filter((_, i) => mySelectedIndices.includes(i));
 
+        // Exchange 2 Scavenge logic check
+        if (gameState.phase === 'exchange2') {
+            // Rule: Hand size must become 7.
+            // keptCards.length must be <= 7.
+            if (keptCards.length > 7) {
+                alert(`カードが多すぎます！\n手札: ${myHand.length}枚\n選択: ${discardedCards.length}枚\n残り: ${keptCards.length}枚\n\n【ルール】\n手札が必ず 7枚以下 になるように捨ててください。\n(不足分は自動で補充されますが、溢れた分は持ち越せません)`);
+                return;
+            }
+        }
+
         // Send exchange Action
         sendAction({
             type: 'action_exchange',
@@ -631,6 +708,9 @@ function handlePlayerAction() {
             discarded: discardedCards
         });
         mySelectedIndices = [];
+    } else if (gameState.phase === 'scavenge') {
+        // "Done" button clicked
+        sendAction({ type: 'action_scavenge_done' });
     } else if (gameState.phase === 'form') {
         // Only Attempt Bond
         if (mySelectedIndices.length === 0) {
@@ -852,6 +932,15 @@ function renderTable() {
     if (discardPoolEl) {
         discardPoolEl.innerHTML = '';
         gameState.discards.forEach(symbol => {
+            if (symbol === null) {
+                // Placeholder for taken card
+                const spacer = document.createElement('div');
+                spacer.className = 'discard-card';
+                spacer.style.visibility = 'hidden'; // Keep structure
+                discardPoolEl.appendChild(spacer);
+                return;
+            }
+
             const cardData = CARD_DATA[symbol];
             if (!cardData) return; // Skip invalid cards
 
@@ -862,6 +951,16 @@ function renderTable() {
             card.style.backgroundColor = cardData.color;
             // Optional: add subtle border
             card.style.border = '1px solid rgba(0,0,0,0.1)';
+
+            // Scavenge Interaction
+            if (gameState.phase === 'scavenge') {
+                card.style.cursor = 'pointer';
+                card.classList.add('scavenge-target'); // Add a class for visual feedback (CSS needed)
+                card.onclick = () => {
+                    sendAction({ type: 'action_scavenge', symbol: symbol });
+                };
+            }
+
             discardPoolEl.appendChild(card);
         });
     }
