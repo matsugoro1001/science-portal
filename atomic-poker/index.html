@@ -42,7 +42,7 @@
                         style="font-size: 1.2rem; padding: 0.5rem; width: 100%; margin-bottom: 0.5rem;">
                     <button class="btn" onclick="joinRoom()">参加する</button>
                     <div id="join-status" style="margin-top: 10px; color: #666;"></div>
-                    <p id="instruction" class="hidden" style="margin-top:5px; color:#2563eb; font-weight:bold;">
+                    <p id="lobby-instruction" class="hidden" style="margin-top:5px; color:#2563eb; font-weight:bold;">
                         ホストが開始するのを待っています...</p>
                 </div>
             </div>
@@ -82,7 +82,7 @@
                 <!-- <div class="opponent-badgewaiting">Player 2</div> -->
             </div>
 
-            <div class="status-message" id="instruction">待機中...</div>
+            <div class="status-message" id="game-instruction">待機中...</div>
 
             <!-- Area for finalized sets -->
             <div id="formed-sets-container" class="formed-area hidden">
@@ -147,35 +147,36 @@
                 <button class="btn" onclick="location.reload()">もう一度遊ぶ</button>
             </div>
 
-            <!-- Yaku List Modal -->
-            <div id="yaku-modal" class="modal hidden">
-                <div class="modal-content">
-                    <div class="modal-header">
-                        <h3>役一覧 (Combinations)</h3>
-                        <button class="close-btn" onclick="closeYakuModal()">×</button>
-                    </div>
-                    <div class="modal-body">
-                        <table class="yaku-table">
-                            <thead>
-                                <tr>
-                                    <th>化学式</th>
-                                    <th>名称</th>
-                                    <th>点数</th>
-                                </tr>
-                            </thead>
-                            <tbody id="yaku-list-body">
-                                <!-- Injected by script -->
-                            </tbody>
-                        </table>
-                    </div>
-                </div>
-            </div>
+
         </div>
 
     </div>
 
     <script src="data.js?v=force_new"></script>
     <script src="atomic_script.js?v=force_new"></script>
+    <!-- Yaku List Modal -->
+    <div id="yaku-modal" class="modal hidden">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h3>役一覧 (Combinations)</h3>
+                <button class="close-btn" onclick="closeYakuModal()">×</button>
+            </div>
+            <div class="modal-body">
+                <table class="yaku-table">
+                    <thead>
+                        <tr>
+                            <th>化学式</th>
+                            <th>名称</th>
+                            <th>点数</th>
+                        </tr>
+                    </thead>
+                    <tbody id="yaku-list-body">
+                        <!-- Injected by script -->
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </div>
 </body>
 
 </html>

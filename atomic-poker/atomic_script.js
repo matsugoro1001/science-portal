@@ -32,7 +32,8 @@ const playerCountEl = document.getElementById('player-count');
 const memberListEl = document.getElementById('member-list');
 const startBtn = document.getElementById('start-btn');
 const joinStatusEl = document.getElementById('join-status');
-const waitingEl = document.getElementById('instruction'); // Status message
+const lobbyInstructionEl = document.getElementById('lobby-instruction'); // For Lobby
+const gameInstructionEl = document.getElementById('game-instruction'); // For Game
 const handEl = document.getElementById('player-hand');
 const opponentsContainer = document.getElementById('opponents-container');
 const phaseDisplay = document.getElementById('phase-display');
@@ -61,9 +62,7 @@ const CONNECT_OPTS = {
     reliable: true
 };
 
-function generateShortId() {
-    return 'A' + Math.random().toString(36).substring(2, 6).toUpperCase();
-}
+
 
 function createRoom() {
     role = 'host';
@@ -134,25 +133,22 @@ function joinRoom() {
 
         conn.on('open', () => {
             clearTimeout(connectionTimeout);
-            joinStatusEl.textContent = '接続成功！ホストの開始を待っています';
-            waitingEl.classList.remove('hidden');
-            lobbyScreen.classList.add('hidden'); // Optional visual update
-        });
-
-        // Re-injected: Client Connection Success Handler
-        conn.on('open', () => {
-            clearTimeout(connectionTimeout);
             joinStatusEl.textContent = '接続成功！ (Connected)';
             joinStatusEl.style.color = 'green';
 
-            // Show waiting message
-            waitingEl.textContent = "ホストがゲームを開始するのを待っています...";
-            waitingEl.classList.remove('hidden');
+            // Show waiting message in LOBBY
+            if (lobbyInstructionEl) {
+                lobbyInstructionEl.textContent = "ホストがゲームを開始するのを待っています...";
+                lobbyInstructionEl.classList.remove('hidden');
+            }
 
             // Lock UI
             document.getElementById('join-id').disabled = true;
             document.querySelector('.lobby-card button').disabled = true;
+
+            // Do NOT hide lobbyScreen here. Wait for state update to switch to game.
         });
+
         conn.on('data', (data) => handleClientData(data));
         conn.on('error', (err) => {
             console.error('Conn Error:', err);
@@ -207,68 +203,65 @@ function handleHostData(peerId, data) {
     if (playerIndex === -1) return;
     const player = gameState.players[playerIndex];
 
-    // Enforce Turn Order for Exchange Phases - REMOVED for Simultaneous Play
     if (gameState.phase.startsWith('exchange')) {
         // Allow simultaneous actions
 
 
         if (data.type === 'action_exchange') {
-            // Processing Exchange
+            // Simultaneous Processing: Just update hand and mark done
             const keptCards = data.kept;
             const discardedCards = data.discarded;
 
             gameState.discards.push(...discardedCards);
             const newCards = drawFromDeck(discardedCards.length);
             player.hand = [...keptCards, ...newCards];
+            player.isDone = true; // Mark as done for this phase
 
-            // Turn Complete for this player
-            advanceTurn();
+            // Broadcast immediately so others see "Thinking" -> "Done"
+            broadcastState();
+
+            // Check if everyone is done
+            checkRoundCompletion();
         }
     } else if (data.type === 'action_finish_form') {
-        // Form phase is simultaneous (or we can make it sequential too? User said "discarding is sequential").
-        // Let's keep Form phase simultaneous for now as it's just submitting results.
+        // Form phase is simultaneous
         player.score = data.score;
         player.formedSets = data.formedSets;
         player.isDone = true;
 
-        checkPhaseProgression();
+        checkRoundCompletion();
     }
 }
 
-function advanceTurn() {
-    gameState.turnIndex++;
-
-    // Check if round is over
-    if (gameState.turnIndex >= gameState.players.length) {
-        // End of this exchange round
-        gameState.turnIndex = 0; // Reset for next phase
-
-        if (gameState.phase === 'exchange1') {
-            gameState.phase = 'exchange2';
-        } else if (gameState.phase === 'exchange2') {
-            gameState.phase = 'form';
-        }
-    }
-
-    broadcastState();
-    handleStateUpdate(gameState);
-}
-
-function checkPhaseProgression() {
-    // For Form Phase
+function checkRoundCompletion() {
     const allDone = gameState.players.every(p => p.isDone);
 
     if (allDone) {
-        if (gameState.phase === 'form') {
+        // Move to next phase
+        if (gameState.phase === 'exchange1') {
+            gameState.phase = 'exchange2';
+            resetPlayerStatus();
+        } else if (gameState.phase === 'exchange2') {
+            gameState.phase = 'form';
+            resetPlayerStatus();
+        } else if (gameState.phase === 'form') {
             gameState.phase = 'result';
+            // result phase doesn't need status reset per se, but good practice
         }
+
         broadcastState();
         handleStateUpdate(gameState);
     } else {
-        broadcastState();
+        // Just update state (already broadcast inside handleHostData for individual updates)
         handleStateUpdate(gameState);
     }
 }
+
+function resetPlayerStatus() {
+    gameState.players.forEach(p => p.isDone = false);
+}
+
+
 
 function broadcastState() {
     const stateStr = JSON.stringify(gameState);
@@ -303,32 +296,7 @@ function sendAction(actionData) {
 
 // --- Common Game Logic ---
 
-// --- Common Game Logic ---
 
-let lastPhase = 'lobby';
-
-function handleStateUpdate(newState) {
-    // Detect Game Start / Reset
-    if (lastPhase === 'result' && newState.phase === 'exchange1') {
-        // Reset local state
-        myScore = 0;
-        myFormedSets = [];
-        mySelectedIndices = [];
-        scoreSubmitted = false;
-        console.log('Local state reset for new game');
-    }
-    // Also reset if coming from lobby
-    if (lastPhase === 'lobby' && newState.phase === 'exchange1') {
-        myScore = 0;
-        myFormedSets = [];
-        mySelectedIndices = [];
-        scoreSubmitted = false;
-    }
-
-    lastPhase = gameState.phase; // Update history (Wait, gameState is updated below, so save old phase first?)
-    // Actually handleStateUpdate receives newState. gameState is old state? No, logic below sets gameState = newState.
-    // So distinct oldState vs newState.
-}
 
 function handleStateUpdate(newState) {
     const oldPhase = gameState.phase;
@@ -385,16 +353,16 @@ function handleStateUpdate(newState) {
     let waitingText = '';
 
     if (gameState.phase.startsWith('exchange')) {
-        // Sequential Turn
-        const activePlayer = gameState.players[gameState.turnIndex];
-        if (activePlayer && activePlayer.id === myId) {
+        // Simultaneous Turn
+        // Use 'me' found above
+        if (me && !me.isDone) {
             isMyTurn = true;
-        } else if (activePlayer) {
-            waitingText = `${activePlayer.name} の番です...`;
+        } else {
+            waitingText = '他のプレイヤーの完了待ち...';
         }
     } else if (gameState.phase === 'form') {
         // Simultaneous
-        if (!me.isDone) isMyTurn = true;
+        if (me && !me.isDone) isMyTurn = true;
         else waitingText = '他のプレイヤーの完了待ち...';
     }
 
@@ -417,7 +385,7 @@ function handleStateUpdate(newState) {
             statusHeader.style.color = '#4b5563';
         }
 
-        if (waitingEl) waitingEl.textContent = waitingText;
+        if (gameInstructionEl) gameInstructionEl.textContent = waitingText;
 
         // Hide action button or disable
         const btn = document.getElementById('action-btn');
@@ -461,7 +429,7 @@ function updateInstruction() {
     }
 
     if (gameState.phase.startsWith('exchange')) {
-        waitingEl.textContent = 'いらないカードを選んで「交換」を押してください';
+        if (gameInstructionEl) gameInstructionEl.textContent = 'いらないカードを選んで「交換」を押してください';
         btn.textContent = 'これらを捨てる (交換)';
         btn.className = 'btn danger';
 
@@ -471,7 +439,7 @@ function updateInstruction() {
             btn.className = 'btn primary';
         }
     } else if (gameState.phase === 'form') {
-        waitingEl.textContent = '手札を選んで「結合」！ 終わったら「終了」ボタン';
+        if (gameInstructionEl) gameInstructionEl.textContent = '手札を選んで「結合」！ 終わったら「終了」ボタン';
         btn.textContent = '結合！ (Bond)';
         btn.className = 'btn accent'; // Make it stand out more
         btn.disabled = false; // Always enabled
@@ -590,9 +558,6 @@ function renderHand(interactive) {
 }
 
 function handlePlayerAction() {
-    // Safety Check removed to allow Simultaneous Actions
-    // if (gameState.phase.startsWith('exchange')) { ... }
-
     if (gameState.phase.startsWith('exchange')) {
         // Identify kept and discarded based on current local hand
         const keptCards = myHand.filter((_, i) => !mySelectedIndices.includes(i));
