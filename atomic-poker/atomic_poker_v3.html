@@ -1,0 +1,1565 @@
+<!DOCTYPE html>
+<html lang="ja">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>原子ポーカー | Atomic Poker (Standalone V3)</title>
+    <script src="https://unpkg.com/peerjs@1.5.4/dist/peerjs.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/Sortable/1.15.0/Sortable.min.js"></script>
+    <script>
+        // Global Error Handler for Debugging
+        window.onerror = function (msg, url, line, col, error) {
+            alert("Error detected: " + msg + "\nLine: " + line);
+            console.error("Global Error", msg, error);
+            document.body.innerHTML += '<div style="position:fixed;top:0;left:0;background:red;color:white;padding:10px;width:100%;z-index:9999;">ERROR: ' + msg + ' (Line ' + line + ')</div>';
+            return false;
+        };
+    </script>
+    <style>
+        /* CSS content from style.css */
+        :root {
+            --primary-color: #4a90e2;
+            --secondary-color: #f5f6fa;
+            --accent-color: #e74c3c;
+            --text-color: #2c3e50;
+            --glass-bg: rgba(255, 255, 255, 0.9);
+            --glass-border: rgba(255, 255, 255, 0.2);
+        }
+
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: linear-gradient(135deg, #a8edea 0%, #fed6e3 100%);
+            margin: 0;
+            min-height: 100vh;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            color: var(--text-color);
+        }
+
+        .game-container {
+            width: 100%;
+            max-width: 1000px;
+            background: var(--glass-bg);
+            border-radius: 20px;
+            box-shadow: 0 8px 32px 0 rgba(31, 38, 135, 0.37);
+            backdrop-filter: blur(4px);
+            border: 1px solid var(--glass-border);
+            padding: 2rem;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            min-height: 600px;
+        }
+
+        h1 {
+            font-size: 2.5rem;
+            margin-bottom: 1rem;
+            color: #1a1a2e;
+        }
+
+        /* Phase Indicators */
+        .phase-indicator {
+            display: flex;
+            gap: 1rem;
+            margin-bottom: 2rem;
+            position: relative;
+            z-index: 5;
+        }
+
+        .step {
+            padding: 0.5rem 1rem;
+            background: #e2e8f0;
+            border-radius: 20px;
+            font-size: 0.9rem;
+            color: #94a3b8;
+        }
+
+        .step.active {
+            background: var(--primary-color);
+            color: white;
+            font-weight: bold;
+            box-shadow: 0 4px 6px rgba(74, 144, 226, 0.3);
+        }
+
+        /* Lobby Styles */
+        .lobby-options {
+            display: flex;
+            gap: 2rem;
+            width: 100%;
+            justify-content: center;
+            flex-wrap: wrap;
+        }
+
+        .lobby-card {
+            background: rgba(255, 255, 255, 0.8);
+            padding: 2rem;
+            border-radius: 15px;
+            width: 300px;
+            text-align: center;
+            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.05);
+        }
+
+        .divider {
+            display: flex;
+            align-items: center;
+            font-weight: bold;
+            color: #64748b;
+        }
+
+        /* Opponents View */
+        .opponents-view {
+            display: flex;
+            gap: 1rem;
+            justify-content: center;
+            margin-bottom: 1rem;
+            flex-wrap: wrap;
+        }
+
+        .opponent-badge {
+            background: white;
+            padding: 0.5rem 1rem;
+            border-radius: 20px;
+            font-size: 0.8rem;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            box-shadow: 0 2px 4px rgba(0, 0, 0, 0.05);
+            min-width: 80px;
+        }
+
+        .opponent-badge.active {
+            border: 2px solid var(--primary-color);
+        }
+
+        .opponent-badge .status-dot {
+            width: 8px;
+            height: 8px;
+            border-radius: 50%;
+            background: #ccc;
+            margin-top: 4px;
+        }
+
+        .opponent-badge.done .status-dot {
+            background: #10b981;
+        }
+
+        .opponent-badge.thinking .status-dot {
+            background: #f59e0b;
+        }
+
+        /* Table Layout */
+        .table-view {
+            width: 100%;
+            background: rgba(0, 0, 0, 0.2);
+            border-radius: 20px;
+            padding: 1.5rem;
+            display: flex;
+            justify-content: space-between;
+            align-items: flex-start;
+            min-height: 250px;
+            margin-bottom: 1rem;
+            position: relative;
+            border: 2px solid rgba(255, 255, 255, 0.3);
+        }
+
+        .deck-info {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            color: white;
+            font-weight: bold;
+            background: rgba(0, 0, 0, 0.3);
+            padding: 1rem;
+            border-radius: 10px;
+        }
+
+        .deck-stack {
+            font-size: 3rem;
+            margin-bottom: 0.5rem;
+        }
+
+        .center-area {
+            flex-grow: 1;
+            margin: 0 2rem;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+        }
+
+        .discard-label {
+            color: rgba(255, 255, 255, 0.8);
+            margin-bottom: 0.5rem;
+            font-size: 0.9rem;
+        }
+
+        .discard-grid {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 4px;
+            justify-content: center;
+            max-width: 600px;
+        }
+
+        .discard-card {
+            width: 36px;
+            height: 48px;
+            background: white;
+            border-radius: 4px;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            font-weight: bold;
+            font-size: 0.9rem;
+            box-shadow: 0 1px 2px rgba(0, 0, 0, 0.2);
+        }
+
+        /* Hand Container updates for responsiveness */
+        .hand-container {
+            display: flex;
+            justify-content: center;
+            gap: 10px;
+            flex-wrap: wrap;
+            min-height: 120px;
+            width: 100%;
+        }
+
+        .sortable-ghost {
+            opacity: 0.4;
+            background: #e2e8f0;
+            border: 2px dashed #94a3b8;
+        }
+
+        .atom-card {
+            width: 80px;
+            height: 110px;
+            border-radius: 10px;
+            background: white;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+            cursor: pointer;
+            transition: all 0.2s ease;
+            border: 2px solid transparent;
+            position: relative;
+            user-select: none;
+        }
+
+        .atom-card:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 10px 15px rgba(0, 0, 0, 0.1);
+        }
+
+        .atom-card.selected {
+            border-color: var(--primary-color);
+            transform: translateY(-10px);
+            box-shadow: 0 0 0 4px rgba(74, 144, 226, 0.3);
+        }
+
+        .atom-card.discarding {
+            opacity: 0.5;
+            background: #fee2e2;
+            border-color: #ef4444;
+        }
+
+        .atom-symbol {
+            font-size: 2rem;
+            font-weight: bold;
+        }
+
+        .atom-name {
+            font-size: 0.8rem;
+            margin-top: 5px;
+        }
+
+        /* Action Bar */
+        .action-bar {
+            margin-top: auto;
+            display: flex;
+            gap: 1rem;
+        }
+
+        .btn {
+            padding: 1rem 2rem;
+            border: none;
+            border-radius: 10px;
+            font-size: 1.2rem;
+            font-weight: bold;
+            cursor: pointer;
+            transition: all 0.2s;
+            background: white;
+            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+        }
+
+        .btn.primary {
+            background: var(--primary-color);
+            color: white;
+        }
+
+        .btn.primary:hover {
+            background: #357abd;
+            transform: translateY(-2px);
+        }
+
+        .btn.accent {
+            background: #ea580c;
+            /* Strong Orange */
+            color: white;
+            font-weight: bold;
+            transform: scale(1.05);
+            /* Slightly larger */
+        }
+
+        .btn.accent:hover {
+            background: #c2410c;
+        }
+
+        .btn.danger {
+            background: #ef4444;
+            color: white;
+        }
+
+        .btn:disabled {
+            opacity: 0.5;
+            cursor: not-allowed;
+            transform: none;
+        }
+
+        /* Formed Sets Area */
+        .formed-area {
+            width: 100%;
+            min-height: 150px;
+            background: rgba(255, 255, 255, 0.5);
+            border-radius: 10px;
+            padding: 1rem;
+            display: flex;
+            flex-wrap: wrap;
+            gap: 1rem;
+            justify-content: center;
+            border: 2px dashed #cbd5e1;
+        }
+
+        .formed-set {
+            background: white;
+            padding: 0.5rem 1rem;
+            border-radius: 50px;
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.05);
+            animation: popIn 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+        }
+
+        .set-formula {
+            font-weight: bold;
+            font-size: 1.2rem;
+        }
+
+        .set-points {
+            background: #10b981;
+            color: white;
+            padding: 2px 8px;
+            border-radius: 10px;
+            font-size: 0.8rem;
+            font-weight: bold;
+        }
+
+        /* Ranking Table reuse */
+        .ranking-table {
+            width: 100%;
+            margin-top: 2rem;
+            border-collapse: collapse;
+            background: white;
+            border-radius: 10px;
+            overflow: hidden;
+            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+        }
+
+        .ranking-table th,
+        .ranking-table td {
+            padding: 12px 15px;
+            text-align: center;
+            border-bottom: 1px solid #eee;
+        }
+
+        .ranking-table th {
+            background-color: var(--primary-color);
+            color: white;
+        }
+
+        .hidden {
+            display: none !important;
+            visibility: hidden !important;
+            opacity: 0 !important;
+            height: 0 !important;
+            min-height: 0 !important;
+            overflow: hidden !important;
+        }
+
+        @keyframes popIn {
+            from {
+                transform: scale(0.8);
+                opacity: 0;
+            }
+
+            to {
+                transform: scale(1);
+                opacity: 1;
+            }
+        }
+
+        /* Modal Styles */
+        .modal {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0, 0, 0, 0.5);
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            z-index: 1000;
+            backdrop-filter: blur(5px);
+        }
+
+        .modal-content {
+            background: white;
+            padding: 2rem;
+            border-radius: 15px;
+            width: 90%;
+            max-width: 500px;
+            max-height: 80vh;
+            overflow-y: auto;
+            box-shadow: 0 10px 25px rgba(0, 0, 0, 0.2);
+            animation: popIn 0.3s;
+        }
+
+        .modal-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 1rem;
+            border-bottom: 2px solid #eee;
+            padding-bottom: 0.5rem;
+        }
+
+        .close-btn {
+            background: none;
+            border: none;
+            font-size: 2rem;
+            cursor: pointer;
+            color: #999;
+            line-height: 1;
+        }
+
+        .close-btn:hover {
+            color: #ff4757;
+        }
+
+        .yaku-table {
+            width: 100%;
+            border-collapse: collapse;
+        }
+
+        .yaku-table th {
+            background: #f1f2f6;
+            color: #57606f;
+            padding: 10px;
+            text-align: left;
+            position: sticky;
+            top: 0;
+        }
+
+        .yaku-table td {
+            padding: 10px;
+            border-bottom: 1px solid #dfe4ea;
+            color: #2f3542;
+        }
+
+        .yaku-table tr:hover {
+            background-color: #f8f9fa;
+        }
+    </style>
+</head>
+
+<body>
+    <div class="game-container">
+        <h1>⚛️ 原子ポーカー <span style="font-size: 1rem; color:red;">v3.0 (Standalone)</span></h1>
+
+        <!-- Lobby Screen -->
+        <div id="lobby-screen" class="play-area">
+
+            <div class="lobby-options">
+                <div class="lobby-card">
+                    <h3>部屋をつくる</h3>
+                    <p>リーダーが押してね</p>
+                    <button class="btn primary" onclick="createRoom()">作成する</button>
+                    <div id="host-info" class="hidden" style="margin-top: 1rem;">
+                        <p>部屋ID: <span id="my-room-id"
+                                style="font-weight:bold; font-size:1.5rem; color:var(--primary-color);">...</span></p>
+                        <p>待機中... (<span id="player-count">1</span>/5)</p>
+                        <ul id="member-list" style="text-align: left; margin: 10px auto; width: fit-content;">
+                            <li>Player 1 (自分)</li>
+                        </ul>
+                        <button class="btn accent" onclick="startGameHost()" id="start-btn" disabled>全員揃ったら開始</button>
+                    </div>
+                </div>
+
+                <div class="divider">OR</div>
+
+                <div class="lobby-card">
+                    <h3>部屋に参加する</h3>
+                    <p>リーダーのIDを入れてね</p>
+                    <input type="text" id="join-id" placeholder="部屋IDを入力"
+                        style="font-size: 1.2rem; padding: 0.5rem; width: 100%; margin-bottom: 0.5rem;">
+                    <button class="btn" onclick="joinRoom()">参加する</button>
+                    <div id="join-status" style="margin-top: 10px; color: #666;"></div>
+                    <p id="instruction" class="hidden" style="margin-top:5px; color:#2563eb; font-weight:bold;">
+                        ホストが開始するのを待っています...</p>
+                </div>
+            </div>
+        </div>
+
+        <div class="phase-indicator hidden" id="phase-display">
+            <div class="step" id="step-ex1">1. 交換①</div>
+            <div class="step" id="step-ex2">2. 交換②</div>
+            <div class="step" id="step-form">3. 結合</div>
+            <div class="step" id="step-result">4. 結果</div>
+        </div>
+
+        <!-- Gameplay Area -->
+        <div id="game-screen" class="play-area hidden">
+
+            <!-- Turn Status Header -->
+            <div id="game-status-header"
+                style="text-align: center; margin-bottom: 1rem; padding: 1rem; background: #e0f2fe; border-radius: 10px; color: #0284c7; font-weight: bold; font-size: 1.2rem; position: relative; z-index: 5;">
+                お待ちください...
+            </div>
+
+            <div
+                style="display: flex; justify-content: space-between; align-items: center; padding: 0 1rem; margin-bottom: 1rem; position: relative; z-index: 10;">
+                <div id="my-player-id-display" style="font-size: 0.9rem; color: #666;">
+                    あなた: Player ?
+                </div>
+                <div
+                    style="font-weight: bold; font-size: 1.2rem; color: var(--primary-color); display: flex; align-items: center; gap: 10px;">
+                    Score: <span id="current-score-display">0</span>
+                </div>
+            </div>
+
+            <!-- Yaku List Button (Fixed Position) -->
+            <button class="btn accent small" onclick="window.toggleYakuModal()"
+                style="position: absolute; top: 10px; right: 10px; padding: 10px 20px; font-size: 1rem; z-index: 2000000000; box-shadow: 0 4px 6px rgba(0,0,0,0.3); cursor: pointer; pointer-events: auto;">
+                📖 役一覧
+            </button>
+        </div>
+
+        <!-- Opponents Status -->
+        <div class="opponents-view" id="opponents-container">
+            <!-- <div class="opponent-badgewaiting">Player 2</div> -->
+        </div>
+
+        <div class="status-message" id="instruction-game" style="text-align:center; color:#64748b; margin-bottom:10px;">
+            待機中...</div>
+
+        <!-- Area for finalized sets -->
+        <div id="formed-sets-container" class="formed-area hidden">
+            <div style="width: 100%; text-align: center; color: #64748b; font-size: 0.9rem;">
+                作った化学式がここに置かれます
+            </div>
+        </div>
+
+        <!-- Table Area (Mahjong Style) -->
+        <div id="table-container" class="table-view">
+            <div class="deck-info">
+                <div class="deck-stack">🎴</div>
+                <div>残りの山札: <span id="deck-count">--</span>枚</div>
+            </div>
+
+            <div class="center-area">
+                <div class="discard-label">捨てられたカード</div>
+                <div id="discard-pool" class="discard-grid">
+                    <!-- Discards go here -->
+                </div>
+            </div>
+        </div>
+
+        <!-- Player's Hand -->
+        <div class="hand-container" id="player-hand">
+            <!-- Cards injected here -->
+        </div>
+
+        <div class="action-bar" style="display: flex; gap: 10px; justify-content: center;">
+            <button class="btn primary" id="action-btn" onclick="handleAction()">交換する</button>
+            <button class="btn secondary hidden" id="finish-btn" onclick="handleFinishTurn()">役作り終了 (結果へ)</button>
+        </div>
+    </div>
+
+    <!-- Ranking/Result Screen -->
+    <div id="result-screen" class="play-area hidden">
+        <div style="text-align: center;">
+            <h2>あなたのスコア</h2>
+            <div style="font-size: 4rem; font-weight: 800; color: var(--primary-color);" id="final-score">0</div>
+            <p>Points</p>
+            <div style="margin-top: 10px; color: #666; font-size: 0.9rem;">(スコアは自動的にランキングに登録されました)</div>
+        </div>
+
+        <div class="ranking-display">
+            <h3>🏆 ランキング (Top 10)</h3>
+            <table class="ranking-table">
+                <thead>
+                    <tr>
+                        <th>Rank</th>
+                        <th>Name</th>
+                        <th>Score</th>
+                        <th>Date</th>
+                    </tr>
+                </thead>
+                <tbody id="ranking-list">
+                    <!-- Rankings -->
+                </tbody>
+            </table>
+        </div>
+
+        <div class="action-bar" style="margin-top: 2rem;">
+            <button class="btn" onclick="location.reload()">もう一度遊ぶ</button>
+        </div>
+
+        <!-- Yaku List Modal -->
+        <div id="yaku-modal" class="modal hidden">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h3>役一覧 (Combinations)</h3>
+                    <button class="close-btn" onclick="closeYakuModal()">×</button>
+                </div>
+                <div class="modal-body">
+                    <table class="yaku-table">
+                        <thead>
+                            <tr>
+                                <th>化学式</th>
+                                <th>名称</th>
+                                <th>点数</th>
+                            </tr>
+                        </thead>
+                        <tbody id="yaku-list-body">
+                            <!-- Injected by script -->
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    </div>
+
+    <!-- DATA -->
+    <script>
+        const CARD_DATA = {
+            'H': { name: '水素', color: '#ffffff', textColor: '#000000', count: 20 },
+            'C': { name: '炭素', color: '#333333', textColor: '#ffffff', count: 10 },
+            'N': { name: '窒素', color: '#3b82f6', textColor: '#ffffff', count: 5 },
+            'O': { name: '酸素', color: '#ef4444', textColor: '#ffffff', count: 15 },
+            'Cl': { name: '塩素', color: '#10b981', textColor: '#ffffff', count: 5 },
+            'Na': { name: 'ナトリウム', color: '#8b5cf6', textColor: '#ffffff', count: 5 },
+            'Ag': { name: '銀', color: '#9ca3af', textColor: '#000000', count: 5 },
+            'Fe': { name: '鉄', color: '#f59e0b', textColor: '#000000', count: 3 },
+            'Cu': { name: '銅', color: '#b91c1c', textColor: '#ffffff', count: 3 },
+            'S': { name: '硫黄', color: '#fbbf24', textColor: '#000000', count: 3 }
+        };
+
+        const SCORING_RULES = [
+            { formula: 'H2SO4', name: '硫酸', points: 20, atoms: { 'H': 2, 'S': 1, 'O': 4 } },
+            { formula: 'Na2CO3', name: '炭酸ナトリウム', points: 18, atoms: { 'Na': 2, 'C': 1, 'O': 3 } },
+            { formula: 'NaHCO3', name: '炭酸水素ナトリウム', points: 14, atoms: { 'Na': 1, 'H': 1, 'C': 1, 'O': 3 } },
+            { formula: 'CuCl2', name: '塩化銅(II)', points: 10, atoms: { 'Cu': 1, 'Cl': 2 } },
+            { formula: 'FeCl2', name: '塩化鉄(II)', points: 10, atoms: { 'Fe': 1, 'Cl': 2 } },
+            { formula: 'Ag2S', name: '硫化銀', points: 10, atoms: { 'Ag': 2, 'S': 1 } },
+            { formula: 'CH4', name: 'メタン', points: 6, atoms: { 'C': 1, 'H': 4 } },
+            { formula: 'Ag2O', name: '酸化銀', points: 6, atoms: { 'Ag': 2, 'O': 1 } },
+            { formula: 'CuS', name: '硫化銅(II)', points: 5, atoms: { 'Cu': 1, 'S': 1 } },
+            { formula: 'FeS', name: '硫化鉄(II)', points: 5, atoms: { 'Fe': 1, 'S': 1 } },
+            { formula: 'H2S', name: '硫化水素', points: 5, atoms: { 'H': 2, 'S': 1 } },
+            { formula: 'NH3', name: 'アンモニア', points: 5, atoms: { 'N': 1, 'H': 3 } },
+            { formula: 'N2', name: '窒素', points: 4, atoms: { 'N': 2 } },
+            { formula: 'Cl2', name: '塩素', points: 4, atoms: { 'Cl': 2 } },
+            { formula: 'CuO', name: '酸化銅(II)', points: 4, atoms: { 'Cu': 1, 'O': 1 } },
+            { formula: 'NaCl', name: '塩化ナトリウム', points: 4, atoms: { 'Na': 1, 'Cl': 1 } },
+            { formula: 'AgCl', name: '塩化銀', points: 4, atoms: { 'Ag': 1, 'Cl': 1 } },
+            { formula: 'FeO', name: '酸化鉄(II)', points: 4, atoms: { 'Fe': 1, 'O': 1 } },
+            { formula: 'NaOH', name: '水酸化ナトリウム', points: 4, atoms: { 'Na': 1, 'O': 1, 'H': 1 } },
+            { formula: 'H2O', name: '水', points: 3, atoms: { 'H': 2, 'O': 1 } },
+            { formula: 'HCl', name: '塩化水素', points: 3, atoms: { 'H': 1, 'Cl': 1 } },
+            { formula: 'CO2', name: '二酸化炭素', points: 3, atoms: { 'C': 1, 'O': 2 } },
+            { formula: 'O2', name: '酸素', points: 2, atoms: { 'O': 2 } },
+            { formula: 'H2', name: '水素', points: 1, atoms: { 'H': 2 } },
+            { formula: 'C (Diamond)', name: 'ダイヤモンド', points: 30, atoms: { 'C': 6 } }
+        ];
+    </script>
+
+    <!-- SCRIPT -->
+    <script>
+        const GAS_URL = 'https://script.google.com/macros/s/AKfycbyoPJnTzenD0Af8Fg0F7xUA2UW9-gIKepeGiG2ouQ0MGBSq8k7_ZFDXjwKV3TbIAbpEWA/exec';
+
+        // PeerJS Setup
+        let peer = null;
+        let conn = null; // For client: connection to host
+        let connections = []; // For host: list of connections
+        let role = 'none'; // 'host' or 'client'
+        let myId = '';
+        let hostId = '';
+        let players = []; // List of {id, name, hand, score, status}
+
+        // Game State
+        let gameState = {
+            phase: 'lobby', // lobby, exchange1, exchange2, form, result
+            deck: [],
+            discards: [], // Array of symbols
+            players: [], // [ {id, name, hand, formedSets, score, isDone} ]
+            startTime: 0
+        };
+
+        let myHand = [];
+        let mySelectedIndices = [];
+        let myFormedSets = [];
+        let myScore = 0;
+
+        // DOM Elements
+        const lobbyScreen = document.getElementById('lobby-screen');
+        const gameScreen = document.getElementById('game-screen');
+        const hostInfo = document.getElementById('host-info');
+        const myRoomIdEl = document.getElementById('my-room-id');
+        const playerCountEl = document.getElementById('player-count');
+        const memberListEl = document.getElementById('member-list');
+        const startBtn = document.getElementById('start-btn');
+        const joinStatusEl = document.getElementById('join-status');
+        const waitingEl = document.getElementById('instruction'); // Status message
+        // Note: instruction-game was used in HTML for game phase, but script references 'instruction' from lobby?
+        // Actually script reuses `waitingEl = document.getElementById('instruction')`.
+        // In Lobby: ID="instruction". In Game: I see 'instruction-game' in the new HTML block above.
+        // I must make sure `waitingEl` points to correct element or update the pointer.
+        // FIX: I will use 'instruction' for Lobby and update logic to target 'instruction-game' when in game if needed?
+        // OR simpler: Just reuse 'instruction' if possible.
+        // Wait, in my V3 HTML above I put `<p id="instruction" ...>` in Lobby.
+        // And `<div id="instruction-game" ...>` in Game.
+        // The script reuses just one variable `waitingEl`.
+        // I should update the script to handle this or just ensure `instruction` exists.
+        // Logic: `waitingEl` is initialized ONCE.
+        // If I assume `waitingEl` is for lobby status...
+        // But `updateInstruction()` (Line 452) sets `waitingEl.textContent`.
+        // So `waitingEl` IS used during game.
+        // PROBLEM: `waitingEl` (Lobby) is HIDDEN when game starts (lobbyScreen hidden).
+        // So game instructions won't show.
+        // FIX in V3 Script below: I will update `waitingEl` to point to `instruction-game` when game starts, or just add a getter.
+        // EASIER FIX: Rename the Game Status element to `id="instruction"`? No, ID must be unique.
+        // BETTER FIX: Make `waitingEl` a dynamic getter or update it on phase change.
+        // I will just make the Game Instruction element have `id="instruction"` and rename the Lobby one?
+        // No, the script expects `instruction`.
+        // I will rename the Lobby one to `instruction-lobby` and the Game one to `instruction`.
+        // Wait, `joinRoom` logic uses `waitingEl` for "Connected, Waiting for Host". This is likely the Lobby one.
+        // Complex.
+        // I will just use TWO variables.
+
+        const lobbyInstructionEl = document.getElementById('instruction'); // Lobby
+        const gameInstructionEl = document.getElementById('instruction-game'); // Game
+
+        const handEl = document.getElementById('player-hand');
+        const opponentsContainer = document.getElementById('opponents-container');
+        const phaseDisplay = document.getElementById('phase-display');
+        const formedContainer = document.getElementById('formed-sets-container');
+        // Table Elements
+        const deckCountEl = document.getElementById('deck-count');
+        const discardPoolEl = document.getElementById('discard-pool');
+
+        // --- Lobby Logic ---
+
+        const usernameInput = document.getElementById('username-input');
+
+        // --- PeerJS Config (Hybrid Optimized: Original Game + Robust Connection) ---
+        const PEER_OPTS = {
+            key: 'peerjs',
+            debug: 2,
+            config: {
+                iceServers: [
+                    { urls: 'stun:stun.l.google.com:19302' },
+                    { urls: 'stun:stun1.l.google.com:19302' }
+                ]
+            }
+        };
+
+        const CONNECT_OPTS = {
+            reliable: true
+        };
+
+        function generateShortId() {
+            return 'A' + Math.random().toString(36).substring(2, 6).toUpperCase();
+        }
+
+        function createRoom() {
+            role = 'host';
+            // Initialize Peer with Short ID and Robust Config
+            peer = new Peer(generateShortId(), PEER_OPTS);
+
+            peer.on('open', (id) => {
+                myId = id;
+                myRoomIdEl.textContent = id;
+                hostInfo.classList.remove('hidden');
+                // Add self to players
+                gameState.players = [{ id: myId, name: 'Player 1', isDone: false, score: 0 }];
+                updateLobbyUI();
+            });
+
+            peer.on('connection', (c) => {
+                // Incoming connection
+                c.on('open', () => {
+                    console.log('Peer connected:', c.peer);
+                    connections.push(c);
+
+                    // Auto-assign name
+                    const name = `Player ${gameState.players.length + 1}`;
+                    gameState.players.push({ id: c.peer, name: name, isDone: false, score: 0 });
+
+                    // Send current lobby state
+                    broadcastState();
+                    updateLobbyUI();
+
+                    // Listen for data
+                    c.on('data', (data) => handleHostData(c.peer, data));
+                });
+
+                c.on('error', (err) => console.error('Connection Error:', err));
+            });
+
+            peer.on('error', (err) => console.error('Peer Error:', err));
+        }
+
+        function joinRoom() {
+            const inputId = document.getElementById('join-id').value.trim().toUpperCase();
+
+            if (!inputId) {
+                joinStatusEl.textContent = 'IDを入力してください';
+                return;
+            }
+
+            role = 'client';
+            hostId = inputId;
+
+            // Client also uses Short ID + Robust Config
+            peer = new Peer(generateShortId(), PEER_OPTS);
+
+            peer.on('open', (id) => {
+                myId = id;
+                joinStatusEl.textContent = '接続中... (15秒待ちます)';
+
+                // Connect with metadata
+                conn = peer.connect(hostId, CONNECT_OPTS);
+
+                // Timeout Safety
+                const connectionTimeout = setTimeout(() => {
+                    if (!conn || !conn.open) {
+                        joinStatusEl.textContent = 'タイムアウト: 接続できませんでした';
+                        if (conn) conn.close();
+                    }
+                }, 15000);
+
+                conn.on('open', () => {
+                    clearTimeout(connectionTimeout);
+                    joinStatusEl.textContent = '接続成功！ホストの開始を待っています';
+                    lobbyInstructionEl.classList.remove('hidden'); // Show Lobby Instruction
+                    // lobbyScreen.classList.add('hidden'); // Optional visual update
+                });
+
+                // Re-injected: Client Connection Success Handler
+                conn.on('open', () => {
+                    clearTimeout(connectionTimeout);
+                    joinStatusEl.textContent = '接続成功！ (Connected)';
+                    joinStatusEl.style.color = 'green';
+
+                    // Show waiting message
+                    lobbyInstructionEl.textContent = "ホストがゲームを開始するのを待っています...";
+                    lobbyInstructionEl.classList.remove('hidden');
+
+                    // Lock UI
+                    document.getElementById('join-id').disabled = true;
+                    document.querySelector('.lobby-card button').disabled = true;
+                });
+                conn.on('data', (data) => handleClientData(data));
+                conn.on('error', (err) => {
+                    console.error('Conn Error:', err);
+                    joinStatusEl.textContent = '通信エラー発生';
+                });
+            });
+
+            peer.on('error', (err) => {
+                console.error('Peer Error:', err);
+                joinStatusEl.textContent = 'ID作成エラー';
+            });
+
+        }
+
+        function updateLobbyUI() {
+            playerCountEl.textContent = gameState.players.length;
+            memberListEl.innerHTML = gameState.players.map(p => `<li>${p.name} ${p.id === myId ? '(自分)' : ''}</li>`).join('');
+
+            // Enable start button if > 1 player (or testing with 1 is fine too)
+            startBtn.disabled = false;
+        }
+
+        // --- Host Logic ---
+
+        function startGameHost() {
+            // Initialize Game
+            gameState.deck = generateDeck();
+            gameState.phase = 'exchange1';
+            gameState.turnIndex = 0; // Start with first player
+
+            // Deal hands
+            gameState.players.forEach(p => {
+                p.hand = drawFromDeck(7);
+                p.isDone = false;
+                p.formedSets = [];
+                p.score = 0;
+            });
+
+            broadcastState();
+            // Local update for host
+            handleStateUpdate(gameState);
+        }
+
+        function handleHostData(peerId, data) {
+            // Handle actions from clients
+            const playerIndex = gameState.players.findIndex(p => p.id === peerId);
+            if (playerIndex === -1) return;
+            const player = gameState.players[playerIndex];
+
+            // Enforce Turn Order for Exchange Phases - REMOVED for Simultaneous Play
+            if (gameState.phase.startsWith('exchange')) {
+                // Allow simultaneous actions
+
+
+                if (data.type === 'action_exchange') {
+                    // Processing Exchange
+                    const keptCards = data.kept;
+                    const discardedCards = data.discarded;
+
+                    gameState.discards.push(...discardedCards);
+                    const newCards = drawFromDeck(discardedCards.length);
+                    player.hand = [...keptCards, ...newCards];
+
+                    // Turn Complete for this player
+                    advanceTurn();
+                }
+            } else if (data.type === 'action_finish_form') {
+                // Form phase is simultaneous (or we can make it sequential too? User said "discarding is sequential").
+                // Let's keep Form phase simultaneous for now as it's just submitting results.
+                player.score = data.score;
+                player.formedSets = data.formedSets;
+                player.isDone = true;
+
+                checkPhaseProgression();
+            }
+        }
+
+        function advanceTurn() {
+            gameState.turnIndex++;
+
+            // Check if round is over
+            if (gameState.turnIndex >= gameState.players.length) {
+                // End of this exchange round
+                gameState.turnIndex = 0; // Reset for next phase
+
+                if (gameState.phase === 'exchange1') {
+                    gameState.phase = 'exchange2';
+                } else if (gameState.phase === 'exchange2') {
+                    gameState.phase = 'form';
+                }
+            }
+
+            broadcastState();
+            handleStateUpdate(gameState);
+        }
+
+        function checkPhaseProgression() {
+            // For Form Phase
+            const allDone = gameState.players.every(p => p.isDone);
+
+            if (allDone) {
+                if (gameState.phase === 'form') {
+                    gameState.phase = 'result';
+                }
+                broadcastState();
+                handleStateUpdate(gameState);
+            } else {
+                broadcastState();
+                handleStateUpdate(gameState);
+            }
+        }
+
+        function broadcastState() {
+            const stateStr = JSON.stringify(gameState);
+            connections.forEach(c => c.send({ type: 'state_update', state: stateStr }));
+        }
+
+        function drawFromDeck(n) {
+            const drawn = [];
+            for (let i = 0; i < n; i++) {
+                if (gameState.deck.length > 0) drawn.push(gameState.deck.pop());
+            }
+            return drawn;
+        }
+
+        // --- Client Logic ---
+
+        function handleClientData(data) {
+            if (data.type === 'state_update') {
+                const newState = JSON.parse(data.state);
+                handleStateUpdate(newState);
+            }
+        }
+
+        function sendAction(actionData) {
+            if (role === 'host') {
+                // Direct call
+                handleHostData(myId, actionData);
+            } else {
+                conn.send(actionData);
+            }
+        }
+
+        // --- Common Game Logic ---
+
+        // --- Common Game Logic ---
+
+        let lastPhase = 'lobby';
+
+        function handleStateUpdate(newState) {
+            const oldPhase = gameState.phase;
+            gameState = newState;
+
+            // Reset local state on new game
+            if ((oldPhase === 'lobby' || oldPhase === 'result') && gameState.phase === 'exchange1') {
+                myScore = 0;
+                myFormedSets = [];
+                mySelectedIndices = [];
+                scoreSubmitted = false;
+                // Make sure to clear the formed sets container visually
+                document.getElementById('formed-sets-container').innerHTML = '<div style="width: 100%; text-align: center; color: #64748b; font-size: 0.9rem;">作った化学式がここに置かれます</div>';
+            }
+
+            // Find my data
+            const me = gameState.players.find(p => p.id === myId);
+            if (me) {
+                // Only sync hand if NOT in form phase (preserve local edits)
+                // OR if it's the very start of form phase (transition)
+                if (gameState.phase !== 'form') {
+                    myHand = me.hand || [];
+                } else if (oldPhase !== 'form' && gameState.phase === 'form') {
+                    // Initial sync for form phase
+                    myHand = me.hand;
+                }
+            }
+
+            // Update UI - STRICT SWITCHING
+            const lobbyEl = document.getElementById('lobby-screen');
+            const gameEl = document.getElementById('game-screen');
+            if (gameState.phase !== 'lobby') {
+                if (lobbyEl) {
+                    lobbyEl.classList.add('hidden');
+                    lobbyEl.style.display = 'none'; // Force
+                }
+                if (gameEl) {
+                    gameEl.classList.remove('hidden');
+                    gameEl.style.display = 'block'; // Force
+                }
+                if (phaseDisplay) phaseDisplay.classList.remove('hidden');
+                updatePhaseDisplay();
+                renderOpponents();
+                renderTable();
+            } else {
+                if (lobbyEl) {
+                    lobbyEl.classList.remove('hidden');
+                    lobbyEl.style.display = 'block';
+                }
+                if (gameEl) {
+                    gameEl.classList.add('hidden');
+                    gameEl.style.display = 'none';
+                }
+            }
+
+            // Link header
+            const statusHeader = document.getElementById('game-status-header');
+            const myIdDisplay = document.getElementById('my-player-id-display');
+            const scoreDisplay = document.getElementById('current-score-display');
+
+            if (me && myIdDisplay) {
+                myIdDisplay.textContent = `${me.name} (あなた)`;
+            }
+
+            if (scoreDisplay) {
+                scoreDisplay.textContent = myScore;
+            }
+
+
+
+            // Determine Turn Status (Simultaneous Logic)
+            let isMyTurn = false;
+            let waitingText = '';
+
+            // Track local action per phase to prevent double submission
+            if (!window.localPhaseTracker) window.localPhaseTracker = { phase: '', acted: false };
+            if (window.localPhaseTracker.phase !== gameState.phase) {
+                window.localPhaseTracker = { phase: gameState.phase, acted: false };
+            }
+
+            if (gameState.phase.startsWith('exchange')) {
+                // Simultaneous: Everyone can act if they haven't yet
+                if (!window.localPhaseTracker.acted) {
+                    isMyTurn = true;
+                } else {
+                    waitingText = '他のプレイヤーの完了待ち...';
+                }
+            } else if (gameState.phase === 'form') {
+                // Simultaneous
+                if (!me.isDone) isMyTurn = true;
+                else waitingText = '他のプレイヤーの完了待ち...';
+            }
+
+            if (me && isMyTurn) {
+                // I need to act
+                renderHand(true); // Interactive
+                updateInstruction();
+                if (statusHeader) {
+                    statusHeader.textContent = `あなたの番です！ (${getPhaseName(gameState.phase)})`;
+                    statusHeader.style.backgroundColor = '#dbeafe'; // Light blue
+                    statusHeader.style.color = '#0369a1';
+                }
+            } else {
+                // I am waiting
+                renderHand(false); // Locked
+
+                if (statusHeader) {
+                    statusHeader.textContent = waitingText || '待機中...';
+                    statusHeader.style.backgroundColor = '#f3f4f6'; // Gray
+                    statusHeader.style.color = '#4b5563';
+                }
+
+                // UPDATE GAME INSTRUCTION
+                if (gameInstructionEl) gameInstructionEl.textContent = waitingText;
+
+                // Hide action button or disable
+                const btn = document.getElementById('action-btn');
+                if (btn) {
+                    btn.classList.add('hidden');
+                    btn.disabled = true;
+                }
+            }
+
+
+            if (gameState.phase === 'result') {
+                showResultScreen();
+            }
+        }
+
+        let scoreSubmitted = false;
+
+        function getPhaseName(p) {
+            if (p === 'exchange1') return 'カード交換 1回目';
+            if (p === 'exchange2') return 'カード交換 2回目';
+            if (p === 'form') return '役作り（結合）';
+            return '';
+        }
+
+        function updatePhaseDisplay() {
+            document.querySelectorAll('.step').forEach(el => el.classList.remove('active'));
+            if (gameState.phase === 'exchange1') document.getElementById('step-ex1').classList.add('active');
+            if (gameState.phase === 'exchange2') document.getElementById('step-ex2').classList.add('active');
+            if (gameState.phase === 'form') document.getElementById('step-form').classList.add('active');
+            if (gameState.phase === 'result') document.getElementById('step-result').classList.add('active');
+        }
+
+        function updateInstruction() {
+            const btn = document.getElementById('action-btn');
+            const finishBtn = document.getElementById('finish-btn');
+
+            // Default visibility
+            if (finishBtn) finishBtn.classList.add('hidden');
+            if (btn) {
+                btn.classList.remove('hidden');
+                btn.disabled = false;
+            }
+
+            if (gameState.phase.startsWith('exchange')) {
+                if (gameInstructionEl) gameInstructionEl.textContent = 'いらないカードを選んで「交換」を押してください';
+                btn.textContent = 'これらを捨てる (交換)';
+                btn.className = 'btn danger';
+
+                // Special: If no cards selected, "Skip Exchange"
+                if (mySelectedIndices.length === 0) {
+                    btn.textContent = '交換せずに次へ';
+                    btn.className = 'btn primary';
+                }
+            } else if (gameState.phase === 'form') {
+                if (gameInstructionEl) gameInstructionEl.textContent = '手札を選んで「結合」！ 終わったら「終了」ボタン';
+                btn.textContent = '結合！ (Bond)';
+                btn.className = 'btn accent'; // Make it stand out more
+                btn.disabled = false; // Always enabled
+
+                // Show Finish Button
+                if (finishBtn) {
+                    finishBtn.classList.remove('hidden');
+                    // Style it differently
+                    finishBtn.className = 'btn secondary';
+                    finishBtn.style.backgroundColor = '#64748b';
+                    finishBtn.style.color = 'white';
+                }
+            }
+        }
+
+        function handleFinishTurn() {
+            if (gameState.phase !== 'form') return;
+
+            // No confirmation needed per user request
+            console.log('Finishing Form Phase. Score:', myScore);
+            sendAction({
+                type: 'action_finish_form',
+                score: myScore,
+                formedSets: myFormedSets
+            });
+        }
+
+        function renderOpponents() {
+            opponentsContainer.innerHTML = '';
+            gameState.players.forEach(p => {
+                if (p.id === myId) return;
+                const badge = document.createElement('div');
+                badge.className = `opponent-badge ${p.isDone ? 'done' : 'thinking'}`;
+                badge.innerHTML = `
+            <div>${p.name}</div>
+            <div class="status-dot"></div>
+            <div style="font-size:0.7rem; color:#666;">${p.isDone ? '完了' : '考え中'}</div>
+        `;
+                opponentsContainer.appendChild(badge);
+            });
+        }
+
+        // Sortable Instance
+        let handSortable = null;
+
+        function renderHand(interactive) {
+            handEl.innerHTML = '';
+            myHand.forEach((symbol, index) => {
+                const cardData = CARD_DATA[symbol];
+                const card = document.createElement('div');
+                card.className = `atom-card ${mySelectedIndices.includes(index) ? 'selected' : ''}`;
+                card.dataset.symbol = symbol; // For state sync
+
+                if (interactive) {
+                    // Click to toggle selection
+                    card.onclick = (e) => {
+                        // Prevent click processing if it was a drag (Sortable handles this usually, but good to be sure)
+                        // Actually Sortable prevents click event on drag.
+
+                        // We need to fetch the CURRENT index because Dragging changes indices
+                        const currentIdx = Array.from(handEl.children).indexOf(card);
+
+                        const idxInSelection = mySelectedIndices.indexOf(currentIdx);
+                        if (idxInSelection > -1) {
+                            mySelectedIndices.splice(idxInSelection, 1);
+                            card.classList.remove('selected');
+                        } else {
+                            mySelectedIndices.push(currentIdx);
+                            card.classList.add('selected');
+                        }
+                        updateInstruction();
+                    };
+                } else {
+                    card.style.opacity = 0.7;
+                }
+
+                card.innerHTML = `
+            <div class="atom-symbol" style="color: ${cardData.textColor}">${symbol === 'Blank' ? '' : symbol}</div>
+            <div class="atom-name" style="color: ${cardData.textColor}">${cardData.name}</div>
+        `;
+                card.style.backgroundColor = cardData.color;
+                handEl.appendChild(card);
+            });
+
+            // Initialize Sortable if needed and interactive
+            if (interactive) {
+                if (!handSortable) {
+                    handSortable = new Sortable(handEl, {
+                        animation: 150,
+                        ghostClass: 'sortable-ghost',
+                        delay: 100, // Slight delay to prevent accidental drag when clicking
+                        delayOnTouchOnly: true,
+                        onEnd: function (evt) {
+                            // Sync myHand state with new DOM order
+                            const newHand = [];
+                            const newSelected = [];
+
+                            Array.from(handEl.children).forEach((card, newIndex) => {
+                                newHand.push(card.dataset.symbol);
+                                if (card.classList.contains('selected')) {
+                                    newSelected.push(newIndex);
+                                }
+                            });
+
+                            myHand = newHand;
+                            mySelectedIndices = newSelected;
+                        }
+                    });
+                }
+                handSortable.option('disabled', false);
+            } else {
+                if (handSortable) {
+                    handSortable.option('disabled', true);
+                }
+            }
+        }
+
+        function handlePlayerAction() {
+            // Safety Check removed to allow Simultaneous Actions
+            // if (gameState.phase.startsWith('exchange')) { ... }
+
+            if (gameState.phase.startsWith('exchange')) {
+                // Identify kept and discarded based on current local hand
+                const keptCards = myHand.filter((_, i) => !mySelectedIndices.includes(i));
+                const discardedCards = myHand.filter((_, i) => mySelectedIndices.includes(i));
+
+                // Send exchange Action
+                sendAction({
+                    type: 'action_exchange',
+                    kept: keptCards,
+                    discarded: discardedCards
+                });
+                // Local UI Update
+                window.localPhaseTracker.acted = true;
+                mySelectedIndices = [];
+                // Force UI Update
+                handleStateUpdate(gameState);
+            } else if (gameState.phase === 'form') {
+                // Only Attempt Bond
+                if (mySelectedIndices.length === 0) {
+                    // Should be disabled, but just in case
+                    return;
+                } else {
+                    // Attempt Bond
+                    attemptBondLocal();
+                }
+            }
+        }
+
+        // ... attemptBondLocal ...
+
+        function attemptBondLocal() {
+            const selectedSymbols = mySelectedIndices.map(i => myHand[i]);
+            const matchedFormula = checkFormula(selectedSymbols);
+
+            if (matchedFormula) {
+                addFormedSet(matchedFormula);
+                console.log('Bond formed! New Score:', myScore);
+
+                // Update display immediately
+                const sd = document.getElementById('current-score-display');
+                if (sd) sd.textContent = myScore;
+
+                // Remove from local hand
+                myHand = myHand.filter((_, i) => !mySelectedIndices.includes(i));
+                mySelectedIndices = [];
+                renderHand(true);
+                updateInstruction();
+            } else {
+                alert('できません！');
+                mySelectedIndices = [];
+                renderHand(true);
+            }
+        }
+
+        function addFormedSet(rule) {
+            myFormedSets.push(rule);
+            myScore += rule.points;
+            const setEl = document.createElement('div');
+            setEl.className = 'formed-set';
+            setEl.innerHTML = `<span class="set-formula">${toSubscript(rule.formula)}</span> +${rule.points}`;
+            formedContainer.classList.remove('hidden');
+            formedContainer.appendChild(setEl);
+        }
+
+        // Reuse logic
+        function checkFormula(symbols) {
+            const counts = {};
+            symbols.forEach(s => counts[s] = (counts[s] || 0) + 1);
+            for (const rule of SCORING_RULES) {
+                const ruleAtoms = rule.atoms;
+                if (Object.keys(ruleAtoms).length !== Object.keys(counts).length) continue;
+                let match = true;
+                for (const atom in ruleAtoms) {
+                    if (counts[atom] !== ruleAtoms[atom]) { match = false; break; }
+                }
+                if (match) return rule;
+            }
+            return null;
+        }
+
+        function toSubscript(str) {
+            if (str.includes('Diamond')) return 'C (Diamond)';
+            return str.replace(/(\d+)/g, '<sub>$1</sub>');
+        }
+
+        function generateDeck() {
+            let d = [];
+            Object.keys(CARD_DATA).forEach(symbol => {
+                const count = CARD_DATA[symbol].count;
+                for (let i = 0; i < count; i++) d.push(symbol);
+            });
+            return d.sort(() => Math.random() - 0.5);
+        }
+
+        function showResultScreen() {
+            const me = gameState.players.find(p => p.id === myId);
+
+            // Calculate Rank
+            const sortedPlayers = [...gameState.players].sort((a, b) => b.score - a.score);
+            const myRank = sortedPlayers.findIndex(p => p.id === myId) + 1;
+
+            // Auto submit if not done yet
+            if (me && !scoreSubmitted) {
+                submitScoreToGas(me.name, me.score);
+                scoreSubmitted = true;
+            }
+
+            gameScreen.innerHTML = `
+        <div style="text-align: center;">
+            <h2>最終結果</h2>
+            
+            <div style="font-size: 1.5rem; color: #666; font-weight: bold; margin-bottom: 0.5rem;">
+                第 ${myRank} 位
+            </div>
+
+            <div style="font-size: 3rem; margin-bottom:1rem;">
+                ${me ? me.score : 0} <span style="font-size:1rem;">Points</span>
+            </div>
+            
+            <div class="ranking-display">
+                <table class="ranking-table">
+                    <thead><tr><th>Rank</th><th>Name</th><th>Score</th></tr></thead>
+                    <tbody>
+                        ${gameState.players.sort((a, b) => b.score - a.score).map((p, i) => `
+                            <tr class="${p.id === myId ? 'highlight-row' : ''}">
+                                <td>${i + 1}</td>
+                                <td>${p.name}</td>
+                                <td>${p.score}</td>
+                            </tr>
+                        `).join('')}
+                    </tbody>
+                </table>
+            </div>
+            <button class="btn" onclick="location.reload()">もう一度</button>
+        </div>
+    `;
+            gameScreen.classList.remove('hidden');
+        }
+
+        async function submitScoreToGas(name, score) {
+            console.log(`Submitting score for ${name}: ${score}`);
+            const url = `${GAS_URL}?type=原子ポーカー&action=save&gameMode=multi&name=${encodeURIComponent(name)}&score=${score}`;
+            fetch(url).then(res => res.json()).then(data => console.log(data)).catch(e => console.error(e));
+        }
+
+
+        // Alias for HTML button
+        function handleAction() {
+            handlePlayerAction();
+        }
+
+        function renderTable() {
+            // Safety check
+            if (!gameState.discards) gameState.discards = [];
+
+            // Update Deck Count
+            if (deckCountEl) deckCountEl.textContent = gameState.deck.length;
+
+            // Update Discards
+            if (discardPoolEl) {
+                discardPoolEl.innerHTML = '';
+                gameState.discards.forEach(symbol => {
+                    const cardData = CARD_DATA[symbol];
+                    if (!cardData) return; // Skip invalid cards
+
+                    const card = document.createElement('div');
+                    card.className = 'discard-card';
+                    card.innerHTML = toSubscript(symbol);
+                    card.style.color = cardData.textColor;
+                    card.style.backgroundColor = cardData.color;
+                    // Optional: add subtle border
+                    card.style.border = '1px solid rgba(0,0,0,0.1)';
+                    discardPoolEl.appendChild(card);
+                });
+            }
+        }
+
+        // --- Yaku Modal Logic ---
+        // --- Yaku Modal Logic ---
+        // Make global for button onclick (Renamed to avoid conflict)
+        window.toggleYakuModal = function () {
+            console.log('toggleYakuModal called');
+            const modal = document.getElementById('yaku-modal');
+            if (modal) {
+                // Toggle Hidden
+                if (modal.classList.contains('hidden')) {
+                    modal.classList.remove('hidden');
+                    renderYakuList();
+                } else {
+                    modal.classList.add('hidden');
+                }
+            } else {
+                alert('Error: Modal element not found!');
+            }
+        };
+        window.closeYakuModal = closeYakuModal;
+
+        // Alias for safety if old calls exist
+        function openYakuModal() {
+            window.toggleYakuModal();
+        }
+
+        function closeYakuModal() {
+            document.getElementById('yaku-modal').classList.add('hidden');
+        }
+
+        function renderYakuList() {
+            const tbody = document.getElementById('yaku-list-body');
+            // If already rendered, don't re-render unless empty (e.g. initial load)
+            if (tbody.children.length > 0) return;
+
+            // Use SCORING_RULES from data.js
+            tbody.innerHTML = SCORING_RULES.map(rule => `
+        <tr>
+            <td style="font-weight:bold; font-family: 'Times New Roman', serif; font-size: 1.1rem; white-space: nowrap;">
+                ${formatFormulaScoring(rule.formula)}
+            </td>
+            <td>${rule.name || '-'}</td>
+            <td style="font-weight:bold; color:#10b981; white-space: nowrap;">${rule.points} pts</td>
+        </tr>
+    `).join('');
+        }
+
+        function formatFormulaScoring(formula) {
+            // Basic H2O -> H<sub>2</sub>O replacement logic
+            return formula.replace(/(\d+)/g, '<sub>$1</sub>');
+        }
+
+        // Close modal if clicked outside content
+        document.getElementById('yaku-modal')?.addEventListener('click', (e) => {
+            if (e.target.id === 'yaku-modal') {
+                closeYakuModal();
+            }
+        });
+
+    </script>
+</body>
+
+</html>
