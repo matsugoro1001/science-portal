@@ -6,13 +6,13 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>原子ポーカー | Atomic Poker</title>
     <link rel="stylesheet" href="style.css">
-    <script src="https://unpkg.com/peerjs@1.5.2/dist/peerjs.min.js"></script>
+    <script src="https://unpkg.com/peerjs@1.5.4/dist/peerjs.min.js"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/Sortable/1.15.0/Sortable.min.js"></script>
 </head>
 
 <body>
     <div class="game-container">
-        <h1>⚛️ 原子ポーカー <span style="font-size: 1rem; opacity: 0.7;">Multiplayer</span></h1>
+        <h1>⚛️ 原子ポーカー <span style="font-size: 1rem; color:red;">v2.5 (更新完了)</span></h1>
 
         <!-- Lobby Screen -->
         <div id="lobby-screen" class="play-area">
@@ -42,6 +42,8 @@
                         style="font-size: 1.2rem; padding: 0.5rem; width: 100%; margin-bottom: 0.5rem;">
                     <button class="btn" onclick="joinRoom()">参加する</button>
                     <div id="join-status" style="margin-top: 10px; color: #666;"></div>
+                    <p id="instruction" class="hidden" style="margin-top:5px; color:#2563eb; font-weight:bold;">
+                        ホストが開始するのを待っています...</p>
                 </div>
             </div>
         </div>
@@ -172,8 +174,8 @@
 
     </div>
 
-    <script src="data.js?v=yaku1"></script>
-    <script src="script.js?v=yaku1"></script>
+    <script src="data.js?v=force_new"></script>
+    <script src="atomic_script.js?v=force_new"></script>
 </body>
 
 </html>
