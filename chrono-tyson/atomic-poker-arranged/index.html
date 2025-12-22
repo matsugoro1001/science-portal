@@ -12,7 +12,7 @@
 
 <body>
     <div class="game-container">
-        <h1>🀄️ 原子麻雀 <span style="font-size: 1rem; color:#d97706;">(Atomic Mahjong v4.8)</span></h1>
+        <h1>🀄️ 原子麻雀 <span style="font-size: 1rem; color:#d97706;">(Atomic Mahjong v5.2)</span></h1>
 
         <!-- Lobby Screen -->
         <div id="lobby-screen" class="play-area">
@@ -81,6 +81,8 @@
                     Score: <span id="current-score-display">0</span>
                     <button class="btn accent small" onclick="openYakuModal()"
                         style="padding: 2px 8px; font-size: 0.8rem;">役一覧</button>
+                    <button class="btn accent small" onclick="openDeckModal()"
+                        style="padding: 2px 8px; font-size: 0.8rem; margin-left:5px; background-color: #64748b;">山札一覧</button>
                 </div>
             </div>
 
@@ -159,8 +161,8 @@
 
     </div>
 
-    <script src="data.js?v=4.8"></script>
-    <script src="atomic_script.js?v=4.8"></script>
+    <script src="data.js?v=5.2"></script>
+    <script src="atomic_script.js?v=5.2"></script>
     <!-- Yaku List Modal -->
     <div id="yaku-modal" class="modal hidden">
         <div class="modal-content">
@@ -182,6 +184,22 @@
                         <!-- Injected by script -->
                     </tbody>
                 </table>
+            </div>
+
+        </div>
+    </div>
+
+    <!-- Deck Modal -->
+    <div id="deck-modal" class="modal hidden">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h3>山札構成 (Deck Info)</h3>
+                <button class="close-btn" onclick="closeDeckModal()">×</button>
+            </div>
+            <div class="modal-body">
+                <div id="deck-info-container">
+                    <!-- Deck info injected here -->
+                </div>
             </div>
         </div>
     </div>
