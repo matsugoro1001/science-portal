@@ -366,6 +366,7 @@ function resetLocalGame() {
     myScore = 0;
     myFormedSets = [];
     mySelectedIndices = [];
+    myHand = []; // Clear hand to allow new deal sync
     scoreSubmitted = false;
     document.getElementById('formed-sets-container').innerHTML =
         '<div style="width: 100%; text-align: center; color: #64748b; font-size: 0.9rem;">作った化学式がここに置かれます</div>';
@@ -946,11 +947,21 @@ function renderTable() {
 
             const card = document.createElement('div');
             card.className = 'discard-card';
-            card.innerHTML = toSubscript(symbol);
-            card.style.color = cardData.textColor;
-            card.style.backgroundColor = cardData.color;
-            // Optional: add subtle border
-            card.style.border = '1px solid rgba(0,0,0,0.1)';
+
+            // Feature: Hidden Discards during Exchange 1
+            if (gameState.phase === 'exchange1') {
+                // Render face down
+                card.style.backgroundColor = '#94a3b8'; // Slate 400
+                card.style.border = '2px solid #cbd5e1';
+                card.innerHTML = ''; // No text
+                card.title = 'Scavenge Phaseで公開されます';
+            } else {
+                // Render face up (Normal)
+                card.innerHTML = toSubscript(symbol);
+                card.style.color = cardData.textColor;
+                card.style.backgroundColor = cardData.color;
+                card.style.border = '1px solid rgba(0,0,0,0.1)';
+            }
 
             // Scavenge Interaction
             if (gameState.phase === 'scavenge') {
@@ -997,6 +1008,8 @@ function renderYakuList() {
             <td style="font-weight:bold; color:#10b981; white-space: nowrap;">${rule.points} pts</td>
         </tr>
     `).join('');
+
+
 }
 
 function formatFormulaScoring(formula) {
@@ -1013,4 +1026,50 @@ document.getElementById('yaku-modal')?.addEventListener('click', (e) => {
 
 // --- Yaku Modal Logic (Restored) ---
 // Duplicate removed. Using original openYakuModal defined above.
+
+// --- Deck Modal Logic ---
+window.openDeckModal = openDeckModal;
+window.closeDeckModal = closeDeckModal;
+
+function openDeckModal() {
+    document.getElementById('deck-modal').classList.remove('hidden');
+    renderDeckInfo();
+}
+
+function closeDeckModal() {
+    document.getElementById('deck-modal').classList.add('hidden');
+}
+
+function renderDeckInfo() {
+    const deckContainer = document.getElementById('deck-info-container');
+    if (deckContainer && deckContainer.children.length === 0) {
+        let totalCards = 0;
+        const rows = Object.entries(CARD_DATA).map(([symbol, data]) => {
+            totalCards += data.count;
+            return `
+                <div style="display:flex; justify-content:space-between; padding: 4px; border-bottom: 1px solid #eee;">
+                    <div>
+                        <span style="display:inline-block; width:20px; text-align:center; font-weight:bold; color:${data.textColor}; background-color:${data.color}; border-radius:4px; margin-right:5px; border:1px solid #ccc;">${symbol}</span>
+                        ${data.name}
+                    </div>
+                    <div style="font-weight:bold;">${data.count}枚</div>
+                </div>
+            `;
+        }).join('');
+
+        deckContainer.innerHTML = `
+            <div style="background: #f8fafc; padding: 10px; border-radius: 8px; border: 1px solid #ddd;">
+                ${rows}
+                <div style="margin-top:10px; font-size:0.8rem; color:#666;">※ +α は予備カード(無地)など</div>
+            </div>
+        `;
+    }
+}
+
+// Close deck modal if clicked outside content
+document.getElementById('deck-modal')?.addEventListener('click', (e) => {
+    if (e.target.id === 'deck-modal') {
+        closeDeckModal();
+    }
+});
 
