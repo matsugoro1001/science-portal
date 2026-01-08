@@ -408,7 +408,7 @@ function endGame() {
         document.querySelector('#certificate-screen h2').textContent = "イオン式テスト";
 
         // Save Result to GAS
-        saveScoreToGas('test', testName, testScore, 'イオン式テスト');
+        saveScoreToGas('test', testName, testScore);
 
         document.getElementById('new-record-form').classList.add('hidden');
         document.getElementById('ranking-section').classList.add('hidden');
