@@ -79,9 +79,17 @@ window.startGame = (mode) => {
 
     // Start Timer
     if (timerInterval) clearInterval(timerInterval);
-
-    // Timer is used for Choice/Matching, and logic runs every 50ms
     timerInterval = setInterval(updateTimer, 50);
+
+    // Update Question Counter Suffix
+    if (mode === 'choice' || mode === 'test' || mode === 'matching') {
+        if (mode !== 'matching') {
+            const total = mode === 'test' ? TEST_QUESTION_COUNT : TOTAL_QUESTIONS_CHOICE;
+            if (questionCountEl && questionCountEl.nextSibling) {
+                questionCountEl.nextSibling.textContent = ` / ${total}`;
+            }
+        }
+    }
 
     if (mode === 'choice') {
         quizScreen.classList.remove('hidden');
@@ -154,7 +162,7 @@ function nextQuestion() {
     }
 
     isAnswering = true;
-    questionCountEl.textContent = Math.min(questionsAnswered + 1, TOTAL_QUESTIONS_CHOICE);
+    questionCountEl.textContent = questionsAnswered + 1;
 
     const correctElement = questionPool.pop();
 
@@ -382,12 +390,15 @@ function endGame() {
         const passFailEl = document.getElementById('test-pass-fail');
 
         if (testScore >= PASSING_SCORE) {
-            passFailEl.textContent = "合格！ (PASS)";
+            passFailEl.textContent = `${testName}: 合格！ (PASS)`;
             passFailEl.className = "pass-text";
         } else {
-            passFailEl.textContent = "不合格 (FAIL)";
+            passFailEl.textContent = `${testName}: 不合格 (FAIL)`;
             passFailEl.className = "fail-text";
         }
+
+        // Auto-save Test Result
+        saveScoreToGas('test', testName, testScore, 'element_test');
 
         // Hide Ranking stuff for Test Mode
         document.getElementById('new-record-form').classList.add('hidden');
@@ -433,9 +444,10 @@ async function getRankings(mode) {
     }
 }
 
-async function saveScoreToGas(mode, name, score) {
+async function saveScoreToGas(mode, name, score, typeOverride = null) {
     try {
-        const url = `${GAS_URL}?type=${SHEET_TYPE}&action=save&gameMode=${mode}&name=${encodeURIComponent(name)}&score=${score}`;
+        const type = typeOverride || SHEET_TYPE;
+        const url = `${GAS_URL}?type=${type}&action=save&gameMode=${mode}&name=${encodeURIComponent(name)}&score=${score}`;
         await fetch(url);
     } catch (e) {
         console.error('Ranking Save Error:', e);
@@ -587,6 +599,70 @@ window.insertChar = (char) => {
 
 
 // End of Script
+
+function initTestQuestionPool() {
+    const shuffled = [...elements].sort(() => Math.random() - 0.5);
+    questionPool = shuffled.slice(0, TEST_QUESTION_COUNT);
+}
+
+function nextTestQuestion() {
+    isAnswering = true;
+
+    if (questionPool.length === 0) {
+        endGame();
+        return;
+    }
+
+    questionCountEl.textContent = questionsAnswered + 1;
+
+    const correctElement = questionPool.pop();
+
+    currentQuestion = {
+        element: correctElement,
+        type: 0 // Name -> Symbol
+    };
+
+    questionLabel.textContent = currentLanguage === 'JP' ? '元素名は何？' : '元素名是什么？';
+    questionContent.textContent = currentLanguage === 'JP' ? correctElement.nameJP : correctElement.nameCN;
+
+    const input = document.getElementById('answer-input');
+    input.value = '';
+    input.focus();
+}
+
+window.submitTestAnswer = () => {
+    if (!isAnswering) return;
+
+    const input = document.getElementById('answer-input');
+    const userVal = input.value.trim();
+
+    if (!userVal) return;
+
+    const correctVal = currentQuestion.element.symbol;
+    const isCorrect = userVal === correctVal;
+
+    if (isCorrect) {
+        testScore++;
+        input.style.borderColor = "#22c55e";
+        input.style.backgroundColor = "#dcfce7";
+    } else {
+        input.style.borderColor = "#ef4444";
+        input.style.backgroundColor = "#fee2e2";
+    }
+
+    isAnswering = false;
+    questionsAnswered++;
+
+    setTimeout(() => {
+        input.style.borderColor = "#ddd";
+        input.style.backgroundColor = "white";
+        nextTestQuestion();
+    }, 1000);
+};
+
+document.getElementById('answer-input').addEventListener('keydown', (e) => {
+    if (e.key === 'Enter') window.submitTestAnswer();
+});
 
 async function renderRankingList(rankingsData = null) {
     const listEl = document.getElementById('ranking-list');

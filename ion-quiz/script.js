@@ -81,6 +81,18 @@ window.startGame = (mode) => {
     if (timerInterval) clearInterval(timerInterval);
     timerInterval = setInterval(updateTimer, 50);
 
+    // Update Question Counter Suffix
+    if (mode === 'choice' || mode === 'test' || mode === 'matching') {
+        // Note: Matching mode uses matchedCountEl which handles its own suffixes.
+        // choice/test mode use questionCountEl
+        if (mode !== 'matching') {
+            const total = mode === 'test' ? TEST_QUESTION_COUNT : TOTAL_QUESTIONS_CHOICE;
+            if (questionCountEl && questionCountEl.nextSibling) {
+                questionCountEl.nextSibling.textContent = ` / ${total}`;
+            }
+        }
+    }
+
     if (mode === 'choice') {
         quizScreen.classList.remove('hidden');
         document.getElementById('timer-container').style.visibility = 'visible';
@@ -385,12 +397,15 @@ function endGame() {
         const passFailEl = document.getElementById('test-pass-fail');
 
         if (testScore >= PASSING_SCORE) {
-            passFailEl.textContent = "合格！ (PASS)";
+            passFailEl.textContent = `${testName}: 合格！ (PASS)`;
             passFailEl.className = "pass-text";
         } else {
-            passFailEl.textContent = "不合格 (FAIL)";
+            passFailEl.textContent = `${testName}: 不合格 (FAIL)`;
             passFailEl.className = "fail-text";
         }
+
+        // Auto-save Test Result
+        saveScoreToGas('test', testName, testScore, 'ion_test');
 
         document.getElementById('new-record-form').classList.add('hidden');
         document.querySelectorAll('.ranking-container').forEach(el => el.classList.add('hidden'));
@@ -469,7 +484,7 @@ function nextTestQuestion() {
         return;
     }
 
-    questionCountEl.textContent = `${questionsAnswered + 1} / ${TEST_QUESTION_COUNT}`;
+    questionCountEl.textContent = questionsAnswered + 1;
 
     const correctElement = questionPool.pop();
 
@@ -551,9 +566,10 @@ async function getRankings(mode) {
     }
 }
 
-async function saveScoreToGas(mode, name, score) {
+async function saveScoreToGas(mode, name, score, typeOverride = null) {
     try {
-        const url = `${GAS_URL}?type=${SHEET_TYPE}&action=save&gameMode=${mode}&name=${encodeURIComponent(name)}&score=${score}`;
+        const type = typeOverride || SHEET_TYPE;
+        const url = `${GAS_URL}?type=${type}&action=save&gameMode=${mode}&name=${encodeURIComponent(name)}&score=${score}`;
         await fetch(url);
     } catch (e) {
         console.error('Ranking Save Error:', e);
