@@ -591,7 +591,7 @@ window.skipTestQuestion = () => {
 
 // --- Ranking System ---
 // --- Ranking System (Google Sheets) ---
-const GAS_URL = 'https://script.google.com/macros/s/AKfycbwyXsAuU2Zyrcuf-FChZRx-TqLZPn9smRv2E1hBhOqsZuSuUCk7yaO4w-kwRITIC6PvfQ/exec';
+const GAS_URL = 'https://script.google.com/macros/s/AKfycbxlO5RanxYM-eqQhBSkkQBNjmils2LLJ6UmyX7pVlAcSvly-5oePfK0xrFciVrq3Vro7g/exec';
 const SHEET_TYPE = 'chemical'; // '化学式' template
 
 async function getRankings(mode) {
