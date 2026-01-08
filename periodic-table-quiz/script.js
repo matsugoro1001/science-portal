@@ -434,7 +434,7 @@ function endGame() {
 }
 
 // --- Ranking System (Google Sheets) ---
-const GAS_URL = 'https://script.google.com/macros/s/AKfycbyoPJnTzenD0Af8Fg0F7xUA2UW9-gIKepeGiG2ouQ0MGBSq8k7_ZFDXjwKV3TbIAbpEWA/exec';
+const GAS_URL = 'https://script.google.com/macros/s/AKfycbwyXsAuU2Zyrcuf-FChZRx-TqLZPn9smRv2E1hBhOqsZuSuUCk7yaO4w-kwRITIC6PvfQ/exec';
 const SHEET_TYPE = 'element'; // '元素記号' template
 
 async function getRankings(mode) {
@@ -456,7 +456,7 @@ async function saveScoreToGas(mode, name, score, typeOverride = null) {
 
     try {
         const type = typeOverride || SHEET_TYPE;
-        const url = `${GAS_URL}?type=${encodeURIComponent(type)}&action=save&gameMode=${encodeURIComponent(mode)}&name=${encodeURIComponent(name)}&score=${score}`;
+        const url = `${GAS_URL}?type=${encodeURIComponent(type)}&action=save&gameMode=${encodeURIComponent(mode)}&name=${encodeURIComponent(name)}&score=${score}&t=${Date.now()}`;
         console.log("Saving to GAS:", url);
         await fetch(url, { mode: 'no-cors' });
         if (statusEl) {
