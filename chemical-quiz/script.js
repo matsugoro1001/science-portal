@@ -402,6 +402,9 @@ function endGame() {
         // Show Test Name at the top
         document.querySelector('#certificate-screen h2').textContent = "化学式テスト";
 
+        // Save Result to GAS
+        saveScoreToGas('test', testName, testScore, '化学式テスト');
+
         // Hide Ranking stuff for Test Mode
         document.getElementById('new-record-form').classList.add('hidden');
         document.getElementById('ranking-section').classList.add('hidden');

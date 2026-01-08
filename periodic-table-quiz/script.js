@@ -400,6 +400,9 @@ function endGame() {
         // Show Test Name at the top
         document.querySelector('#certificate-screen h2').textContent = "元素記号テスト";
 
+        // Save Result to GAS
+        saveScoreToGas('test', testName, testScore, '元素記号テスト');
+
         // Hide Ranking stuff for Test Mode
         document.getElementById('new-record-form').classList.add('hidden');
         document.getElementById('ranking-section').classList.add('hidden');
