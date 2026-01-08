@@ -405,7 +405,7 @@ function endGame() {
         }
 
         // Auto-save Test Result
-        saveScoreToGas('test', testName, testScore, 'ion_test');
+        saveScoreToGas('test', testName, testScore, 'イオン式テスト');
 
         document.getElementById('new-record-form').classList.add('hidden');
         document.querySelectorAll('.ranking-container').forEach(el => el.classList.add('hidden'));

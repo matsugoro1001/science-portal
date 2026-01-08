@@ -400,7 +400,7 @@ function endGame() {
         }
 
         // Auto-save Test Result
-        saveScoreToGas('test', testName, testScore, 'chemical_test');
+        saveScoreToGas('test', testName, testScore, '化学式テスト');
 
         // Hide Ranking stuff for Test Mode
         document.getElementById('new-record-form').classList.add('hidden');

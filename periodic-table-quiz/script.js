@@ -398,7 +398,7 @@ function endGame() {
         }
 
         // Auto-save Test Result
-        saveScoreToGas('test', testName, testScore, 'element_test');
+        saveScoreToGas('test', testName, testScore, '元素記号テスト');
 
         // Hide Ranking stuff for Test Mode
         document.getElementById('new-record-form').classList.add('hidden');
