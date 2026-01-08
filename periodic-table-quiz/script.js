@@ -397,19 +397,22 @@ function endGame() {
             passFailEl.className = "fail-text";
         }
 
-        // Auto-save Test Result
-        saveScoreToGas('test', testName, testScore, '元素記号テスト');
+        // Show Test Name at the top
+        document.querySelector('#certificate-screen h2').textContent = "元素記号テスト";
 
         // Hide Ranking stuff for Test Mode
         document.getElementById('new-record-form').classList.add('hidden');
-        document.querySelectorAll('.ranking-container').forEach(el => el.classList.add('hidden'));
+        document.getElementById('ranking-section').classList.add('hidden');
+        // Optional: Hide history too if desired, usage:
+        // document.querySelector('.history-section').classList.add('hidden');
 
     } else {
         // Normal Mode End
+        document.querySelector('#certificate-screen h2').textContent = "CERTIFICATE";
         document.getElementById('test-result-details').classList.add('hidden');
         document.getElementById('final-time').style.display = 'block';
         document.querySelector('#certificate-screen p').style.display = 'block';
-        document.querySelectorAll('.ranking-container').forEach(el => el.classList.remove('hidden'));
+        document.getElementById('ranking-section').classList.remove('hidden');
 
         const finalTime = currentMode === 'choice' ? timerEl.textContent : matchTimerEl.textContent;
         finalTimeEl.textContent = finalTime;
