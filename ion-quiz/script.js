@@ -589,7 +589,7 @@ window.skipTestQuestion = () => {
 
 // --- Ranking System ---
 // --- Ranking System (Google Sheets) ---
-const GAS_URL = 'https://script.google.com/macros/s/AKfycbxlO5RanxYM-eqQhBSkkQBNjmils2LLJ6UmyX7pVlAcSvly-5oePfK0xrFciVrq3Vro7g/exec';
+const GAS_URL = 'https://script.google.com/macros/s/AKfycbwB46vb88VLTrHOV08ow8lrhhM3B4EVHbPZOHri_G5bRDRg_BIKoc-FQjzRBjzeyII2Xg/exec';
 const SHEET_TYPE = 'ion'; // 'イオン式' template
 
 async function getRankings(mode) {
