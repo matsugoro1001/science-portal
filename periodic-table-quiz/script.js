@@ -475,15 +475,20 @@ async function saveScoreToGas(mode, name, score, typeOverride = null) {
 
 // --- DEBUG: Auto Test Sending ---
 window.debugSendTest = async function () {
+    alert("テスト開始！(Test Started)"); // Visual confirmation
     const statusEl = document.getElementById('debug-status');
     if (statusEl) statusEl.textContent = "DEBUG: テストデータを送信中...";
+
     // using 'test' mode and a dummy score
-    await saveScoreToGas('test', 'DEBUG_USER', 999);
-    if (statusEl) {
-        // saveScoreToGas updates 'save-status', but we might want to update our local debug status too if needed
-        // mainly relying on saveScoreToGas's side effect or we can duplicate the message
-        const urlSuffix = GAS_URL.slice(-6);
-        statusEl.textContent = `完了 (Sent to ...${urlSuffix})`;
+    try {
+        await saveScoreToGas('test', 'DEBUG_USER', 999);
+        if (statusEl) {
+            const urlSuffix = GAS_URL.slice(-6);
+            statusEl.textContent = `完了 (Sent to ...${urlSuffix})`;
+        }
+    } catch (e) {
+        alert("Error: " + e.message);
+        if (statusEl) statusEl.textContent = "Error: " + e.message;
     }
 };
 
