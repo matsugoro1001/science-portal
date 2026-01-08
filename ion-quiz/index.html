@@ -112,70 +112,68 @@
         <div id="certificate-screen" class="screen hidden">
             <div class="certificate">
                 <div class="certificate-border">
-                    <div class="certificate-border">
-                        <h2>CERTIFICATE</h2>
-                        <p class="cert-subtitle">of Achievement</p>
+                    <h2>CERTIFICATE</h2>
+                    <p class="cert-subtitle">of Achievement</p>
 
-                        <div class="cert-divider"></div>
+                    <div class="cert-divider"></div>
 
-                        <p class="cert-text">This certifies that you have completed the quiz in:</p>
-                        <div class="final-time" id="final-time">00.00</div>
-                        <p class="cert-text">seconds</p>
+                    <p class="cert-text">This certifies that you have completed the quiz in:</p>
+                    <div class="final-time" id="final-time">00.00</div>
+                    <p class="cert-text">seconds</p>
 
-                        <div id="test-result-details" class="hidden">
-                            <h3 id="test-pass-fail">合格 / 不合格</h3>
-                            <p>Score: <span id="test-score-display">0</span> / 18</p>
-                        </div>
+                    <div id="test-result-details" class="hidden">
+                        <h3 id="test-pass-fail">合格 / 不合格</h3>
+                        <p>Score: <span id="test-score-display">0</span> / 18</p>
+                    </div>
 
-                        <div class="cert-stamp">PASSED</div>
+                    <div class="cert-stamp">PASSED</div>
 
-                        <!-- Ranking Section -->
-                        <div class="ranking-flex-container"
-                            style="display: flex; gap: 20px; justify-content: center; flex-wrap: wrap;">
-                            <div class="ranking-section" id="ranking-section">
-                                <div id="new-record-form" class="hidden">
-                                    <p class="new-record-msg">🎉 New Record! 🎉</p>
-                                    <div class="input-group">
-                                        <input type="text" id="player-name" placeholder="Enter Name" maxlength="10">
-                                        <button class="btn primary small" onclick="submitScore()">Save</button>
-                                    </div>
-                                </div>
-
-                                <div class="ranking-display">
-                                    <h3>🏆 Global Ranking (Top 10)</h3>
-                                    <table class="ranking-table">
-                                        <thead>
-                                            <tr>
-                                                <th>Rank</th>
-                                                <th>Name</th>
-                                                <th>Time</th>
-                                                <th>Date</th>
-                                            </tr>
-                                        </thead>
-                                        <tbody id="ranking-list">
-                                            <!-- Rankings injected here -->
-                                        </tbody>
-                                    </table>
+                    <!-- Ranking Section -->
+                    <div class="ranking-flex-container"
+                        style="display: flex; gap: 20px; justify-content: center; flex-wrap: wrap;">
+                        <div class="ranking-section" id="ranking-section">
+                            <div id="new-record-form" class="hidden">
+                                <p class="new-record-msg">🎉 New Record! 🎉</p>
+                                <div class="input-group">
+                                    <input type="text" id="player-name" placeholder="Enter Name" maxlength="10">
+                                    <button class="btn primary small" onclick="submitScore()">Save</button>
                                 </div>
                             </div>
 
-                            <!-- Local History Section -->
-                            <div class="history-section" style="flex: 1; min-width: 300px; max-width: 400px;">
-                                <h3>📅 My History (Last 5)</h3>
-                                <div class="ranking-display">
-                                    <table class="ranking-table">
-                                        <thead>
-                                            <tr>
-                                                <th>Run</th>
-                                                <th>Time</th>
-                                                <th>Date</th>
-                                            </tr>
-                                        </thead>
-                                        <tbody id="history-list">
-                                            <!-- History injected here -->
-                                        </tbody>
-                                    </table>
-                                </div>
+                            <div class="ranking-display">
+                                <h3>🏆 Global Ranking (Top 10)</h3>
+                                <table class="ranking-table">
+                                    <thead>
+                                        <tr>
+                                            <th>Rank</th>
+                                            <th>Name</th>
+                                            <th>Time</th>
+                                            <th>Date</th>
+                                        </tr>
+                                    </thead>
+                                    <tbody id="ranking-list">
+                                        <!-- Rankings injected here -->
+                                    </tbody>
+                                </table>
+                            </div>
+                        </div>
+
+                        <!-- Local History Section -->
+                        <div class="history-section" style="flex: 1; min-width: 300px; max-width: 400px;">
+                            <h3>📅 My History (Last 5)</h3>
+                            <div class="ranking-display">
+                                <table class="ranking-table">
+                                    <thead>
+                                        <tr>
+                                            <th>Run</th>
+                                            <th>Time</th>
+                                            <th>Date</th>
+                                        </tr>
+                                    </thead>
+                                    <tbody id="history-list">
+                                        <!-- History injected here -->
+                                    </tbody>
+                                </table>
                             </div>
                         </div>
                     </div>
