@@ -615,8 +615,7 @@ async function saveScoreToGas(mode, name, score, typeOverride = null) {
         console.log("Saving to GAS:", url);
         await fetch(url, { mode: 'no-cors' });
         if (statusEl) {
-            const urlSuffix = GAS_URL.slice(-6);
-            statusEl.textContent = `データ送信完了 (Data Sent to ...${urlSuffix})`;
+            statusEl.textContent = "データ送信完了 (Data Sent)";
             statusEl.style.color = "green";
         }
     } catch (e) {

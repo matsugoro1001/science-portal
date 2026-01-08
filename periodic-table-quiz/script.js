@@ -460,8 +460,7 @@ async function saveScoreToGas(mode, name, score, typeOverride = null) {
         console.log("Saving to GAS:", url);
         await fetch(url, { mode: 'no-cors' });
         if (statusEl) {
-            const urlSuffix = GAS_URL.slice(-6);
-            statusEl.textContent = `データ送信完了 (Data Sent to ...${urlSuffix})`;
+            statusEl.textContent = "データ送信完了 (Data Sent)";
             statusEl.style.color = "green";
         }
     } catch (e) {
@@ -472,25 +471,6 @@ async function saveScoreToGas(mode, name, score, typeOverride = null) {
         }
     }
 }
-
-// --- DEBUG: Auto Test Sending ---
-window.debugSendTest = async function () {
-    alert("テスト開始！(Test Started)"); // Visual confirmation
-    const statusEl = document.getElementById('debug-status');
-    if (statusEl) statusEl.textContent = "DEBUG: テストデータを送信中...";
-
-    // using 'test' mode and a dummy score
-    try {
-        await saveScoreToGas('test', 'DEBUG_USER', 999);
-        if (statusEl) {
-            const urlSuffix = GAS_URL.slice(-6);
-            statusEl.textContent = `完了 (Sent to ...${urlSuffix})`;
-        }
-    } catch (e) {
-        alert("Error: " + e.message);
-        if (statusEl) statusEl.textContent = "Error: " + e.message;
-    }
-};
 
 async function checkRanking(score) {
     const newRecordForm = document.getElementById('new-record-form');

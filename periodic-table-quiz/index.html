@@ -10,7 +10,7 @@
     <link
         href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;800&family=Noto+Sans+JP:wght@400;700&family=Noto+Sans+SC:wght@400;700&display=swap"
         rel="stylesheet">
-    <link rel="stylesheet" href="style.css?v=fix23">
+    <link rel="stylesheet" href="style.css?v=fix24">
 </head>
 
 <body>
@@ -46,152 +46,145 @@
                 </div>
             </div>
 
-            <!-- DEBUG BUTTON -->
-            <div style="margin-top: 20px; text-align: center; border-top: 1px solid #333; padding-top: 10px;">
-                <button class="btn" style="background: #444; color: #ccc; font-size: 0.8rem; padding: 5px 10px;"
-                    onclick="debugSendTest()">
-                    🛠 接続テスト (いきなり送信)
-                </button>
-                <div id="debug-status" style="margin-top: 5px; font-size: 0.8rem; color: #aaa; min-height: 20px;"></div>
-                <!-- REMOVED duplicate save-status to prevent conflict -->
+        </div>
+    </div>
+    </div>
+
+    <!-- Name Input Modal -->
+    <div id="name-input-modal" class="modal-overlay hidden">
+        <div class="modal-content">
+            <h2>名前を入力してください</h2>
+            <input type="text" id="test-player-name" placeholder="名前" maxlength="10">
+            <div class="modal-buttons">
+                <button class="btn secondary" onclick="closeNameInput()">キャンセル</button>
+                <button class="btn primary" onclick="confirmTestStart()">スタート</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Quiz Screen (Choice Mode) -->
+    <div id="quiz-screen" class="screen hidden">
+        <div class="header">
+            <div class="timer-container" id="timer-container">
+                <div class="timer">Time: <span id="timer">00.00</span></div>
+                <div class="penalty-indicator" id="penalty-indicator">+10s</div>
+            </div>
+            <div class="question-counter">Question: <span id="question-count">1</span> / 20</div>
+        </div>
+
+        <div class="question-card">
+            <div class="question-label" id="question-label">Symbol for:</div>
+            <div class="question-content" id="question-content">H</div>
+        </div>
+
+        <div id="test-input-area" class="input-area hidden">
+            <input type="text" id="answer-input" placeholder="元素記号を入力 (例: H)" autocomplete="off">
+            <button class="btn-submit" onclick="submitTestAnswer()">回答</button>
+
+            <!-- Helper Buttons -->
+            <div class="helper-buttons">
+                <!-- For Periodic Table, usually simple letters, but just in case -->
             </div>
         </div>
 
-        <!-- Name Input Modal -->
-        <div id="name-input-modal" class="modal-overlay hidden">
-            <div class="modal-content">
-                <h2>名前を入力してください</h2>
-                <input type="text" id="test-player-name" placeholder="名前" maxlength="10">
-                <div class="modal-buttons">
-                    <button class="btn secondary" onclick="closeNameInput()">キャンセル</button>
-                    <button class="btn primary" onclick="confirmTestStart()">スタート</button>
-                </div>
-            </div>
+        <div class="options-grid" id="options-grid">
+            <!-- Options will be injected here -->
         </div>
+    </div>
 
-        <!-- Quiz Screen (Choice Mode) -->
-        <div id="quiz-screen" class="screen hidden">
-            <div class="header">
-                <div class="timer-container" id="timer-container">
-                    <div class="timer">Time: <span id="timer">00.00</span></div>
-                    <div class="penalty-indicator" id="penalty-indicator">+10s</div>
-                </div>
-                <div class="question-counter">Question: <span id="question-count">1</span> / 20</div>
+    <!-- Matching Screen -->
+    <div id="matching-screen" class="screen hidden">
+        <div class="header">
+            <div class="timer-container">
+                <div class="timer">Time: <span id="match-timer">00.00</span></div>
+                <div class="penalty-indicator" id="match-penalty-indicator">+10s</div>
             </div>
-
-            <div class="question-card">
-                <div class="question-label" id="question-label">Symbol for:</div>
-                <div class="question-content" id="question-content">H</div>
-            </div>
-
-            <div id="test-input-area" class="input-area hidden">
-                <input type="text" id="answer-input" placeholder="元素記号を入力 (例: H)" autocomplete="off">
-                <button class="btn-submit" onclick="submitTestAnswer()">回答</button>
-
-                <!-- Helper Buttons -->
-                <div class="helper-buttons">
-                    <!-- For Periodic Table, usually simple letters, but just in case -->
-                </div>
-            </div>
-
-            <div class="options-grid" id="options-grid">
-                <!-- Options will be injected here -->
-            </div>
+            <div class="question-counter">Pairs: <span id="matched-count">0</span></div>
         </div>
-
-        <!-- Matching Screen -->
-        <div id="matching-screen" class="screen hidden">
-            <div class="header">
-                <div class="timer-container">
-                    <div class="timer">Time: <span id="match-timer">00.00</span></div>
-                    <div class="penalty-indicator" id="match-penalty-indicator">+10s</div>
-                </div>
-                <div class="question-counter">Pairs: <span id="matched-count">0</span></div>
-            </div>
-            <div class="matching-grid" id="matching-grid">
-                <!-- Cards injected here -->
-            </div>
+        <div class="matching-grid" id="matching-grid">
+            <!-- Cards injected here -->
         </div>
+    </div>
 
-        <!-- Certificate Screen -->
-        <div id="certificate-screen" class="screen hidden">
-            <div class="certificate">
-                <div class="certificate-border">
-                    <h2>CERTIFICATE</h2>
-                    <p class="cert-subtitle">of Achievement</p>
+    <!-- Certificate Screen -->
+    <div id="certificate-screen" class="screen hidden">
+        <div class="certificate">
+            <div class="certificate-border">
+                <h2>CERTIFICATE</h2>
+                <p class="cert-subtitle">of Achievement</p>
 
-                    <div class="cert-divider"></div>
+                <div class="cert-divider"></div>
 
-                    <p class="cert-text">This certifies that you have completed the quiz in:</p>
-                    <div class="final-time" id="final-time">00.00</div>
-                    <p class="cert-text">seconds</p>
+                <p class="cert-text">This certifies that you have completed the quiz in:</p>
+                <div class="final-time" id="final-time">00.00</div>
+                <p class="cert-text">seconds</p>
 
-                    <div id="test-result-details" class="hidden">
-                        <h3 id="test-pass-fail">合格 / 不合格</h3>
-                        <div id="save-status" style="font-size: 0.9rem; color: #888; margin-bottom: 5px;"></div>
-                        <p>Score: <span id="test-score-display">0</span> / 25</p>
-                    </div>
+                <div id="test-result-details" class="hidden">
+                    <h3 id="test-pass-fail">合格 / 不合格</h3>
+                    <div id="save-status" style="font-size: 0.9rem; color: #888; margin-bottom: 5px;"></div>
+                    <p>Score: <span id="test-score-display">0</span> / 25</p>
+                </div>
 
-                    <div class="cert-stamp">PASSED</div>
+                <div class="cert-stamp">PASSED</div>
 
-                    <!-- Ranking Section -->
-                    <div class="ranking-flex-container"
-                        style="display: flex; gap: 20px; justify-content: center; flex-wrap: wrap;">
-                        <div class="ranking-section" id="ranking-section">
-                            <div id="new-record-form" class="hidden">
-                                <p class="new-record-msg">🎉 New Record! 🎉</p>
-                                <div class="input-group">
-                                    <input type="text" id="player-name" placeholder="Enter Name" maxlength="10">
-                                    <button class="btn primary small" onclick="submitScore()">Save</button>
-                                </div>
-                            </div>
-
-                            <div class="ranking-display">
-                                <h3>🏆 Global Ranking (Top 10)</h3>
-                                <table class="ranking-table">
-                                    <thead>
-                                        <tr>
-                                            <th>Rank</th>
-                                            <th>Name</th>
-                                            <th>Time</th>
-                                            <th>Date</th>
-                                        </tr>
-                                    </thead>
-                                    <tbody id="ranking-list">
-                                        <!-- Rankings injected here -->
-                                    </tbody>
-                                </table>
+                <!-- Ranking Section -->
+                <div class="ranking-flex-container"
+                    style="display: flex; gap: 20px; justify-content: center; flex-wrap: wrap;">
+                    <div class="ranking-section" id="ranking-section">
+                        <div id="new-record-form" class="hidden">
+                            <p class="new-record-msg">🎉 New Record! 🎉</p>
+                            <div class="input-group">
+                                <input type="text" id="player-name" placeholder="Enter Name" maxlength="10">
+                                <button class="btn primary small" onclick="submitScore()">Save</button>
                             </div>
                         </div>
 
-                        <!-- Local History Section -->
-                        <div class="history-section" style="flex: 1; min-width: 300px; max-width: 400px;">
-                            <h3>📅 My History (Last 5)</h3>
-                            <div class="ranking-display">
-                                <table class="ranking-table">
-                                    <thead>
-                                        <tr>
-                                            <th>Run</th>
-                                            <th>Time</th>
-                                            <th>Date</th>
-                                        </tr>
-                                    </thead>
-                                    <tbody id="history-list">
-                                        <!-- History injected here -->
-                                    </tbody>
-                                </table>
-                            </div>
+                        <div class="ranking-display">
+                            <h3>🏆 Global Ranking (Top 10)</h3>
+                            <table class="ranking-table">
+                                <thead>
+                                    <tr>
+                                        <th>Rank</th>
+                                        <th>Name</th>
+                                        <th>Time</th>
+                                        <th>Date</th>
+                                    </tr>
+                                </thead>
+                                <tbody id="ranking-list">
+                                    <!-- Rankings injected here -->
+                                </tbody>
+                            </table>
+                        </div>
+                    </div>
+
+                    <!-- Local History Section -->
+                    <div class="history-section" style="flex: 1; min-width: 300px; max-width: 400px;">
+                        <h3>📅 My History (Last 5)</h3>
+                        <div class="ranking-display">
+                            <table class="ranking-table">
+                                <thead>
+                                    <tr>
+                                        <th>Run</th>
+                                        <th>Time</th>
+                                        <th>Date</th>
+                                    </tr>
+                                </thead>
+                                <tbody id="history-list">
+                                    <!-- History injected here -->
+                                </tbody>
+                            </table>
                         </div>
                     </div>
                 </div>
             </div>
-            <button class="btn primary" onclick="resetGame()">Play Again</button>
         </div>
+        <button class="btn primary" onclick="resetGame()">Play Again</button>
     </div>
-    <div style="position: fixed; bottom: 5px; right: 5px; opacity: 0.5; font-size: 0.8rem; color: #aaa;">Ver: fix23
     </div>
-    <script src="data.js?v=fix23"></script>
-    <script src="script.js?v=fix23"></script>
+    <div style="position: fixed; bottom: 5px; right: 5px; opacity: 0.5; font-size: 0.8rem; color: #aaa;">Ver: fix24
+    </div>
+    <script src="data.js?v=fix24"></script>
+    <script src="script.js?v=fix24"></script>
 </body>
 
 </html>
