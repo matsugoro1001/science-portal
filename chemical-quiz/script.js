@@ -99,6 +99,10 @@ window.startGame = (mode) => {
         document.getElementById('test-input-area').classList.add('hidden');
         document.getElementById('options-grid').classList.remove('hidden');
 
+        // Hide test info
+        const testInfo = document.getElementById('test-info');
+        if (testInfo) testInfo.style.display = 'none';
+
         setTimeout(() => quizScreen.classList.add('active'), 50);
         initQuestionPool(TOTAL_QUESTIONS_CHOICE);
         nextQuestion();
@@ -114,6 +118,10 @@ window.startGame = (mode) => {
         document.getElementById('timer-container').style.visibility = 'hidden';
         document.getElementById('test-input-area').classList.remove('hidden');
         document.getElementById('options-grid').classList.add('hidden');
+
+        // Show test info
+        const testInfo = document.getElementById('test-info');
+        if (testInfo) testInfo.style.display = 'block';
 
         setTimeout(() => quizScreen.classList.add('active'), 50);
         initTestQuestionPool();

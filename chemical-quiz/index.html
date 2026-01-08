@@ -10,7 +10,7 @@
     <link
         href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;800&family=Noto+Sans+JP:wght@400;700&family=Noto+Sans+SC:wght@400;700&display=swap"
         rel="stylesheet">
-    <link rel="stylesheet" href="style.css?v=fix11">
+    <link rel="stylesheet" href="style.css?v=fix13">
 </head>
 
 <body>
@@ -67,6 +67,10 @@
                     <div class="penalty-indicator" id="penalty-indicator">+10s</div>
                 </div>
                 <div class="question-counter">Question: <span id="question-count">1</span> / 20</div>
+                <div class="test-info" id="test-info"
+                    style="display: none; font-size: 0.9rem; opacity: 0.8; margin-top: 5px; text-align: right;">
+                    合格点: 32点
+                </div>
             </div>
 
             <div class="question-card">
@@ -186,8 +190,8 @@
             <button class="btn primary" onclick="resetGame()">Play Again</button>
         </div>
     </div>
-    <script src="data.js?v=fix11"></script>
-    <script src="script.js?v=fix11"></script>
+    <script src="data.js?v=fix13"></script>
+    <script src="script.js?v=fix13"></script>
 </body>
 
 </html>
