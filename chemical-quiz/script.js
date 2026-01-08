@@ -79,18 +79,35 @@ window.startGame = (mode) => {
 
     // Start Timer
     if (timerInterval) clearInterval(timerInterval);
+
+    // Timer is needed for Choice/Matching, but maybe not visible for Test
     timerInterval = setInterval(updateTimer, 50);
 
     if (mode === 'choice') {
         quizScreen.classList.remove('hidden');
+        document.getElementById('timer-container').style.visibility = 'visible';
+        document.getElementById('test-input-area').classList.add('hidden');
+        document.getElementById('options-grid').classList.remove('hidden');
+
         setTimeout(() => quizScreen.classList.add('active'), 50);
         initQuestionPool(TOTAL_QUESTIONS_CHOICE);
         nextQuestion();
-    } else {
+    } else if (mode === 'matching') {
         matchingScreen.classList.remove('hidden');
         setTimeout(() => matchingScreen.classList.add('active'), 50);
         matchingRound = 1;
         initMatchingGame();
+    } else if (mode === 'test') {
+        // Init Test Mode
+        testScore = 0;
+        quizScreen.classList.remove('hidden');
+        document.getElementById('timer-container').style.visibility = 'hidden';
+        document.getElementById('test-input-area').classList.remove('hidden');
+        document.getElementById('options-grid').classList.add('hidden');
+
+        setTimeout(() => quizScreen.classList.add('active'), 50);
+        initTestQuestionPool();
+        nextTestQuestion();
     }
 };
 
@@ -345,22 +362,168 @@ function showPenalty(el) {
 
 function endGame() {
     clearInterval(timerInterval);
-    const finalTime = currentMode === 'choice' ? timerEl.textContent : matchTimerEl.textContent;
-    finalTimeEl.textContent = finalTime;
 
-    quizScreen.classList.add('hidden');
-    quizScreen.classList.remove('active');
-    matchingScreen.classList.add('hidden');
-    matchingScreen.classList.remove('active');
+    if (currentMode === 'test') {
+        // Test Mode End
+        quizScreen.classList.add('hidden');
+        quizScreen.classList.remove('active');
 
-    certificateScreen.classList.remove('hidden');
-    setTimeout(() => certificateScreen.classList.add('active'), 50);
+        certificateScreen.classList.remove('hidden');
+        setTimeout(() => certificateScreen.classList.add('active'), 50);
 
-    // Save Local History
-    saveLocalHistory(parseFloat(finalTime), currentMode);
+        // Hide Time Display, Show Score
+        document.getElementById('final-time').style.display = 'none';
+        document.querySelector('#certificate-screen p').style.display = 'none'; // 'Seconds' label
 
-    checkRanking(parseFloat(finalTime));
+        const resultDiv = document.getElementById('test-result-details');
+        resultDiv.classList.remove('hidden');
+
+        document.getElementById('test-score-display').textContent = testScore;
+        const passFailEl = document.getElementById('test-pass-fail');
+
+        if (testScore >= PASSING_SCORE) {
+            passFailEl.textContent = "合格！ (PASS)";
+            passFailEl.className = "pass-text";
+        } else {
+            passFailEl.textContent = "不合格 (FAIL)";
+            passFailEl.className = "fail-text";
+        }
+
+        // Hide Ranking stuff for Test Mode
+        document.getElementById('new-record-form').classList.add('hidden');
+        document.querySelectorAll('.ranking-container').forEach(el => el.classList.add('hidden'));
+
+    } else {
+        // Normal Mode End
+        document.getElementById('test-result-details').classList.add('hidden');
+        document.getElementById('final-time').style.display = 'block';
+        document.querySelector('#certificate-screen p').style.display = 'block';
+        document.querySelectorAll('.ranking-container').forEach(el => el.classList.remove('hidden'));
+
+        const finalTime = currentMode === 'choice' ? timerEl.textContent : matchTimerEl.textContent;
+        finalTimeEl.textContent = finalTime;
+
+        quizScreen.classList.add('hidden');
+        quizScreen.classList.remove('active');
+        matchingScreen.classList.add('hidden');
+        matchingScreen.classList.remove('active');
+
+        certificateScreen.classList.remove('hidden');
+        setTimeout(() => certificateScreen.classList.add('active'), 50);
+
+        saveLocalHistory(parseFloat(finalTime), currentMode);
+        checkRanking(parseFloat(finalTime));
+    }
 }
+
+// --- Test Mode Logic ---
+
+let testName = "";
+let testScore = 0;
+const PASSING_SCORE = 32;
+const TEST_QUESTION_COUNT = 40;
+
+window.startTestModeSetup = () => {
+    document.getElementById('name-input-modal').classList.remove('hidden');
+    document.getElementById('test-player-name').focus();
+};
+
+window.closeNameInput = () => {
+    document.getElementById('name-input-modal').classList.add('hidden');
+};
+
+window.confirmTestStart = () => {
+    const nameInput = document.getElementById('test-player-name');
+    if (!nameInput.value.trim()) {
+        alert("名前を入力してください");
+        return;
+    }
+    testName = nameInput.value.trim();
+    closeNameInput();
+    startGame('test');
+};
+
+// Helper for inserting characters
+window.insertChar = (char) => {
+    const input = document.getElementById('answer-input');
+    const start = input.selectionStart;
+    const end = input.selectionEnd;
+    const text = input.value;
+    input.value = text.substring(0, start) + char + text.substring(end);
+    input.focus();
+    input.selectionStart = input.selectionEnd = start + 1;
+};
+
+function initTestQuestionPool() {
+    // Chemical Quiz has 40 questions req.
+    const shuffled = [...elements].sort(() => Math.random() - 0.5);
+    questionPool = shuffled.slice(0, TEST_QUESTION_COUNT);
+}
+
+function nextTestQuestion() {
+    isAnswering = true;
+
+    if (questionPool.length === 0) {
+        endGame();
+        return;
+    }
+
+    questionCountEl.textContent = `${questionsAnswered + 1} / ${TEST_QUESTION_COUNT}`;
+
+    const correctElement = questionPool.pop();
+
+    // FORCE Type: 1 (Name -> Symbol/Formula)
+    currentQuestion = {
+        element: correctElement,
+        type: 1
+    };
+
+    // UI Setup
+    questionLabel.textContent = currentLanguage === 'JP' ? '化学式は？' : '化学式是什么？';
+    questionContent.textContent = currentLanguage === 'JP' ? correctElement.nameJP : correctElement.nameCN;
+
+    // Clear Input
+    const input = document.getElementById('answer-input');
+    input.value = '';
+    input.focus();
+}
+
+window.submitTestAnswer = () => {
+    if (!isAnswering) return;
+
+    const input = document.getElementById('answer-input');
+    const userVal = input.value.trim();
+
+    // Correct Element Symbol usually contains subscripts like H₂O
+    // The user input should match this exactly.
+    const correctVal = currentQuestion.element.symbol;
+
+    if (!userVal) return;
+
+    const isCorrect = userVal === correctVal;
+
+    if (isCorrect) {
+        testScore++;
+        input.style.borderColor = "#22c55e";
+        input.style.backgroundColor = "#dcfce7";
+    } else {
+        input.style.borderColor = "#ef4444";
+        input.style.backgroundColor = "#fee2e2";
+    }
+
+    isAnswering = false;
+    questionsAnswered++;
+
+    setTimeout(() => {
+        input.style.borderColor = "#ddd";
+        input.style.backgroundColor = "white";
+        nextTestQuestion();
+    }, 1000);
+};
+
+document.getElementById('answer-input').addEventListener('keydown', (e) => {
+    if (e.key === 'Enter') window.submitTestAnswer();
+});
 
 // --- Ranking System ---
 // --- Ranking System (Google Sheets) ---

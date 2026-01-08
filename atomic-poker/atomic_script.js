@@ -833,8 +833,8 @@ function restartGameHost() {
 
 async function submitScoreToGas(name, score) {
     console.log(`Submitting score for ${name}: ${score}`);
-    const url = `${GAS_URL}?type=原子ポーカー&action=save&gameMode=multi&name=${encodeURIComponent(name)}&score=${score}`;
-    fetch(url).then(res => res.json()).then(data => console.log(data)).catch(e => console.error(e));
+// fetch(url).then(res => res.json()).then(data => console.log(data)).catch(e => console.error(e));
+    console.log("Data logging disabled per user request.");
 }
 
 // Alias for HTML button

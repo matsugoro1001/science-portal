@@ -83,14 +83,29 @@ window.startGame = (mode) => {
 
     if (mode === 'choice') {
         quizScreen.classList.remove('hidden');
+        document.getElementById('timer-container').style.visibility = 'visible';
+        document.getElementById('test-input-area').classList.add('hidden');
+        document.getElementById('options-grid').classList.remove('hidden');
+
         setTimeout(() => quizScreen.classList.add('active'), 50);
         initQuestionPool(TOTAL_QUESTIONS_CHOICE);
         nextQuestion();
-    } else {
+    } else if (mode === 'matching') {
         matchingScreen.classList.remove('hidden');
         setTimeout(() => matchingScreen.classList.add('active'), 50);
         matchingRound = 1;
         initMatchingGame();
+    } else if (mode === 'test') {
+        // Init Test Mode
+        testScore = 0;
+        quizScreen.classList.remove('hidden');
+        document.getElementById('timer-container').style.visibility = 'hidden'; // Hide timer
+        document.getElementById('test-input-area').classList.remove('hidden');
+        document.getElementById('options-grid').classList.add('hidden');
+
+        setTimeout(() => quizScreen.classList.add('active'), 50);
+        initTestQuestionPool();
+        nextTestQuestion();
     }
 };
 
@@ -351,22 +366,174 @@ function showPenalty(el) {
 
 function endGame() {
     clearInterval(timerInterval);
-    const finalTime = currentMode === 'choice' ? timerEl.textContent : matchTimerEl.textContent;
-    finalTimeEl.textContent = finalTime;
 
-    quizScreen.classList.add('hidden');
-    quizScreen.classList.remove('active');
-    matchingScreen.classList.add('hidden');
-    matchingScreen.classList.remove('active');
+    if (currentMode === 'test') {
+        quizScreen.classList.add('hidden');
+        quizScreen.classList.remove('active');
 
-    certificateScreen.classList.remove('hidden');
-    setTimeout(() => certificateScreen.classList.add('active'), 50);
+        certificateScreen.classList.remove('hidden');
+        setTimeout(() => certificateScreen.classList.add('active'), 50);
 
-    // Save Local History
-    saveLocalHistory(parseFloat(finalTime), currentMode);
+        // Hide Time Display, Show Score
+        document.getElementById('final-time').style.display = 'none';
+        document.querySelector('#certificate-screen p').style.display = 'none';
 
-    checkRanking(parseFloat(finalTime));
+        const resultDiv = document.getElementById('test-result-details');
+        resultDiv.classList.remove('hidden');
+
+        document.getElementById('test-score-display').textContent = testScore;
+        const passFailEl = document.getElementById('test-pass-fail');
+
+        if (testScore >= PASSING_SCORE) {
+            passFailEl.textContent = "合格！ (PASS)";
+            passFailEl.className = "pass-text";
+        } else {
+            passFailEl.textContent = "不合格 (FAIL)";
+            passFailEl.className = "fail-text";
+        }
+
+        document.getElementById('new-record-form').classList.add('hidden');
+        document.querySelectorAll('.ranking-container').forEach(el => el.classList.add('hidden'));
+
+    } else {
+        // Normal
+        document.getElementById('test-result-details').classList.add('hidden');
+        document.getElementById('final-time').style.display = 'block';
+        document.querySelector('#certificate-screen p').style.display = 'block';
+        document.querySelectorAll('.ranking-container').forEach(el => el.classList.remove('hidden'));
+
+        const finalTime = currentMode === 'choice' ? timerEl.textContent : matchTimerEl.textContent;
+        finalTimeEl.textContent = finalTime;
+
+        quizScreen.classList.add('hidden');
+        quizScreen.classList.remove('active');
+        matchingScreen.classList.add('hidden');
+        matchingScreen.classList.remove('active');
+
+        certificateScreen.classList.remove('hidden');
+        setTimeout(() => certificateScreen.classList.add('active'), 50);
+
+        saveLocalHistory(parseFloat(finalTime), currentMode);
+        checkRanking(parseFloat(finalTime));
+    }
 }
+
+// --- Test Mode Logic ---
+
+let testName = "";
+let testScore = 0;
+const PASSING_SCORE = 18;
+const TEST_QUESTION_COUNT = 18;
+
+window.startTestModeSetup = () => {
+    document.getElementById('name-input-modal').classList.remove('hidden');
+    document.getElementById('test-player-name').focus();
+};
+
+window.closeNameInput = () => {
+    document.getElementById('name-input-modal').classList.add('hidden');
+};
+
+window.confirmTestStart = () => {
+    const nameInput = document.getElementById('test-player-name');
+    if (!nameInput.value.trim()) {
+        alert("名前を入力してください");
+        return;
+    }
+    testName = nameInput.value.trim();
+    closeNameInput();
+    startGame('test');
+};
+
+// Helper for inserting characters
+window.insertChar = (char) => {
+    const input = document.getElementById('answer-input');
+    const start = input.selectionStart;
+    const end = input.selectionEnd;
+    const text = input.value;
+    input.value = text.substring(0, start) + char + text.substring(end);
+    input.focus();
+    input.selectionStart = input.selectionEnd = start + 1;
+};
+
+function initTestQuestionPool() {
+    const shuffled = [...elements].sort(() => Math.random() - 0.5);
+    questionPool = shuffled.slice(0, TEST_QUESTION_COUNT);
+}
+
+function nextTestQuestion() {
+    isAnswering = true;
+
+    if (questionPool.length === 0) {
+        endGame();
+        return;
+    }
+
+    questionCountEl.textContent = `${questionsAnswered + 1} / ${TEST_QUESTION_COUNT}`;
+
+    const correctElement = questionPool.pop();
+
+    // FORCE Type: 1
+    currentQuestion = {
+        element: correctElement,
+        type: 1
+    };
+
+    questionLabel.textContent = currentLanguage === 'JP' ? 'イオン式は？' : '离子化学式是什么？';
+    questionContent.textContent = currentLanguage === 'JP' ? correctElement.nameJP : correctElement.nameCN;
+
+    const input = document.getElementById('answer-input');
+    input.value = '';
+    input.focus();
+}
+
+window.submitTestAnswer = () => {
+    if (!isAnswering) return;
+
+    const input = document.getElementById('answer-input');
+    const userVal = input.value.trim();
+
+    // Normalize correct value from HTML tags to chars
+    const rawSymbol = currentQuestion.element.symbol;
+    let normalizedCorrect = rawSymbol
+        .replace(/<sub>0<\/sub>/g, '₀')
+        .replace(/<sub>1<\/sub>/g, '₁')
+        .replace(/<sub>2<\/sub>/g, '₂')
+        .replace(/<sub>3<\/sub>/g, '₃')
+        .replace(/<sub>4<\/sub>/g, '₄')
+        .replace(/<sup>\+<\/sup>/g, '⁺')
+        .replace(/<sup>-<\/sup>/g, '⁻')
+        .replace(/<sup>2\+<\/sup>/g, '²⁺')
+        .replace(/<sup>3\+<\/sup>/g, '³⁺')
+        .replace(/<sup>2-<\/sup>/g, '²⁻')
+        .replace(/<sup>3-<\/sup>/g, '³⁻');
+
+    if (!userVal) return;
+
+    const isCorrect = userVal === normalizedCorrect;
+
+    if (isCorrect) {
+        testScore++;
+        input.style.borderColor = "#22c55e";
+        input.style.backgroundColor = "#dcfce7";
+    } else {
+        input.style.borderColor = "#ef4444";
+        input.style.backgroundColor = "#fee2e2";
+    }
+
+    isAnswering = false;
+    questionsAnswered++;
+
+    setTimeout(() => {
+        input.style.borderColor = "#ddd";
+        input.style.backgroundColor = "white";
+        nextTestQuestion();
+    }, 1000);
+};
+
+document.getElementById('answer-input').addEventListener('keydown', (e) => {
+    if (e.key === 'Enter') window.submitTestAnswer();
+});
 
 // --- Ranking System ---
 // --- Ranking System (Google Sheets) ---
