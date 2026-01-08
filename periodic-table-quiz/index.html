@@ -40,10 +40,21 @@
                         <span class="mode-text">マッチング (10ペア)</span>
                     </button>
                     <button class="mode-btn" onclick="startTestModeSetup()">
-                        <span class="mode-icon">🎓</span>
-                        <span class="mode-text">テストモード (25問)</span>
+                        <span class="mode-icon">✍️</span>
+                        <span class="mode-text">テストモード (Test Mode)</span>
                     </button>
                 </div>
+            </div>
+
+            <!-- DEBUG BUTTON -->
+            <div style="margin-top: 20px; text-align: center; border-top: 1px solid #333; padding-top: 10px;">
+                <button class="btn" style="background: #444; color: #ccc; font-size: 0.8rem; padding: 5px 10px;"
+                    onclick="debugSendTest()">
+                    🛠 接続テスト (いきなり送信)
+                </button>
+                <div id="debug-status" style="margin-top: 5px; font-size: 0.8rem; color: #aaa; min-height: 20px;"></div>
+                <!-- Reuse save-status for shared feedback if needed, but debug-status is safer here -->
+                <div id="save-status" style="display:none;"></div>
             </div>
         </div>
 
