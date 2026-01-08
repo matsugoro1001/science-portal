@@ -79,18 +79,43 @@ window.startGame = (mode) => {
 
     // Start Timer
     if (timerInterval) clearInterval(timerInterval);
+
+    // Timer is used for Choice/Matching, and logic runs every 50ms
     timerInterval = setInterval(updateTimer, 50);
 
     if (mode === 'choice') {
         quizScreen.classList.remove('hidden');
+        document.getElementById('timer-container').style.visibility = 'visible';
+        document.getElementById('test-input-area').classList.add('hidden');
+        document.getElementById('options-grid').classList.remove('hidden');
+
+        // Reset timer
+        timerEl.textContent = "00.00";
+
         setTimeout(() => quizScreen.classList.add('active'), 50);
         initQuestionPool(TOTAL_QUESTIONS_CHOICE);
         nextQuestion();
-    } else {
+    } else if (mode === 'matching') {
         matchingScreen.classList.remove('hidden');
         setTimeout(() => matchingScreen.classList.add('active'), 50);
+
         matchingRound = 1;
         initMatchingGame();
+    } else if (mode === 'test') {
+        // Init Test Mode
+        testScore = 0;
+        quizScreen.classList.remove('hidden');
+
+        // Hide Timer for Test Mode
+        document.getElementById('timer-container').style.visibility = 'hidden';
+
+        // Show Input Area, Hide Options
+        document.getElementById('test-input-area').classList.remove('hidden');
+        document.getElementById('options-grid').classList.add('hidden');
+
+        setTimeout(() => quizScreen.classList.add('active'), 50);
+        initTestQuestionPool();
+        nextTestQuestion();
     }
 };
 
@@ -337,21 +362,58 @@ function showPenalty(el) {
 
 function endGame() {
     clearInterval(timerInterval);
-    const finalTime = currentMode === 'choice' ? timerEl.textContent : matchTimerEl.textContent;
-    finalTimeEl.textContent = finalTime;
 
-    quizScreen.classList.add('hidden');
-    quizScreen.classList.remove('active');
-    matchingScreen.classList.add('hidden');
-    matchingScreen.classList.remove('active');
+    if (currentMode === 'test') {
+        // Test Mode End
+        quizScreen.classList.add('hidden');
+        quizScreen.classList.remove('active');
 
-    certificateScreen.classList.remove('hidden');
-    setTimeout(() => certificateScreen.classList.add('active'), 50);
+        certificateScreen.classList.remove('hidden');
+        setTimeout(() => certificateScreen.classList.add('active'), 50);
 
-    // Save Local History
-    saveLocalHistory(parseFloat(finalTime), currentMode);
+        // Hide Time Display, Show Score
+        document.getElementById('final-time').style.display = 'none';
+        document.querySelector('#certificate-screen p').style.display = 'none'; // 'Seconds' label
 
-    checkRanking(parseFloat(finalTime));
+        const resultDiv = document.getElementById('test-result-details');
+        resultDiv.classList.remove('hidden');
+
+        document.getElementById('test-score-display').textContent = testScore;
+        const passFailEl = document.getElementById('test-pass-fail');
+
+        if (testScore >= PASSING_SCORE) {
+            passFailEl.textContent = "合格！ (PASS)";
+            passFailEl.className = "pass-text";
+        } else {
+            passFailEl.textContent = "不合格 (FAIL)";
+            passFailEl.className = "fail-text";
+        }
+
+        // Hide Ranking stuff for Test Mode
+        document.getElementById('new-record-form').classList.add('hidden');
+        document.querySelectorAll('.ranking-container').forEach(el => el.classList.add('hidden'));
+
+    } else {
+        // Normal Mode End
+        document.getElementById('test-result-details').classList.add('hidden');
+        document.getElementById('final-time').style.display = 'block';
+        document.querySelector('#certificate-screen p').style.display = 'block';
+        document.querySelectorAll('.ranking-container').forEach(el => el.classList.remove('hidden'));
+
+        const finalTime = currentMode === 'choice' ? timerEl.textContent : matchTimerEl.textContent;
+        finalTimeEl.textContent = finalTime;
+
+        quizScreen.classList.add('hidden');
+        quizScreen.classList.remove('active');
+        matchingScreen.classList.add('hidden');
+        matchingScreen.classList.remove('active');
+
+        certificateScreen.classList.remove('hidden');
+        setTimeout(() => certificateScreen.classList.add('active'), 50);
+
+        saveLocalHistory(parseFloat(finalTime), currentMode);
+        checkRanking(parseFloat(finalTime));
+    }
 }
 
 // --- Ranking System (Google Sheets) ---
@@ -523,210 +585,7 @@ window.insertChar = (char) => {
     input.selectionStart = input.selectionEnd = start + 1;
 };
 
-// Override startGame to handle 'test' mode
-const originalStartGame = window.startGame;
-window.startGame = (mode) => {
-    currentMode = mode;
-    questionsAnswered = 0;
 
-    // UI Reset
-    updateFont();
-    startScreen.classList.add('hidden');
-    startScreen.classList.remove('active');
-
-    // Timer is NOT used for score in Test Mode, but maybe for display?
-    // Let's hide timer for Test Mode or keep it just as info.
-    // User requested "Test Mode" with "Score". Time is secondary.
-    if (timerInterval) clearInterval(timerInterval);
-
-    if (mode === 'choice') {
-        quizScreen.classList.remove('hidden');
-        document.getElementById('timer-container').style.visibility = 'visible';
-        document.getElementById('test-input-area').classList.add('hidden');
-        document.getElementById('options-grid').classList.remove('hidden');
-
-        penaltyTime = 0;
-        startTime = Date.now();
-        timerInterval = setInterval(updateTimer, 50);
-
-        setTimeout(() => quizScreen.classList.add('active'), 50);
-        initQuestionPool(TOTAL_QUESTIONS_CHOICE);
-        nextQuestion();
-    } else if (mode === 'matching') {
-        matchingScreen.classList.remove('hidden');
-        setTimeout(() => matchingScreen.classList.add('active'), 50);
-
-        penaltyTime = 0;
-        startTime = Date.now();
-        timerInterval = setInterval(updateTimer, 50);
-
-        matchingRound = 1;
-        initMatchingGame();
-    } else if (mode === 'test') {
-        // Init Test Mode
-        testScore = 0;
-        quizScreen.classList.remove('hidden');
-        document.getElementById('timer-container').style.visibility = 'hidden'; // Hide timer in test mode for cleaner look
-        document.getElementById('test-input-area').classList.remove('hidden');
-        document.getElementById('options-grid').classList.add('hidden');
-
-        setTimeout(() => quizScreen.classList.add('active'), 50);
-        initTestQuestionPool();
-        nextTestQuestion();
-    }
-};
-
-function initTestQuestionPool() {
-    // For Periodic Table: 25 questions from ALL data (27 total)
-    // Random 25
-    const shuffled = [...elements].sort(() => Math.random() - 0.5);
-    questionPool = shuffled.slice(0, TEST_QUESTION_COUNT);
-}
-
-function nextTestQuestion() {
-    isAnswering = true;
-
-    if (questionPool.length === 0) {
-        endGame();
-        return;
-    }
-
-    questionCountEl.textContent = `${questionsAnswered + 1} / ${TEST_QUESTION_COUNT}`;
-
-    const correctElement = questionPool.pop();
-
-    // FORCE Type: 1 (Name -> Symbol)
-    currentQuestion = {
-        element: correctElement,
-        type: 1 // Always Name -> Symbol
-    };
-
-    // UI Setup
-    questionLabel.textContent = currentLanguage === 'JP' ? '元素記号は？' : '元素符号是什么？';
-    questionContent.textContent = currentLanguage === 'JP' ? correctElement.nameJP : correctElement.nameCN;
-
-    // Clear Input
-    const input = document.getElementById('answer-input');
-    input.value = '';
-    input.focus();
-}
-
-window.submitTestAnswer = () => {
-    if (!isAnswering) return;
-
-    const input = document.getElementById('answer-input');
-    const userVal = input.value.trim();
-    const correctVal = currentQuestion.element.symbol;
-
-    if (!userVal) return;
-
-    // Loose check? Strict check?
-    // Chemistry symbols are Case Sensitive usually (Co vs CO).
-    // Let's stick to strict equality for now.
-
-    // Normalize?
-    // User might type regular numbers? Test mode requirements say buttons `₀` etc.
-    // If we want to support "H2O" keys -> "H₂O", we need conversion logic.
-    // But for Periodic Table (Single Element), it's just Letters usually.
-    // Except maybe... none of the first 20 have subscripts.
-    // Wait, Periodic Table Quiz is just Elements (H, He, Li...).
-    // So subscripts are NOT needed for THIS quiz, but will be for Chemical/Ion.
-    // I added buttons anyway for consistency/future proofing.
-
-    const isCorrect = userVal === correctVal;
-
-    if (isCorrect) {
-        testScore++;
-        input.style.borderColor = "#22c55e"; // Green
-        input.style.backgroundColor = "#dcfce7";
-    } else {
-        input.style.borderColor = "#ef4444"; // Red
-        input.style.backgroundColor = "#fee2e2";
-        // Show correct answer momentarily?
-        // For a test, maybe just move on?
-        // Let's show alert or feedback?
-        // User didn't specify feedback behavior.
-        // Let's simple flash color and move on.
-    }
-
-    isAnswering = false;
-    questionsAnswered++;
-
-    // Wait 1s then next
-    setTimeout(() => {
-        input.style.borderColor = "#ddd";
-        input.style.backgroundColor = "white";
-        nextTestQuestion();
-    }, 1000);
-};
-
-// Handle Enter key
-document.getElementById('answer-input').addEventListener('keydown', (e) => {
-    if (e.key === 'Enter') window.submitTestAnswer();
-});
-
-// Update endGame for Test Mode
-const originalEndGame = endGame;
-endGame = () => {
-    if (currentMode === 'test') {
-        quizScreen.classList.add('hidden');
-        quizScreen.classList.remove('active');
-
-        certificateScreen.classList.remove('hidden');
-        setTimeout(() => certificateScreen.classList.add('active'), 50);
-
-        // Hide Time Display, Show Score
-        document.getElementById('final-time').style.display = 'none';
-        document.querySelector('#certificate-screen p').style.display = 'none'; // 'Seconds' label
-
-        const resultDiv = document.getElementById('test-result-details');
-        resultDiv.classList.remove('hidden');
-
-        document.getElementById('test-score-display').textContent = testScore;
-        const passFailEl = document.getElementById('test-pass-fail');
-
-        if (testScore >= PASSING_SCORE) {
-            passFailEl.textContent = "合格！ (PASS)";
-            passFailEl.className = "pass-text";
-            // Confetti or Happy?
-        } else {
-            passFailEl.textContent = "不合格 (FAIL)";
-            passFailEl.className = "fail-text";
-        }
-
-        // Hide Ranking stuff for Test Mode?
-        // User didn't ask for Ranking for Test Mode.
-        // Let's hide New Record form and Ranking tables for Test Mode to avoid confusion.
-        document.getElementById('new-record-form').classList.add('hidden');
-        document.querySelectorAll('.ranking-container').forEach(el => el.classList.add('hidden'));
-
-    } else {
-        // Normal behavior
-        document.getElementById('test-result-details').classList.add('hidden');
-        document.getElementById('final-time').style.display = 'block';
-        document.querySelector('#certificate-screen p').style.display = 'block';
-        document.querySelectorAll('.ranking-container').forEach(el => el.classList.remove('hidden'));
-
-        // Call original logic?
-        // originalEndGame uses variables that are global, so we can basically copy-paste logic or reuse parts.
-        // But since I overwrote `endGame` locally, I should just implement the Choice/Matching part here.
-
-        clearInterval(timerInterval);
-        const finalTime = currentMode === 'choice' ? timerEl.textContent : matchTimerEl.textContent;
-        finalTimeEl.textContent = finalTime;
-
-        quizScreen.classList.add('hidden');
-        quizScreen.classList.remove('active');
-        matchingScreen.classList.add('hidden');
-        matchingScreen.classList.remove('active');
-
-        certificateScreen.classList.remove('hidden');
-        setTimeout(() => certificateScreen.classList.add('active'), 50);
-
-        saveLocalHistory(parseFloat(finalTime), currentMode);
-        checkRanking(parseFloat(finalTime));
-    }
-};
 // End of Script
 
 async function renderRankingList(rankingsData = null) {
