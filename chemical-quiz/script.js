@@ -405,6 +405,7 @@ function endGame() {
         // Hide Ranking stuff for Test Mode
         document.getElementById('new-record-form').classList.add('hidden');
         document.getElementById('ranking-section').classList.add('hidden');
+        document.querySelector('.history-section').classList.add('hidden');
 
     } else {
         // Normal Mode End
@@ -413,6 +414,7 @@ function endGame() {
         document.getElementById('final-time').style.display = 'block';
         document.querySelector('#certificate-screen p').style.display = 'block';
         document.getElementById('ranking-section').classList.remove('hidden');
+        document.querySelector('.history-section').classList.remove('hidden');
 
         const finalTime = currentMode === 'choice' ? timerEl.textContent : matchTimerEl.textContent;
         finalTimeEl.textContent = finalTime;
@@ -538,6 +540,43 @@ window.submitTestAnswer = () => {
 document.getElementById('answer-input').addEventListener('keydown', (e) => {
     if (e.key === 'Enter') window.submitTestAnswer();
 });
+
+window.skipTestQuestion = () => {
+    if (!isAnswering) return;
+
+    const input = document.getElementById('answer-input');
+    // Normalize correct valid for display (convert tags to chars if needed, but chemical quiz uses tags in data)
+    // Actually, chemical quiz 'symbol' usually has <sub> tags. We should strip them or convert for input display?
+    // The input allows raw text. Let's just show the symbol but maybe stripped of tags for cleaner text input value?
+    // Wait, the input logic normalizes USER input to compare with correct symbol.
+    // If we put the correct symbol (with tags) into input, it might look messy if input is plain text.
+    // However, the helper buttons insert subscript chars. So the correct answer should probably be the subscript char version.
+    // Let's use the normalization logic from submitTestAnswer if available, or just helper logic.
+
+    let correctVal = currentQuestion.element.symbol;
+    // Simple conversion for display
+    correctVal = correctVal
+        .replace(/<sub>/g, '')
+        .replace(/<\/sub>/g, '') // Be careful if we want real subscript chars
+        .replace(/0/g, '₀').replace(/1/g, '₁').replace(/2/g, '₂').replace(/3/g, '₃').replace(/4/g, '₄')
+        .replace(/5/g, '₅').replace(/6/g, '₆').replace(/7/g, '₇').replace(/8/g, '₈').replace(/9/g, '₉');
+
+    // Display
+    input.value = correctVal;
+    input.style.borderColor = "#ef4444";
+    input.style.backgroundColor = "#fee2e2";
+    input.style.color = "#ef4444";
+
+    isAnswering = false;
+    questionsAnswered++;
+
+    setTimeout(() => {
+        input.style.borderColor = "#ddd";
+        input.style.backgroundColor = "white";
+        input.style.color = "inherit";
+        nextTestQuestion();
+    }, 1500);
+};
 
 // --- Ranking System ---
 // --- Ranking System (Google Sheets) ---

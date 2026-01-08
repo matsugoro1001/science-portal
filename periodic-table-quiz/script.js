@@ -403,8 +403,7 @@ function endGame() {
         // Hide Ranking stuff for Test Mode
         document.getElementById('new-record-form').classList.add('hidden');
         document.getElementById('ranking-section').classList.add('hidden');
-        // Optional: Hide history too if desired, usage:
-        // document.querySelector('.history-section').classList.add('hidden');
+        document.querySelector('.history-section').classList.add('hidden');
 
     } else {
         // Normal Mode End
@@ -413,6 +412,7 @@ function endGame() {
         document.getElementById('final-time').style.display = 'block';
         document.querySelector('#certificate-screen p').style.display = 'block';
         document.getElementById('ranking-section').classList.remove('hidden');
+        document.querySelector('.history-section').classList.remove('hidden');
 
         const finalTime = currentMode === 'choice' ? timerEl.textContent : matchTimerEl.textContent;
         finalTimeEl.textContent = finalTime;
@@ -666,6 +666,29 @@ window.submitTestAnswer = () => {
 document.getElementById('answer-input').addEventListener('keydown', (e) => {
     if (e.key === 'Enter') window.submitTestAnswer();
 });
+
+window.skipTestQuestion = () => {
+    if (!isAnswering) return;
+
+    const input = document.getElementById('answer-input');
+    const correctVal = currentQuestion.element.symbol;
+
+    // Show correct answer
+    input.value = correctVal;
+    input.style.borderColor = "#ef4444";
+    input.style.backgroundColor = "#fee2e2";
+    input.style.color = "#ef4444";
+
+    isAnswering = false;
+    questionsAnswered++;
+
+    setTimeout(() => {
+        input.style.borderColor = "#ddd";
+        input.style.backgroundColor = "white";
+        input.style.color = "inherit";
+        nextTestQuestion();
+    }, 1500); // Give a bit more time to see the answer
+};
 
 async function renderRankingList(rankingsData = null) {
     const listEl = document.getElementById('ranking-list');

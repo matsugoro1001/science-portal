@@ -409,6 +409,7 @@ function endGame() {
 
         document.getElementById('new-record-form').classList.add('hidden');
         document.getElementById('ranking-section').classList.add('hidden');
+        document.querySelector('.history-section').classList.add('hidden');
 
     } else {
         // Normal
@@ -417,6 +418,7 @@ function endGame() {
         document.getElementById('final-time').style.display = 'block';
         document.querySelector('#certificate-screen p').style.display = 'block';
         document.getElementById('ranking-section').classList.remove('hidden');
+        document.querySelector('.history-section').classList.remove('hidden');
 
         const finalTime = currentMode === 'choice' ? timerEl.textContent : matchTimerEl.textContent;
         finalTimeEl.textContent = finalTime;
@@ -550,6 +552,37 @@ window.submitTestAnswer = () => {
 document.getElementById('answer-input').addEventListener('keydown', (e) => {
     if (e.key === 'Enter') window.submitTestAnswer();
 });
+
+window.skipTestQuestion = () => {
+    if (!isAnswering) return;
+
+    const input = document.getElementById('answer-input');
+
+    // Normalize correct value logic from submitTestAnswer for consistency
+    const rawSymbol = currentQuestion.element.symbol;
+    let correctVal = rawSymbol
+        .replace(/<sub>0<\/sub>/g, '₀').replace(/<sub>1<\/sub>/g, '₁').replace(/<sub>2<\/sub>/g, '₂')
+        .replace(/<sub>3<\/sub>/g, '₃').replace(/<sub>4<\/sub>/g, '₄')
+        .replace(/<sup>\+<\/sup>/g, '⁺').replace(/<sup>-<\/sup>/g, '⁻')
+        .replace(/<sup>2\+<\/sup>/g, '²⁺').replace(/<sup>3\+<\/sup>/g, '³⁺')
+        .replace(/<sup>2-<\/sup>/g, '²⁻').replace(/<sup>3-<\/sup>/g, '³⁻');
+
+    // Show correct answer
+    input.value = correctVal;
+    input.style.borderColor = "#ef4444";
+    input.style.backgroundColor = "#fee2e2";
+    input.style.color = "#ef4444";
+
+    isAnswering = false;
+    questionsAnswered++;
+
+    setTimeout(() => {
+        input.style.borderColor = "#ddd";
+        input.style.backgroundColor = "white";
+        input.style.color = "inherit";
+        nextTestQuestion();
+    }, 1500);
+};
 
 // --- Ranking System ---
 // --- Ranking System (Google Sheets) ---
