@@ -450,8 +450,9 @@ async function getRankings(mode) {
 async function saveScoreToGas(mode, name, score, typeOverride = null) {
     try {
         const type = typeOverride || SHEET_TYPE;
-        const url = `${GAS_URL}?type=${type}&action=save&gameMode=${mode}&name=${encodeURIComponent(name)}&score=${score}`;
-        await fetch(url);
+        const url = `${GAS_URL}?type=${encodeURIComponent(type)}&action=save&gameMode=${encodeURIComponent(mode)}&name=${encodeURIComponent(name)}&score=${score}`;
+        console.log("Saving to GAS:", url);
+        await fetch(url, { mode: 'no-cors' });
     } catch (e) {
         console.error('Ranking Save Error:', e);
         // Alert is suppressed
