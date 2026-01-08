@@ -434,7 +434,7 @@ function endGame() {
 }
 
 // --- Ranking System (Google Sheets) ---
-const GAS_URL = 'https://script.google.com/macros/s/AKfycbx--upU9RiX382kIZVXbsJn3Ao1O1rttb9J0B6rF42t9shYff2WeJa0GAhHKrwix2B1sg/exec';
+const GAS_URL = 'https://script.google.com/macros/s/AKfycbyGtS6zkCFBwf3ymgndBjaEZamV2dWOyz1-nUx7S9dE-t4DQ2oiTzMmULcXMdGCBYrJ/exec';
 const SHEET_TYPE = 'element'; // '元素記号' template
 
 async function getRankings(mode) {
