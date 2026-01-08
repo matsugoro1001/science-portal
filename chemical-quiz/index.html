@@ -39,6 +39,22 @@
                         <span class="mode-icon">🧩</span>
                         <span class="mode-text">マッチング (10ペア)</span>
                     </button>
+                    <button class="mode-btn" onclick="startTestModeSetup()">
+                        <span class="mode-icon">🎓</span>
+                        <span class="mode-text">テストモード (40問)</span>
+                    </button>
+                </div>
+            </div>
+        </div>
+
+        <!-- Name Input Modal -->
+        <div id="name-input-modal" class="modal-overlay hidden">
+            <div class="modal-content">
+                <h2>名前を入力してください</h2>
+                <input type="text" id="test-player-name" placeholder="名前" maxlength="10">
+                <div class="modal-buttons">
+                    <button class="btn secondary" onclick="closeNameInput()">キャンセル</button>
+                    <button class="btn primary" onclick="confirmTestStart()">スタート</button>
                 </div>
             </div>
         </div>
@@ -56,6 +72,24 @@
             <div class="question-card">
                 <div class="question-label" id="question-label">Symbol for:</div>
                 <div class="question-content" id="question-content">H</div>
+            </div>
+
+            <div id="test-input-area" class="input-area hidden">
+                <input type="text" id="answer-input" placeholder="化学式を入力 (例: H₂O)" autocomplete="off">
+                <button class="btn-submit" onclick="submitTestAnswer()">回答</button>
+
+                <div class="helper-buttons">
+                    <button onclick="insertChar('₂')">₂</button>
+                    <button onclick="insertChar('₃')">₃</button>
+                    <button onclick="insertChar('₄')">₄</button>
+                    <button onclick="insertChar('₀')">₀</button>
+                    <button onclick="insertChar('₁')">₁</button>
+                    <button onclick="insertChar('₅')">₅</button>
+                    <button onclick="insertChar('₆')">₆</button>
+                    <button onclick="insertChar('₇')">₇</button>
+                    <button onclick="insertChar('₈')">₈</button>
+                    <button onclick="insertChar('₉')">₉</button>
+                </div>
             </div>
 
             <div class="options-grid" id="options-grid">
