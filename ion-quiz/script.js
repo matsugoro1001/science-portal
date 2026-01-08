@@ -604,13 +604,24 @@ async function getRankings(mode) {
 }
 
 async function saveScoreToGas(mode, name, score, typeOverride = null) {
+    const statusEl = document.getElementById('save-status');
+    if (statusEl) statusEl.textContent = "データを送信中... (Sending data...)";
+
     try {
         const type = typeOverride || SHEET_TYPE;
         const url = `${GAS_URL}?type=${encodeURIComponent(type)}&action=save&gameMode=${encodeURIComponent(mode)}&name=${encodeURIComponent(name)}&score=${score}`;
         console.log("Saving to GAS:", url);
         await fetch(url, { mode: 'no-cors' });
+        if (statusEl) {
+            statusEl.textContent = "データ送信完了 (Data Sent)";
+            statusEl.style.color = "green";
+        }
     } catch (e) {
         console.error('Ranking Save Error:', e);
+        if (statusEl) {
+            statusEl.textContent = "送信エラー (Error): " + e.message;
+            statusEl.style.color = "red";
+        }
     }
 }
 
