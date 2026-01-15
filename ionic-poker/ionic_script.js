@@ -554,8 +554,14 @@ function renderOpponents() {
     });
 }
 
+// --- Render Hand with Drag & Drop ---
+let sortableInstance = null;
+
 function renderMyHand(me) {
     const handContainer = document.getElementById('player-hand');
+
+    // Store current state for reconciliation if needed, but for simplicity we rebuild on sort
+    // Just simple render.
     handContainer.innerHTML = '';
 
     myHand.forEach((symbol, idx) => {
@@ -563,22 +569,85 @@ function renderMyHand(me) {
         const isSelected = mySelectedIndices.includes(idx);
         const card = document.createElement('div');
         card.className = `atom-card ${data.type} ${isSelected ? 'selected' : ''}`;
+        card.setAttribute('data-symbol', symbol); // Store symbol for reconstruction
         card.style.borderColor = data.textColor;
         card.style.backgroundColor = data.color;
 
         // Sup logic
-        const displaySym = symbol.replace(/(\d+)([+-])/g, '<sup>$1$2</sup>').replace(/([+-])(?!\d)/g, '<sup>$1</sup>');
+        let displaySym = symbol.replace(/(\d+)([+-])/g, '<sup>$1$2</sup>').replace(/([+-])(?!\d)/g, '<sup>$1</sup>');
+        // Simple fallback cleanup if needed
 
         card.innerHTML = `
             <div class="atom-symbol" style="color:${data.textColor}">${displaySym}</div>
             <div class="atom-name" style="color:${data.textColor}">${data.name}</div>
         `;
 
-        card.onclick = () => toggleSelect(idx);
+        // Click to Select (Conflict with Drag? SortableJS handles this usually)
+        // We use typical click handler. Sortable prevents click if dragged.
+        card.onclick = (e) => {
+            // Check if it was a drag (Sortable adds a flag? No, usually timing.)
+            // SortableJS doesn't fire click if dragged.
+            toggleSelect(idx);
+        };
+
         handContainer.appendChild(card);
     });
+
+    // Initialize Sortable once
+    if (!sortableInstance) {
+        sortableInstance = new Sortable(handContainer, {
+            animation: 150,
+            ghostClass: 'sortable-ghost',
+            delay: 100, // Slight delay to prevent accidental drag on touch? 
+            delayOnTouchOnly: true,
+            onEnd: function (evt) {
+                // Reorder myHand based on DOM
+                const newHand = [];
+                const newSelection = [];
+                const cards = handContainer.children;
+
+                for (let i = 0; i < cards.length; i++) {
+                    const el = cards[i];
+                    const sym = el.getAttribute('data-symbol');
+                    newHand.push(sym);
+                    if (el.classList.contains('selected')) {
+                        newSelection.push(i);
+                    }
+                }
+
+                // Update State
+                myHand = newHand;
+                mySelectedIndices = newSelection;
+
+                // Sync to global player object
+                const p = gameState.players.find(pl => pl.id === myId);
+                if (p) p.hand = myHand;
+
+                // Re-render to ensure indices update correctly (onclick handlers need new index)
+                renderMyHand(p);
+                updateInstruction();
+            }
+        });
+    }
 }
 
+function toggleSelect(idx) {
+    if (gameState.phase === 'result') return; // Locked
+
+    const pos = mySelectedIndices.indexOf(idx);
+    if (pos >= 0) mySelectedIndices.splice(pos, 1);
+    else mySelectedIndices.push(idx);
+
+    // Re-render to show selection
+    const me = gameState.players.find(p => p.id === myId);
+    renderMyHand(me); // This re-renders (destroying sortable dom), but Sortable is robust? 
+    // Wait, if we re-render, we destroy DOM elements. 
+    // The previous Sortable instance is attached to container.
+    // Container content changes. Sortable should be fine as it monitors children.
+    // BUT onclick handlers are closure-bound to old 'idx'.
+    // Yes, renderMyHand updates 'onclick' with current 'idx'. Correct.
+    updateInstruction();
+}
 function toggleSelect(idx) {
     if (gameState.phase === 'result') return; // Locked
 

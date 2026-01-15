@@ -7,10 +7,11 @@
     <title>Strategic Ion Poker - 戦略的イオンポーカー</title>
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;800&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="style.css?v=2">
-    <script src="https://unpkg.com/peerjs@1.5.4/dist/peerjs.min.js"></script>
+    <script src="https://unpkg.com/peerjs@1.5.0/dist/peerjs.min.js"></script> <!-- PeerJS -->
+    <!-- SortableJS -->
     <script src="https://cdnjs.cloudflare.com/ajax/libs/Sortable/1.15.0/Sortable.min.js"></script>
-    <!-- MAIN SCRIPT -->
-    <script src="ionic_script.js?v=2" defer></script>
+    <!-- Game Script -->
+    <script src="ionic_script.js?v=fix42" defer></script>
 </head>
 
 <body>
@@ -116,9 +117,8 @@
                 <!-- Cards injected here -->
             </div>
 
-            <!-- Action Bar -->
-            <div class="action-bar" style="display: flex; gap: 10px; justify-content: center; margin-top:20px;">
-                <button class="btn primary hidden" id="action-btn" onclick="handlePlayerAction()">アクション</button>
+            <div class="action-bar">
+                <button id="action-btn" class="btn primary" onclick="handleAction()">決定</button>
             </div>
         </div>
 
@@ -177,7 +177,7 @@
             </div>
         </div>
         <!-- Version Indicator -->
-        <div style="position: fixed; bottom: 5px; right: 5px; color: #aaa; font-size: 0.7rem;">v=fix40</div>
+        <div style="position: fixed; bottom: 5px; right: 5px; color: #aaa; font-size: 0.7rem;">v=fix42</div>
 </body>
 
 </html>
