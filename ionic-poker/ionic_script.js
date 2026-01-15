@@ -189,49 +189,94 @@ function checkPhaseCompletion() {
 }
 
 function resolveShowdown() {
-    // 1. Collect all formulas
-    const allFormulas = [];
-    gameState.players.forEach(p => {
-        p.formedSets.forEach(set => {
-            allFormulas.push({
-                formula: set.formula,
-                playerId: p.id,
-                setRef: set
+    try {
+        // 1. Collect all formulas
+        const allFormulas = [];
+        gameState.players.forEach(p => {
+            if (!p.formedSets) p.formedSets = []; // Safety
+            p.formedSets.forEach(set => {
+                allFormulas.push({
+                    formula: set.formula,
+                    playerId: p.id,
+                    setRef: set
+                });
             });
         });
-    });
 
-    // 2. Count occurrences (Duplicate Check)
-    const formulaCounts = {};
-    allFormulas.forEach(item => {
-        formulaCounts[item.formula] = (formulaCounts[item.formula] || 0) + 1;
-    });
-
-    // 3. Mark duplicates and calculate final score
-    gameState.players.forEach(p => {
-        let totalScore = 0;
-        p.formedSets.forEach(set => {
-            if (formulaCounts[set.formula] > 1) {
-                set.isDuplicated = true;
-                set.finalPoints = 0;
-            } else {
-                set.isDuplicated = false;
-                set.finalPoints = set.points;
-            }
-            totalScore += set.finalPoints;
+        // 2. Count occurrences (Duplicate Check)
+        const formulaCounts = {};
+        allFormulas.forEach(item => {
+            formulaCounts[item.formula] = (formulaCounts[item.formula] || 0) + 1;
         });
 
-        // Special Hand Bonus (Full House: 5 cards used)
-        const cardsUsed = p.formedSets.reduce((sum, s) => sum + s.cards.length, 0);
-        if (cardsUsed === 5) {
-            totalScore += 1000;
-            p.hasFullBonus = true;
-        }
+        // 3. Mark duplicates and calculate final score
+        gameState.players.forEach(p => {
+            let totalScore = 0;
+            p.formedSets.forEach(set => {
+                if (formulaCounts[set.formula] > 1) {
+                    set.isDuplicated = true;
+                    set.finalPoints = 0;
+                } else {
+                    set.isDuplicated = false;
+                    set.finalPoints = set.points;
+                }
+                totalScore += set.finalPoints;
+            });
 
-        p.score = totalScore;
-    });
+            // Special Hand Bonus (Full House: 5 cards used)
+            // Ensure cards is array
+            const cardsUsed = p.formedSets.reduce((sum, s) => sum + (s.cards ? s.cards.length : 0), 0);
+            if (cardsUsed === 5) {
+                totalScore += 1000;
+                p.hasFullBonus = true;
+            }
+
+            p.score = totalScore;
+        });
+    } catch (e) {
+        alert("Error in Showdown Logic: " + e.message);
+        console.error(e);
+    }
 }
 
+// ...
+
+function renderResult(players) {
+    try {
+        const table = document.getElementById('ranking-list');
+        if (!table) return;
+
+        // Sort by score
+        const sorted = [...players].sort((a, b) => b.score - a.score);
+
+        table.innerHTML = sorted.map((p, i) => `
+            <tr class="${p.id === myId ? 'me' : ''}">
+                <td>${i + 1}</td>
+                <td>${p.name}</td>
+                <td>${p.score}</td>
+                <td style="font-size:0.8rem">
+                    ${(p.formedSets || []).map(s => {
+            const style = s.isDuplicated ? 'text-decoration: line-through; color: red;' : 'color: green;';
+            const suffix = s.isDuplicated ? '(被り💥)' : '';
+            return `<span style="${style}">${formatFormula(s.formula)}${suffix}</span>`;
+        }).join(', ') || 'なし'}
+                    ${p.hasFullBonus ? '<br><span style="color:gold">★FULL BONUS</span>' : ''}
+                </td>
+            </tr>
+        `).join('');
+
+        // Inject Restart Button for Host
+        const bar = document.querySelector('#result-screen .action-bar');
+        if (bar) {
+            bar.innerHTML = role === 'host'
+                ? `<button class="btn primary" onclick="restartGameHost()">もう一度遊ぶ</button>`
+                : `<div style="color:#666">ホストの操作待ち...</div>`;
+        }
+    } catch (e) {
+        alert("Error in Render Result: " + e.message);
+        console.error(e);
+    }
+}
 function restartGameHost() {
     // Regenerate Deck and reset everything
     startDate = Date.now();
@@ -471,7 +516,7 @@ function attemptBond() {
         }
 
         // Success!
-        const formula = generateFormula(counts);
+        const formula = generateFormula(selectedCards);
         const points = calculatePoints(selectedCards, formula);
 
         // Add to local formed sets
