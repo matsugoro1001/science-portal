@@ -1,5 +1,5 @@
 
-// --- Strategic Ion Poker Script (v=fix44) ---
+// --- Strategic Ion Poker Script (v=fix51) ---
 
 // GAS URL for logging (optional)
 const GAS_URL = '';
@@ -59,6 +59,7 @@ let myHand = [];
 let mySelectedIndices = [];
 let myFormedSets = [];
 let myScore = 0;
+let sortableInstance = null;
 
 // DOM Elements
 const lobbyScreen = document.getElementById('lobby-screen');
@@ -137,10 +138,11 @@ function startGameHost() {
         gameState.deck = generateDeck();
         gameState.phase = 'exchange1';
         gameState.players.forEach(p => {
-            p.hand = drawFromDeck(7);
+            p.hand = drawFromDeck(7); // 7 Cards Start
             p.isDone = false;
             p.formedSets = [];
             p.score = 0;
+            p.hasFullBonus = false;
         });
         broadcastState();
         handleStateUpdate(gameState);
@@ -149,7 +151,146 @@ function startGameHost() {
     }
 }
 
-// ... handleHostData ...
+function handleHostData(peerId, data) {
+    const player = gameState.players.find(p => p.id === peerId);
+    if (!player) return;
+
+    if (data.type === 'action_exchange') {
+        const keeps = data.kept;
+        // Logic: Discard rest, Draw new (Check against Hand Size 7)
+        const countNeeded = 7 - keeps.length;
+
+        const newCards = drawFromDeck(countNeeded);
+        player.hand = [...keeps, ...newCards];
+        player.isDone = true;
+
+        checkPhaseCompletion();
+
+    } else if (data.type === 'action_finish_form') {
+        player.formedSets = data.formedSets;
+        player.isDone = true;
+        checkPhaseCompletion();
+    }
+
+    broadcastState();
+}
+
+function checkPhaseCompletion() {
+    if (gameState.players.every(p => p.isDone)) {
+        if (gameState.phase === 'exchange1') {
+            gameState.phase = 'exchange2';
+            gameState.players.forEach(p => p.isDone = false);
+        } else if (gameState.phase === 'exchange2') {
+            gameState.phase = 'form';
+            gameState.players.forEach(p => p.isDone = false);
+        } else if (gameState.phase === 'form') {
+            resolveShowdown();
+            gameState.phase = 'result';
+        }
+        broadcastState();
+        handleStateUpdate(gameState);
+    }
+}
+
+function resolveShowdown() {
+    try {
+        const allFormulas = [];
+        gameState.players.forEach(p => {
+            if (!p.formedSets) p.formedSets = [];
+            p.formedSets.forEach(set => {
+                allFormulas.push({
+                    formula: set.formula,
+                    playerId: p.id,
+                    setRef: set
+                });
+            });
+        });
+
+        const formulaCounts = {};
+        allFormulas.forEach(item => {
+            formulaCounts[item.formula] = (formulaCounts[item.formula] || 0) + 1;
+        });
+
+        gameState.players.forEach(p => {
+            let totalScore = 0;
+            p.formedSets.forEach(set => {
+                if (formulaCounts[set.formula] > 1) {
+                    set.isDuplicated = true;
+                    set.finalPoints = 0;
+                } else {
+                    set.isDuplicated = false;
+                    set.finalPoints = set.points;
+                }
+                totalScore += set.finalPoints;
+            });
+
+            // Full Bonus Check (7 Cards)
+            const cardsUsed = p.formedSets.reduce((sum, s) => sum + (s.cards ? s.cards.length : 0), 0);
+            if (cardsUsed === 7) {
+                totalScore += 500;
+                p.hasFullBonus = true;
+            } else {
+                p.hasFullBonus = false;
+            }
+
+            p.score = totalScore;
+        });
+    } catch (e) {
+        console.error("Showdown Error", e);
+    }
+}
+
+function restartGameHost() {
+    gameState.deck = generateDeck();
+    gameState.phase = 'exchange1';
+    gameState.discards = [];
+
+    gameState.players.forEach(p => {
+        p.hand = drawFromDeck(7); // 7 Cards
+        p.isDone = false;
+        p.formedSets = [];
+        p.score = 0;
+        p.hasFullBonus = false;
+    });
+
+    broadcastState();
+    handleStateUpdate(gameState);
+}
+
+// --- Common Logic ---
+function generateDeck() {
+    let d = [];
+    Object.keys(CARD_DATA).forEach(k => {
+        for (let i = 0; i < CARD_DATA[k].count; i++) d.push(k);
+    });
+    return d.sort(() => Math.random() - 0.5);
+}
+
+function drawFromDeck(n) {
+    const drawn = [];
+    for (let i = 0; i < n; i++) {
+        if (gameState.deck.length > 0) drawn.push(gameState.deck.pop());
+    }
+    return drawn;
+}
+
+function broadcastState() {
+    const s = JSON.stringify(gameState);
+    connections.forEach(c => c.send({ type: 'update', state: s }));
+}
+
+// --- Client Logic ---
+function handleClientData(data) {
+    if (data.type === 'update') {
+        handleStateUpdate(JSON.parse(data.state));
+    }
+}
+
+function sendAction(data) {
+    if (role === 'host') handleHostData(myId, data);
+    else conn.send(data);
+}
+
 
 function handleStateUpdate(newState) {
     try {
@@ -229,8 +370,6 @@ function renderOpponents() {
 }
 
 // --- Render Hand with SortableJS ---
-let sortableInstance = null;
-
 function renderMyHand(me) {
     const handContainer = document.getElementById('player-hand');
     handContainer.innerHTML = '';
@@ -256,6 +395,12 @@ function renderMyHand(me) {
         };
         handContainer.appendChild(card);
     });
+
+    // Check if SortableJS is loaded
+    if (typeof Sortable === 'undefined') {
+        console.warn("SortableJS not loaded");
+        return;
+    }
 
     if (!sortableInstance) {
         sortableInstance = new Sortable(handContainer, {
@@ -360,7 +505,10 @@ function updateInstruction() {
 // --- Bonding Logic ---
 // Global Error Handler 
 window.onerror = function (msg, url, line, col, error) {
-    alert("Error: " + msg + "\nLine: " + line);
+    // Only show if not handled by try-catch
+    if (!msg.includes("Error in")) {
+        alert("System Error: " + msg + "\nLine: " + line);
+    }
     return false;
 };
 
