@@ -564,40 +564,89 @@ function renderFormedSets() {
     container.classList.remove('hidden');
 }
 
-function formatFormula(f) {
-    return f.replace(/(\d+)/g, '<sub>$1</sub>');
+function generateFormula(cards) {
+    const counts = {};
+    cards.forEach(c => {
+        // Strip charge symbols for counting (H+ -> H, CO32- -> CO3)
+        // Actually, we must be careful. Let's map card symbol to element composition.
+        // Simple heuristic for this game set:
+        counts[c] = (counts[c] || 0) + 1;
+    });
+
+    // Order: Cations then Anions
+    const cations = Object.keys(counts).filter(k => CARD_DATA[k].charge > 0);
+    const anions = Object.keys(counts).filter(k => CARD_DATA[k].charge < 0);
+
+    let formula = "";
+
+    // Helper to format part
+    const formatPart = (ionList) => {
+        let partStr = "";
+        ionList.forEach(ion => {
+            let count = counts[ion];
+            // Remove charge from string: Na+ -> Na, Mg2+ -> Mg, SO42- -> SO4
+            let sym = ion.replace(/[0-9]*[+-]+$/, '');
+
+            // Special Case: H + HCO3 -> H2CO3
+            // This is tricky if handled generically.
+            // Let's rely on standard logic: cation count + anion count.
+            // But H+ is H, HCO3- is HCO3. Combined H H HCO3 ?? No.
+            // Standard chemical nomenclature:
+            // Cation(Count) Anion(Count)
+
+            // If polyatomic ion has count > 1, need parenthesis?
+            // Mg(OH)2
+            const isPoly = /[A-Z].*[A-Z]/.test(sym) || /\d/.test(sym); // Very rough check
+
+            if (count > 1) {
+                if (isPoly && sym !== 'H' && sym !== 'O' && sym !== 'Cl') { // Simple exclusion
+                    partStr += `(${sym})${count}`;
+                } else {
+                    partStr += `${sym}${count}`;
+                }
+            } else {
+                partStr += sym;
+            }
+        });
+        return partStr;
+    };
+
+    // Special Merges for cleanliness (e.g. H + HCO3 -> H2CO3)
+    // Construct raw string first then clean up?
+    // H + HCO3 -> H HCO3 -> H2CO3
+    // H + H + O -> H2 O -> H2O
+
+    // Let's manually handle specific combinations if needed or use the simple concat.
+    // The previous HHCO3 suggests we just concatenated H and HCO3.
+    // H (1) + HCO3 (1)
+
+    let rawC = formatPart(cations);
+    let rawA = formatPart(anions);
+
+    // Merge logic for Hydrogen special cases to look like acids
+    if (rawC.startsWith('H') && !rawC.includes('(')) {
+        // e.g. H + Cl -> HCl (OK)
+        // H + HCO3 -> HHCO3 (Bad) -> H2CO3
+        // H + H + SO4 -> H2SO4 (OK)
+
+        if (rawA.startsWith('H')) {
+            // Anion starts with H (HCO3, HSO4 etc)
+            // We sum the H's.
+            // But parsing 'HCO3' is hard.
+            // Hardcode fix for H + HCO3 -> H2CO3
+            if (rawA.startsWith('HCO3')) return 'H₂CO₃';
+        }
+    }
+
+    // Default fallback
+    return rawC + rawA;
 }
 
-// --- Result Screen ---
-function renderResult(players) {
-    const table = document.getElementById('ranking-list');
-
-    // Sort by score
-    const sorted = [...players].sort((a, b) => b.score - a.score);
-
-    table.innerHTML = sorted.map((p, i) => `
-        <tr class="${p.id === myId ? 'me' : ''}">
-            <td>${i + 1}</td>
-            <td>${p.name}</td>
-            <td>${p.score}</td>
-            <td style="font-size:0.8rem">
-                ${p.formedSets.map(s => {
-        const style = s.isDuplicated ? 'text-decoration: line-through; color: red;' : 'color: green;';
-        const suffix = s.isDuplicated ? '(被り💥)' : '';
-        return `<span style="${style}">${formatFormula(s.formula)}${suffix}</span>`;
-    }).join(', ') || 'なし'}
-                ${p.hasFullBonus ? '<br><span style="color:gold">★FULL BONUS</span>' : ''}
-            </td>
-        </tr>
-    `).join('');
-
-    // Inject Restart Button for Host
-    const bar = document.querySelector('#result-screen .action-bar');
-    if (bar) {
-        bar.innerHTML = role === 'host'
-            ? `<button class="btn primary" onclick="restartGameHost()">もう一度遊ぶ</button>`
-            : `<div style="color:#666">ホストの操作待ち...</div>`;
-    }
+// Clear UI helper called on Reset
+function clearGameUI() {
+    document.getElementById('formed-sets-container').innerHTML = '';
+    document.getElementById('result-screen').classList.add('hidden');
+    document.getElementById('ranking-list').innerHTML = '';
 }
 
 function updateLobbyUI() {
