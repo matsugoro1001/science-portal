@@ -152,8 +152,6 @@ function handleHostData(peerId, data) {
         const keeps = data.kept;
         // Logic: Discard rest, Draw new
         const countNeeded = 5 - keeps.length;
-        // Debug Alert
-        alert(`Exchange Requested. Keeping ${keeps.length}, Drawing ${countNeeded}`);
 
         const newCards = drawFromDeck(countNeeded);
         player.hand = [...keeps, ...newCards];
