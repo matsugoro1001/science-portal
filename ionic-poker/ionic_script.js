@@ -441,11 +441,13 @@ function renderResult(players) {
         console.error(e);
     }
 }
-let d = [];
-Object.keys(CARD_DATA).forEach(k => {
-    for (let i = 0; i < CARD_DATA[k].count; i++) d.push(k);
-});
-return d.sort(() => Math.random() - 0.5);
+// --- Common Logic ---
+function generateDeck() {
+    let d = [];
+    Object.keys(CARD_DATA).forEach(k => {
+        for (let i = 0; i < CARD_DATA[k].count; i++) d.push(k);
+    });
+    return d.sort(() => Math.random() - 0.5);
 }
 
 function drawFromDeck(n) {
@@ -473,48 +475,44 @@ function sendAction(data) {
     else conn.send(data);
 }
 
-function handleStateUpdate(newState) {
-    // Clear UI if phase reset (Restart detected)
-    if (newState.phase === 'exchange1' && (gameState.phase === 'result' || gameState.phase === 'form')) {
-        clearGameUI();
-        myFormedSets = []; // Reset local state
-        mySelectedIndices = [];
-        // Also force clear container just in case
-        document.getElementById('formed-sets-container').innerHTML = '';
+
+mySelectedIndices = [];
+// Also force clear container just in case
+document.getElementById('formed-sets-container').innerHTML = '';
     }
 
-    gameState = newState;
-    const me = gameState.players.find(p => p.id === myId);
+gameState = newState;
+const me = gameState.players.find(p => p.id === myId);
 
-    // Switch Screen
-    if (gameState.phase === 'lobby') {
-        lobbyScreen.classList.remove('hidden');
-        gameScreen.classList.add('hidden');
-        resultScreen.classList.add('hidden');
-    } else if (gameState.phase === 'result') {
-        gameScreen.classList.add('hidden');
-        resultScreen.classList.remove('hidden');
-        renderResult(gameState.players);
-    } else {
-        // Game Playing
-        lobbyScreen.classList.add('hidden');
-        gameScreen.classList.remove('hidden');
-        resultScreen.classList.add('hidden');
+// Switch Screen
+if (gameState.phase === 'lobby') {
+    lobbyScreen.classList.remove('hidden');
+    gameScreen.classList.add('hidden');
+    resultScreen.classList.add('hidden');
+} else if (gameState.phase === 'result') {
+    gameScreen.classList.add('hidden');
+    resultScreen.classList.remove('hidden');
+    renderResult(gameState.players);
+} else {
+    // Game Playing
+    lobbyScreen.classList.add('hidden');
+    gameScreen.classList.remove('hidden');
+    resultScreen.classList.add('hidden');
 
-        // Render UI
-        updatePhaseIndicator();
-        renderOpponents();
+    // Render UI
+    updatePhaseIndicator();
+    renderOpponents();
 
-        // Hand & Interaction
-        if (me) {
-            // Sync local hand ONLY if phase changed or first load (to avoid overwrite during drag)
-            // But for exchange/form, we should just trust server state at start of phase
-            // For MVP, just render server hand.
-            myHand = me.hand;
-            renderMyHand(me);
-            updateInstruction();
-        }
+    // Hand & Interaction
+    if (me) {
+        // Sync local hand ONLY if phase changed or first load (to avoid overwrite during drag)
+        // But for exchange/form, we should just trust server state at start of phase
+        // For MVP, just render server hand.
+        myHand = me.hand;
+        renderMyHand(me);
+        updateInstruction();
     }
+}
 }
 
 function updatePhaseIndicator() {
