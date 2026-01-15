@@ -297,13 +297,155 @@ function restartGameHost() {
     handleStateUpdate(gameState);
 }
 
-// --- Common Logic ---
-function generateDeck() {
-    let d = [];
-    Object.keys(CARD_DATA).forEach(k => {
-        for (let i = 0; i < CARD_DATA[k].count; i++) d.push(k);
-    });
-    return d.sort(() => Math.random() - 0.5);
+// --- Naming Logic ---
+function generateCompoundName(formula, cards) {
+    // 1. Check Special Dictionary First
+    if (SPECIAL_COMPOUNDS[formula]) {
+        return SPECIAL_COMPOUNDS[formula].name;
+    }
+
+    // 2. Generic Construction
+    const cations = cards.filter(c => CARD_DATA[c].type === 'cation');
+    const anions = cards.filter(c => CARD_DATA[c].type === 'anion');
+
+    // Pick representative (first one found)
+    const cat = cations[0];
+    const ani = anions[0];
+
+    if (!cat || !ani) return '';
+
+    let catName = CARD_DATA[cat].name.replace('イオン', '');
+    let aniName = CARD_DATA[ani].name.replace('イオン', '');
+
+    // Refine Anion Name (Remove '物' from '酸化物', '塩化物', '硫化物', '水酸化物')
+    if (aniName.endsWith('物')) {
+        aniName = aniName.slice(0, -1);
+    }
+
+    // Acid Special Cases (H+)
+    if (cat === 'H⁺') {
+        if (ani === 'Cl⁻') return '塩化水素';
+        if (ani === 'SO₄²⁻') return '硫酸';
+        if (ani === 'NO₃⁻') return '硝酸';
+        if (ani === 'CO₃²⁻') return '炭酸';
+        if (ani === 'PO₄³⁻') return 'リン酸';
+        // Fallback
+        return aniName + '水素';
+    }
+
+    return aniName + catName;
+}
+
+function handleStateUpdate(newState) {
+    // FORCE CLEAR UI if in Exchange Phase (New Game Started)
+    if (newState.phase === 'exchange1') {
+        clearGameUI();
+        myFormedSets = [];
+        mySelectedIndices = [];
+
+        const container = document.getElementById('formed-sets-container');
+        if (container) {
+            container.innerHTML = '';
+            container.classList.add('hidden');
+        }
+    }
+
+    // ... [Rest of function]
+
+    gameState = newState;
+    const me = gameState.players.find(p => p.id === myId);
+
+    // Switch Screen
+    if (gameState.phase === 'lobby') {
+        lobbyScreen.classList.remove('hidden');
+        gameScreen.classList.add('hidden');
+        resultScreen.classList.add('hidden');
+    } else if (gameState.phase === 'result') {
+        gameScreen.classList.add('hidden');
+        resultScreen.classList.remove('hidden');
+        renderResult(gameState.players);
+    } else {
+        // Game Playing
+        lobbyScreen.classList.add('hidden');
+        gameScreen.classList.remove('hidden');
+        resultScreen.classList.add('hidden');
+
+        updatePhaseIndicator();
+        renderOpponents();
+
+        if (me) {
+            myHand = me.hand;
+            renderMyHand(me);
+            updateInstruction();
+
+            // Re-render local formed sets only if in FORM phase
+            if (gameState.phase === 'form') {
+                renderFormedSets();
+            }
+        }
+    }
+}
+
+function renderFormedSets() {
+    const container = document.getElementById('formed-sets-container');
+    container.innerHTML = myFormedSets.map(set => {
+        const name = generateCompoundName(set.formula, set.cards);
+        return `
+        <div class="formed-set">
+            <div class="formula">${formatFormula(set.formula)}</div>
+            <div style="font-size:0.8rem; color:#555;">${name}</div>
+            <div class="pts">${set.points}pt</div>
+        </div>
+    `;
+    }).join('');
+    container.classList.remove('hidden');
+}
+
+function renderResult(players) {
+    try {
+        const table = document.getElementById('ranking-list');
+        if (!table) return;
+
+        // Sort by score
+        const sorted = [...players].sort((a, b) => b.score - a.score);
+
+        table.innerHTML = sorted.map((p, i) => `
+            <tr class="${p.id === myId ? 'me' : ''}">
+                <td>${i + 1}</td>
+                <td>${p.name}</td>
+                <td>${p.score}</td>
+                <td style="font-size:0.8rem">
+                    ${(p.formedSets || []).map(s => {
+            const style = s.isDuplicated ? 'text-decoration: line-through; color: red;' : 'color: green;';
+            const suffix = s.isDuplicated ? '(被り💥)' : '';
+            const name = generateCompoundName(s.formula, s.cards || []);
+            return `<div style="${style}">
+                        <b>${formatFormula(s.formula)}</b> ${suffix}<br>
+                        <span style="font-size:0.7em; color:#666">${name}</span>
+                    </div>`;
+        }).join('<hr style="margin:2px 0; border:0; border-top:1px dashed #ccc;">') || 'なし'}
+                    ${p.hasFullBonus ? '<br><span style="color:gold">★FULL BONUS</span>' : ''}
+                </td>
+            </tr>
+        `).join('');
+
+        // Inject Restart Button for Host
+        const bar = document.querySelector('#result-screen .action-bar');
+        if (bar) {
+            bar.innerHTML = role === 'host'
+                ? `<button class="btn primary" onclick="restartGameHost()">もう一度遊ぶ</button>`
+                : `<div style="color:#666">ホストの操作待ち...</div>`;
+        }
+    } catch (e) {
+        alert("Error in Render Result: " + e.message);
+        console.error(e);
+    }
+}
+let d = [];
+Object.keys(CARD_DATA).forEach(k => {
+    for (let i = 0; i < CARD_DATA[k].count; i++) d.push(k);
+});
+return d.sort(() => Math.random() - 0.5);
 }
 
 function drawFromDeck(n) {
