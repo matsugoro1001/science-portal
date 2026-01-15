@@ -434,60 +434,68 @@ function updateInstruction() {
 
 // --- Bonding Logic ---
 
+// --- Global Error Handler for Debugging on Mobile ---
+window.onerror = function (msg, url, line, col, error) {
+    alert("Error: " + msg + "\nLine: " + line);
+    return false;
+};
+
 function attemptBond() {
-    if (mySelectedIndices.length < 2) {
-        alert("2枚以上選んでください");
-        return;
+    try {
+        if (mySelectedIndices.length < 2) {
+            alert("2枚以上選んでください");
+            return;
+        }
+
+        const selectedCards = mySelectedIndices.map(i => myHand[i]);
+        const counts = {};
+        let totalCharge = 0;
+
+        selectedCards.forEach(s => {
+            counts[s] = (counts[s] || 0) + 1;
+            totalCharge += CARD_DATA[s].charge;
+        });
+
+        if (totalCharge !== 0) {
+            alert(`電荷の合計が0になりません (現在: ${totalCharge > 0 ? '+' + totalCharge : totalCharge})`);
+            return;
+        }
+
+        // Check if Cation + Anion logic exists
+        const hasCation = selectedCards.some(s => CARD_DATA[s].type === 'cation');
+        const hasAnion = selectedCards.some(s => CARD_DATA[s].type === 'anion');
+
+        if (!hasCation || !hasAnion) {
+            alert("陽イオンと陰イオンを組み合わせてください");
+            return;
+        }
+
+        // Success!
+        const formula = generateFormula(counts);
+        const points = calculatePoints(selectedCards, formula);
+
+        // Add to local formed sets
+        myFormedSets.push({
+            formula: formula,
+            cards: selectedCards,
+            points: points
+        });
+
+        // Visualize
+        renderFormedSets();
+
+        // Remove from hand
+        myHand = myHand.filter((_, i) => !mySelectedIndices.includes(i));
+        mySelectedIndices = [];
+
+        // Update UI
+        const me = gameState.players.find(p => p.id === myId);
+        me.hand = myHand;
+        renderMyHand(me);
+    } catch (e) {
+        alert("System Error in Bond: " + e.message);
+        console.error(e);
     }
-
-    const selectedCards = mySelectedIndices.map(i => myHand[i]);
-    const counts = {};
-    let totalCharge = 0;
-
-    selectedCards.forEach(s => {
-        counts[s] = (counts[s] || 0) + 1;
-        totalCharge += CARD_DATA[s].charge;
-    });
-
-    if (totalCharge !== 0) {
-        alert(`電荷の合計が0になりません (現在: ${totalCharge > 0 ? '+' + totalCharge : totalCharge})`);
-        return;
-    }
-
-    // Check if Cation + Anion logic exists
-    const hasCation = selectedCards.some(s => CARD_DATA[s].type === 'cation');
-    const hasAnion = selectedCards.some(s => CARD_DATA[s].type === 'anion');
-
-    if (!hasCation || !hasAnion) {
-        alert("陽イオンと陰イオンを組み合わせてください");
-        return;
-    }
-
-    // Success!
-    const formula = generateFormula(counts);
-    const points = calculatePoints(selectedCards, formula);
-
-    // Add to local formed sets
-    myFormedSets.push({
-        formula: formula,
-        cards: selectedCards,
-        points: points
-    });
-
-    // Visualize
-    renderFormedSets();
-
-    // Remove from hand
-    // Update local myHand (filter out selected indices)
-    // IMPORTANT: Sort indices descending to splice correctly? 
-    // Actually easier to filter.
-    myHand = myHand.filter((_, i) => !mySelectedIndices.includes(i));
-    mySelectedIndices = [];
-
-    // Update UI
-    const me = gameState.players.find(p => p.id === myId);
-    me.hand = myHand; // Update 'me' ref just for rendering
-    renderMyHand(me);
 }
 
 
