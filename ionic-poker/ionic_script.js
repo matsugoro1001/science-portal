@@ -331,8 +331,16 @@ function sendAction(data) {
     else conn.send(data);
 }
 
-// --- UI Rendering ---
 function handleStateUpdate(newState) {
+    // Clear UI if phase reset (Restart detected)
+    if (newState.phase === 'exchange1' && (gameState.phase === 'result' || gameState.phase === 'form')) {
+        clearGameUI();
+        myFormedSets = []; // Reset local state
+        mySelectedIndices = [];
+        // Also force clear container just in case
+        document.getElementById('formed-sets-container').innerHTML = '';
+    }
+
     gameState = newState;
     const me = gameState.players.find(p => p.id === myId);
 
