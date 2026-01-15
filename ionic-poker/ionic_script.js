@@ -738,9 +738,6 @@ function renderFormedSets() {
 function generateFormula(cards) {
     const counts = {};
     cards.forEach(c => {
-        // Strip charge symbols for counting (H+ -> H, CO32- -> CO3)
-        // Actually, we must be careful. Let's map card symbol to element composition.
-        // Simple heuristic for this game set:
         counts[c] = (counts[c] || 0) + 1;
     });
 
@@ -748,29 +745,28 @@ function generateFormula(cards) {
     const cations = Object.keys(counts).filter(k => CARD_DATA[k].charge > 0);
     const anions = Object.keys(counts).filter(k => CARD_DATA[k].charge < 0);
 
-    let formula = "";
-
     // Helper to format part
     const formatPart = (ionList) => {
         let partStr = "";
         ionList.forEach(ion => {
             let count = counts[ion];
-            // Remove charge from string: Na+ -> Na, Mg2+ -> Mg, SO42- -> SO4
-            let sym = ion.replace(/[0-9]*[+-]+$/, '');
+            // Normalize Unicode Subscripts -> ASCII
+            let sym = ion.replace(/₀/g, '0').replace(/₁/g, '1').replace(/₂/g, '2').replace(/₃/g, '3')
+                .replace(/₄/g, '4').replace(/₅/g, '5').replace(/₆/g, '6').replace(/₇/g, '7')
+                .replace(/₈/g, '8').replace(/₉/g, '9');
+
+            // Remove Unicode Charge Superscripts (⁺ ⁻ ² ³ etc) and standard + -
+            // \u207A-F (superscripts + -), \u00B2-3 (2,3), + -
+            // Simply remove any non-alphanumeric chars at the end? No, O2- is different.
+            // Target specific charge chars: ⁺ ⁻ ² ³ 
+            sym = sym.replace(/[⁺⁻²³¹⁰⁴⁵⁶⁷⁸⁹]+$/g, '').replace(/[+-]+$/g, '');
 
             // Special Case: H + HCO3 -> H2CO3
-            // This is tricky if handled generically.
-            // Let's rely on standard logic: cation count + anion count.
-            // But H+ is H, HCO3- is HCO3. Combined H H HCO3 ?? No.
-            // Standard chemical nomenclature:
-            // Cation(Count) Anion(Count)
-
-            // If polyatomic ion has count > 1, need parenthesis?
-            // Mg(OH)2
-            const isPoly = /[A-Z].*[A-Z]/.test(sym) || /\d/.test(sym); // Very rough check
+            // Standard chemical nomenclature: Cation(Count) Anion(Count)
+            const isPoly = /[A-Z].*[A-Z]/.test(sym) || /\d/.test(sym);
 
             if (count > 1) {
-                if (isPoly && sym !== 'H' && sym !== 'O' && sym !== 'Cl') { // Simple exclusion
+                if (isPoly && sym !== 'H' && sym !== 'O' && sym !== 'Cl') {
                     partStr += `(${sym})${count}`;
                 } else {
                     partStr += `${sym}${count}`;
@@ -782,28 +778,12 @@ function generateFormula(cards) {
         return partStr;
     };
 
-    // Special Merges for cleanliness (e.g. H + HCO3 -> H2CO3)
-    // Construct raw string first then clean up?
-    // H + HCO3 -> H HCO3 -> H2CO3
-    // H + H + O -> H2 O -> H2O
-
-    // Let's manually handle specific combinations if needed or use the simple concat.
-    // The previous HHCO3 suggests we just concatenated H and HCO3.
-    // H (1) + HCO3 (1)
-
     let rawC = formatPart(cations);
     let rawA = formatPart(anions);
 
     // Merge logic for Hydrogen special cases to look like acids
     if (rawC.startsWith('H') && !rawC.includes('(')) {
-        // e.g. H + Cl -> HCl (OK)
-        // H + HCO3 -> HHCO3 (Bad) -> H2CO3
-        // H + H + SO4 -> H2SO4 (OK)
-
         if (rawA.startsWith('H')) {
-            // Anion starts with H (HCO3, HSO4 etc)
-            // We sum the H's.
-            // But parsing 'HCO3' is hard.
             // Hardcode fix for H + HCO3 -> H2CO3
             if (rawA.startsWith('HCO3')) return 'H2CO3';
         }
