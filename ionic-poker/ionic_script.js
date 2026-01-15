@@ -595,12 +595,17 @@ function generateFormula(cards) {
             // We sum the H's.
             // But parsing 'HCO3' is hard.
             // Hardcode fix for H + HCO3 -> H2CO3
-            if (rawA.startsWith('HCO3')) return 'H₂CO₃';
+            if (rawA.startsWith('HCO3')) return 'H2CO3';
         }
     }
 
     // Default fallback
     return rawC + rawA;
+}
+
+function formatFormula(f) {
+    if (!f) return '';
+    return f.replace(/(\d+)/g, '<sub>$1</sub>');
 }
 
 // Clear UI helper called on Reset
