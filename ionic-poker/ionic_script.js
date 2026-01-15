@@ -490,46 +490,7 @@ function attemptBond() {
     renderMyHand(me);
 }
 
-function generateFormula(counts) {
-    // Need standard ordering Cation -> Anion
-    const cations = Object.keys(counts).filter(s => CARD_DATA[s].type === 'cation');
-    const anions = Object.keys(counts).filter(s => CARD_DATA[s].type === 'anion');
 
-    // Simple constructor: Cation(n)Anion(m)
-    // Case 1: 1 Cation, 1 Anion type (NaCl, Al2O3)
-    if (cations.length === 1 && anions.length === 1) {
-        const c = cations[0];
-        const a = anions[0];
-        const cCount = counts[c];
-        const aCount = counts[a];
-
-        let cSym = c.replace(/[0-9\+\-]+/g, ''); // Strip charge
-        let aSym = a.replace(/[0-9\+\-]+/g, '');
-
-        // Handle NH4, OH, etc (keep subscript numbers? NH4 is tricky)
-        // Simple Strip: 'NH4+' -> 'NH4'. 'SO4 2-' -> 'SO4'
-        // Regex: remove ONLY charge symbols (+, -) and leading numbers if pure charge?
-        // Let's manually map for MVP or use cleaner regex.
-
-        // Better: Map symbols to basic formulas
-        const BASE_SYMBOLS = {
-            'H⁺': 'H', 'Na⁺': 'Na', 'Mg²⁺': 'Mg', 'Ca²⁺': 'Ca', 'Cu²⁺': 'Cu', 'Ba²⁺': 'Ba', 'Fe³⁺': 'Fe', 'Al³⁺': 'Al',
-            'Cl⁻': 'Cl', 'OH⁻': 'OH', 'NO₃⁻': 'NO3', 'HCO₃⁻': 'HCO3', 'O²⁻': 'O', 'S²⁻': 'S', 'CO₃²⁻': 'CO3', 'SO₄²⁻': 'SO4', 'PO₄³⁻': 'PO4'
-        };
-
-        let cBase = BASE_SYMBOLS[c];
-        let aBase = BASE_SYMBOLS[a];
-
-        // Add counts
-        let cPart = cCount > 1 ? (cBase.length > 2 ? `(${cBase})${cCount}` : `${cBase}${cCount}`) : cBase;
-        let aPart = aCount > 1 ? (aBase.length > 2 ? `(${aBase})${aCount}` : `${aBase}${aCount}`) : aBase;
-
-        // Organic exceptions? CH3COO? Not in list.
-        return cPart + aPart;
-    }
-
-    return "ComplexSalt"; // Fallback
-}
 
 function calculatePoints(cards, formula) {
     let pts = 0;
