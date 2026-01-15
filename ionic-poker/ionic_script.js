@@ -620,12 +620,16 @@ function clearGameUI() {
 }
 
 function updateLobbyUI() {
-    const list = document.getElementById('lobby-player-list');
+    const list = document.getElementById('member-list');
     if (!list) return;
+
     list.innerHTML = gameState.players.map(p => `<li>${p.name} ${p.id === hostId ? '(HOST)' : ''}</li>`).join('');
+    document.getElementById('player-count').textContent = gameState.players.length;
 
     if (role === 'host') {
-        document.getElementById('start-btn').classList.remove('hidden');
+        const btn = document.getElementById('start-btn');
+        btn.classList.remove('hidden');
+        btn.disabled = false; // Enable the button!
     }
 }
 
