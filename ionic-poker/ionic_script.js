@@ -664,11 +664,17 @@ function attemptBond() {
         }
 
         // Check if Cation + Anion logic exists
-        const hasCation = selectedCards.some(s => CARD_DATA[s].type === 'cation');
-        const hasAnion = selectedCards.some(s => CARD_DATA[s].type === 'anion');
+        const uniqueCations = [...new Set(selectedCards.filter(c => CARD_DATA[c].type === 'cation'))];
+        const uniqueAnions = [...new Set(selectedCards.filter(c => CARD_DATA[c].type === 'anion'))];
 
-        if (!hasCation || !hasAnion) {
+        if (uniqueCations.length === 0 || uniqueAnions.length === 0) {
             alert("陽イオンと陰イオンを組み合わせてください");
+            return;
+        }
+
+        // Strict Rule: 1 Type of Cation + 1 Type of Anion
+        if (uniqueCations.length > 1 || uniqueAnions.length > 1) {
+            alert("混ぜられるのは「1種類の陽イオン」と「1種類の陰イオン」だけです。\n(例: Na+とK+を混ぜたり、Cl-とOH-を混ぜたりはできません)");
             return;
         }
 
