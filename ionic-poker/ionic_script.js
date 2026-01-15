@@ -233,8 +233,23 @@ function resolveShowdown() {
 }
 
 function restartGameHost() {
-    // Simple Restart
-    startGameHost();
+    // Regenerate Deck and reset everything
+    startDate = Date.now();
+    gameState.deck = generateDeck(); // NEW DECK
+    gameState.phase = 'exchange1';
+    gameState.discards = [];
+
+    // Reset players
+    gameState.players.forEach(p => {
+        p.hand = drawFromDeck(5); // NEW HAND
+        p.isDone = false;
+        p.formedSets = [];
+        p.score = 0;
+        p.hasFullBonus = false;
+    });
+
+    broadcastState();
+    handleStateUpdate(gameState);
 }
 
 // --- Common Logic ---
