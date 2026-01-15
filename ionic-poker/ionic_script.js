@@ -135,7 +135,7 @@ function startGameHost() {
     gameState.deck = generateDeck();
     gameState.phase = 'exchange1';
     gameState.players.forEach(p => {
-        p.hand = drawFromDeck(5); // 5 Cards Start
+        p.hand = drawFromDeck(7); // 7 Cards Start
         p.isDone = false;
         p.formedSets = [];
         p.score = 0;
@@ -151,7 +151,7 @@ function handleHostData(peerId, data) {
     if (data.type === 'action_exchange') {
         const keeps = data.kept;
         // Logic: Discard rest, Draw new
-        const countNeeded = 5 - keeps.length;
+        const countNeeded = 7 - keeps.length;
 
         const newCards = drawFromDeck(countNeeded);
         player.hand = [...keeps, ...newCards];
@@ -224,11 +224,11 @@ function resolveShowdown() {
                 totalScore += set.finalPoints;
             });
 
-            // Special Hand Bonus (Full House: 5 cards used)
+            // Special Hand Bonus (Full House: 7 cards used)
             // Ensure cards is array
             const cardsUsed = p.formedSets.reduce((sum, s) => sum + (s.cards ? s.cards.length : 0), 0);
-            if (cardsUsed === 5) {
-                totalScore += 1000;
+            if (cardsUsed === 7) {
+                totalScore += 500;
                 p.hasFullBonus = true;
             }
 
