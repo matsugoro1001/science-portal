@@ -476,43 +476,52 @@ function sendAction(data) {
 }
 
 
-mySelectedIndices = [];
-// Also force clear container just in case
-document.getElementById('formed-sets-container').innerHTML = '';
+function handleStateUpdate(newState) {
+    // FORCE CLEAR UI if in Exchange Phase (New Game Started)
+    if (newState.phase === 'exchange1') {
+        clearGameUI();
+        myFormedSets = [];
+        mySelectedIndices = [];
+
+        const container = document.getElementById('formed-sets-container');
+        if (container) {
+            container.innerHTML = '';
+            container.classList.add('hidden');
+        }
     }
 
-gameState = newState;
-const me = gameState.players.find(p => p.id === myId);
+    gameState = newState;
+    const me = gameState.players.find(p => p.id === myId);
 
-// Switch Screen
-if (gameState.phase === 'lobby') {
-    lobbyScreen.classList.remove('hidden');
-    gameScreen.classList.add('hidden');
-    resultScreen.classList.add('hidden');
-} else if (gameState.phase === 'result') {
-    gameScreen.classList.add('hidden');
-    resultScreen.classList.remove('hidden');
-    renderResult(gameState.players);
-} else {
-    // Game Playing
-    lobbyScreen.classList.add('hidden');
-    gameScreen.classList.remove('hidden');
-    resultScreen.classList.add('hidden');
+    // Switch Screen
+    if (gameState.phase === 'lobby') {
+        lobbyScreen.classList.remove('hidden');
+        gameScreen.classList.add('hidden');
+        resultScreen.classList.add('hidden');
+    } else if (gameState.phase === 'result') {
+        gameScreen.classList.add('hidden');
+        resultScreen.classList.remove('hidden');
+        renderResult(gameState.players);
+    } else {
+        // Game Playing
+        lobbyScreen.classList.add('hidden');
+        gameScreen.classList.remove('hidden');
+        resultScreen.classList.add('hidden');
 
-    // Render UI
-    updatePhaseIndicator();
-    renderOpponents();
+        updatePhaseIndicator();
+        renderOpponents();
 
-    // Hand & Interaction
-    if (me) {
-        // Sync local hand ONLY if phase changed or first load (to avoid overwrite during drag)
-        // But for exchange/form, we should just trust server state at start of phase
-        // For MVP, just render server hand.
-        myHand = me.hand;
-        renderMyHand(me);
-        updateInstruction();
+        if (me) {
+            myHand = me.hand;
+            renderMyHand(me);
+            updateInstruction();
+
+            // Re-render local formed sets only if in FORM phase
+            if (gameState.phase === 'form') {
+                renderFormedSets();
+            }
+        }
     }
-}
 }
 
 function updatePhaseIndicator() {
