@@ -648,18 +648,6 @@ function toggleSelect(idx) {
     // Yes, renderMyHand updates 'onclick' with current 'idx'. Correct.
     updateInstruction();
 }
-function toggleSelect(idx) {
-    if (gameState.phase === 'result') return; // Locked
-
-    const pos = mySelectedIndices.indexOf(idx);
-    if (pos >= 0) mySelectedIndices.splice(pos, 1);
-    else mySelectedIndices.push(idx);
-
-    // Re-render to show selection
-    const me = gameState.players.find(p => p.id === myId);
-    renderMyHand(me);
-    updateInstruction();
-}
 
 function updateInstruction() {
     const btn = document.getElementById('action-btn');
