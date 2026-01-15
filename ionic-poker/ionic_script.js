@@ -1,41 +1,41 @@
 
-// --- Strategic Ion Poker Script ---
+// --- Strategic Ion Poker Script (v=fix44) ---
 
-// GAS URL for logging (optional, reusing similar endpoint or keeping empty for now)
+// GAS URL for logging (optional)
 const GAS_URL = '';
 
 // --- ION DATA Definitions ---
 const CARD_DATA = {
-    // Cations (阳イオン)
-    'H⁺': { name: '水素イオン', charge: 1, type: 'cation', count: 8, color: '#e0f2fe', textColor: '#0369a1' }, // Blue-50
+    // Cations (陽イオン)
+    'H⁺': { name: '水素イオン', charge: 1, type: 'cation', count: 8, color: '#e0f2fe', textColor: '#0369a1' },
     'Na⁺': { name: 'ナトリウムイオン', charge: 1, type: 'cation', count: 6, color: '#e0f2fe', textColor: '#0369a1' },
-    'Mg²⁺': { name: 'マグネシウムイオン', charge: 2, type: 'cation', count: 5, color: '#dbeafe', textColor: '#1e40af' }, // Blue-100
+    'Mg²⁺': { name: 'マグネシウムイオン', charge: 2, type: 'cation', count: 5, color: '#dbeafe', textColor: '#1e40af' },
     'Ca²⁺': { name: 'カルシウムイオン', charge: 2, type: 'cation', count: 5, color: '#dbeafe', textColor: '#1e40af' },
     'Cu²⁺': { name: '銅(II)イオン', charge: 2, type: 'cation', count: 5, color: '#dbeafe', textColor: '#1e40af' },
     'Ba²⁺': { name: 'バリウムイオン', charge: 2, type: 'cation', count: 5, color: '#dbeafe', textColor: '#1e40af' },
-    'Fe³⁺': { name: '鉄(III)イオン', charge: 3, type: 'cation', count: 5, color: '#bfdbfe', textColor: '#172554' }, // Blue-200
+    'Fe³⁺': { name: '鉄(III)イオン', charge: 3, type: 'cation', count: 5, color: '#bfdbfe', textColor: '#172554' },
     'Al³⁺': { name: 'アルミニウムイオン', charge: 3, type: 'cation', count: 5, color: '#bfdbfe', textColor: '#172554' },
 
-    // Anions (阴イオン)
-    'Cl⁻': { name: '塩化物イオン', charge: -1, type: 'anion', count: 6, color: '#fef2f2', textColor: '#b91c1c' }, // Red-50
+    // Anions (陰イオン)
+    'Cl⁻': { name: '塩化物イオン', charge: -1, type: 'anion', count: 6, color: '#fef2f2', textColor: '#b91c1c' },
     'OH⁻': { name: '水酸化物イオン', charge: -1, type: 'anion', count: 8, color: '#fef2f2', textColor: '#b91c1c' },
     'NO₃⁻': { name: '硝酸イオン', charge: -1, type: 'anion', count: 4, color: '#fef2f2', textColor: '#b91c1c' },
     'HCO₃⁻': { name: '炭酸水素イオン', charge: -1, type: 'anion', count: 4, color: '#fef2f2', textColor: '#b91c1c' },
-    'O²⁻': { name: '酸化物イオン', charge: -2, type: 'anion', count: 4, color: '#fee2e2', textColor: '#991b1b' }, // Red-100
+    'O²⁻': { name: '酸化物イオン', charge: -2, type: 'anion', count: 4, color: '#fee2e2', textColor: '#991b1b' },
     'S²⁻': { name: '硫化物イオン', charge: -2, type: 'anion', count: 4, color: '#fee2e2', textColor: '#991b1b' },
     'CO₃²⁻': { name: '炭酸イオン', charge: -2, type: 'anion', count: 5, color: '#fee2e2', textColor: '#991b1b' },
     'SO₄²⁻': { name: '硫酸イオン', charge: -2, type: 'anion', count: 5, color: '#fee2e2', textColor: '#991b1b' },
-    'PO₄³⁻': { name: 'リン酸イオン', charge: -3, type: 'anion', count: 6, color: '#fecaca', textColor: '#7f1d1d' }, // Red-200
+    'PO₄³⁻': { name: 'リン酸イオン', charge: -3, type: 'anion', count: 6, color: '#fecaca', textColor: '#7f1d1d' },
 };
 
 // Yaku / Bonus Logic
 const SPECIAL_COMPOUNDS = {
-    'H2O': { name: '水 (Water)', points: 500 }, // Neutralization
-    'BaSO4': { name: '硫酸バリウム', points: 300 }, // Precipitation
-    'CaCO3': { name: '炭酸カルシウム', points: 300 }, // Precipitation
-    'BaCO3': { name: '炭酸バリウム', points: 300 }, // Precipitation
-    'AgCl': { name: '塩化銀', points: 300 }, // Precipitation (Extension)
-    'Al2O3': { name: '酸化アルミニウム', points: 2000 }, // Ruby/Sapphire
+    'H2O': { name: '水 (Water)', points: 500 },
+    'BaSO4': { name: '硫酸バリウム', points: 300 },
+    'CaCO3': { name: '炭酸カルシウム', points: 300 },
+    'BaCO3': { name: '炭酸バリウム', points: 300 },
+    'AgCl': { name: '塩化銀', points: 300 },
+    'Al2O3': { name: '酸化アルミニウム', points: 2000 },
 };
 
 // PeerJS Variables
@@ -51,14 +51,14 @@ let gameState = {
     phase: 'lobby', // lobby, exchange1, exchange2, form, result
     deck: [],
     discards: [],
-    players: [], // {id, name, hand, formedSets: [], score: 0, rawScore: 0, isDone: false}
+    players: [],
     startTime: 0
 };
 
 let myHand = [];
 let mySelectedIndices = [];
-let myFormedSets = []; // Local tentative sets
-let myScore = 0; // Local tentative score
+let myFormedSets = [];
+let myScore = 0;
 
 // DOM Elements
 const lobbyScreen = document.getElementById('lobby-screen');
@@ -150,7 +150,7 @@ function handleHostData(peerId, data) {
 
     if (data.type === 'action_exchange') {
         const keeps = data.kept;
-        // Logic: Discard rest, Draw new
+        // Logic: Discard rest, Draw new (Check against Hand Size 7)
         const countNeeded = 7 - keeps.length;
 
         const newCards = drawFromDeck(countNeeded);
@@ -160,19 +160,16 @@ function handleHostData(peerId, data) {
         checkPhaseCompletion();
 
     } else if (data.type === 'action_finish_form') {
-        // Player submitted their formed sets
-        player.formedSets = data.formedSets; // These are tentative objects { formula, score, cards }
+        player.formedSets = data.formedSets;
         player.isDone = true;
         checkPhaseCompletion();
-    } // else if (data.type === 'action_restart') ...
+    }
 
-    // Send immediate update so everyone sees "Done" status
     broadcastState();
 }
 
 function checkPhaseCompletion() {
     if (gameState.players.every(p => p.isDone)) {
-        // Move Phase
         if (gameState.phase === 'exchange1') {
             gameState.phase = 'exchange2';
             gameState.players.forEach(p => p.isDone = false);
@@ -180,7 +177,6 @@ function checkPhaseCompletion() {
             gameState.phase = 'form';
             gameState.players.forEach(p => p.isDone = false);
         } else if (gameState.phase === 'form') {
-            // End of Game -> Calculate Results
             resolveShowdown();
             gameState.phase = 'result';
         }
@@ -191,10 +187,9 @@ function checkPhaseCompletion() {
 
 function resolveShowdown() {
     try {
-        // 1. Collect all formulas
         const allFormulas = [];
         gameState.players.forEach(p => {
-            if (!p.formedSets) p.formedSets = []; // Safety
+            if (!p.formedSets) p.formedSets = [];
             p.formedSets.forEach(set => {
                 allFormulas.push({
                     formula: set.formula,
@@ -204,13 +199,11 @@ function resolveShowdown() {
             });
         });
 
-        // 2. Count occurrences (Duplicate Check)
         const formulaCounts = {};
         allFormulas.forEach(item => {
             formulaCounts[item.formula] = (formulaCounts[item.formula] || 0) + 1;
         });
 
-        // 3. Mark duplicates and calculate final score
         gameState.players.forEach(p => {
             let totalScore = 0;
             p.formedSets.forEach(set => {
@@ -224,70 +217,29 @@ function resolveShowdown() {
                 totalScore += set.finalPoints;
             });
 
-            // Special Hand Bonus (Full House: 7 cards used)
-            // Ensure cards is array
+            // Full Bonus Check (7 Cards)
             const cardsUsed = p.formedSets.reduce((sum, s) => sum + (s.cards ? s.cards.length : 0), 0);
             if (cardsUsed === 7) {
                 totalScore += 500;
                 p.hasFullBonus = true;
+            } else {
+                p.hasFullBonus = false;
             }
 
             p.score = totalScore;
         });
     } catch (e) {
-        alert("Error in Showdown Logic: " + e.message);
-        console.error(e);
+        console.error("Showdown Error", e);
     }
 }
 
-// ...
-
-function renderResult(players) {
-    try {
-        const table = document.getElementById('ranking-list');
-        if (!table) return;
-
-        // Sort by score
-        const sorted = [...players].sort((a, b) => b.score - a.score);
-
-        table.innerHTML = sorted.map((p, i) => `
-            <tr class="${p.id === myId ? 'me' : ''}">
-                <td>${i + 1}</td>
-                <td>${p.name}</td>
-                <td>${p.score}</td>
-                <td style="font-size:0.8rem">
-                    ${(p.formedSets || []).map(s => {
-            const style = s.isDuplicated ? 'text-decoration: line-through; color: red;' : 'color: green;';
-            const suffix = s.isDuplicated ? '(被り💥)' : '';
-            return `<span style="${style}">${formatFormula(s.formula)}${suffix}</span>`;
-        }).join(', ') || 'なし'}
-                    ${p.hasFullBonus ? '<br><span style="color:gold">★FULL BONUS</span>' : ''}
-                </td>
-            </tr>
-        `).join('');
-
-        // Inject Restart Button for Host
-        const bar = document.querySelector('#result-screen .action-bar');
-        if (bar) {
-            bar.innerHTML = role === 'host'
-                ? `<button class="btn primary" onclick="restartGameHost()">もう一度遊ぶ</button>`
-                : `<div style="color:#666">ホストの操作待ち...</div>`;
-        }
-    } catch (e) {
-        alert("Error in Render Result: " + e.message);
-        console.error(e);
-    }
-}
 function restartGameHost() {
-    // Regenerate Deck and reset everything
-    startDate = Date.now();
-    gameState.deck = generateDeck(); // NEW DECK
+    gameState.deck = generateDeck();
     gameState.phase = 'exchange1';
     gameState.discards = [];
 
-    // Reset players
     gameState.players.forEach(p => {
-        p.hand = drawFromDeck(5); // NEW HAND
+        p.hand = drawFromDeck(7); // 7 Cards
         p.isDone = false;
         p.formedSets = [];
         p.score = 0;
@@ -298,150 +250,6 @@ function restartGameHost() {
     handleStateUpdate(gameState);
 }
 
-// --- Naming Logic ---
-function generateCompoundName(formula, cards) {
-    // 1. Check Special Dictionary First
-    if (SPECIAL_COMPOUNDS[formula]) {
-        return SPECIAL_COMPOUNDS[formula].name;
-    }
-
-    // 2. Generic Construction
-    const cations = cards.filter(c => CARD_DATA[c].type === 'cation');
-    const anions = cards.filter(c => CARD_DATA[c].type === 'anion');
-
-    // Pick representative (first one found)
-    const cat = cations[0];
-    const ani = anions[0];
-
-    if (!cat || !ani) return '';
-
-    let catName = CARD_DATA[cat].name.replace('イオン', '');
-    let aniName = CARD_DATA[ani].name.replace('イオン', '');
-
-    // Refine Anion Name (Remove '物' from '酸化物', '塩化物', '硫化物', '水酸化物')
-    if (aniName.endsWith('物')) {
-        aniName = aniName.slice(0, -1);
-    }
-
-    // Acid Special Cases (H+)
-    if (cat === 'H⁺') {
-        if (ani === 'Cl⁻') return '塩化水素';
-        if (ani === 'SO₄²⁻') return '硫酸';
-        if (ani === 'NO₃⁻') return '硝酸';
-        if (ani === 'CO₃²⁻') return '炭酸';
-        if (ani === 'PO₄³⁻') return 'リン酸';
-        // Fallback
-        return aniName + '水素';
-    }
-
-    return aniName + catName;
-}
-
-function handleStateUpdate(newState) {
-    // FORCE CLEAR UI if in Exchange Phase (New Game Started)
-    if (newState.phase === 'exchange1') {
-        clearGameUI();
-        myFormedSets = [];
-        mySelectedIndices = [];
-
-        const container = document.getElementById('formed-sets-container');
-        if (container) {
-            container.innerHTML = '';
-            container.classList.add('hidden');
-        }
-    }
-
-    // ... [Rest of function]
-
-    gameState = newState;
-    const me = gameState.players.find(p => p.id === myId);
-
-    // Switch Screen
-    if (gameState.phase === 'lobby') {
-        lobbyScreen.classList.remove('hidden');
-        gameScreen.classList.add('hidden');
-        resultScreen.classList.add('hidden');
-    } else if (gameState.phase === 'result') {
-        gameScreen.classList.add('hidden');
-        resultScreen.classList.remove('hidden');
-        renderResult(gameState.players);
-    } else {
-        // Game Playing
-        lobbyScreen.classList.add('hidden');
-        gameScreen.classList.remove('hidden');
-        resultScreen.classList.add('hidden');
-
-        updatePhaseIndicator();
-        renderOpponents();
-
-        if (me) {
-            myHand = me.hand;
-            renderMyHand(me);
-            updateInstruction();
-
-            // Re-render local formed sets only if in FORM phase
-            if (gameState.phase === 'form') {
-                renderFormedSets();
-            }
-        }
-    }
-}
-
-function renderFormedSets() {
-    const container = document.getElementById('formed-sets-container');
-    container.innerHTML = myFormedSets.map(set => {
-        const name = generateCompoundName(set.formula, set.cards);
-        return `
-        <div class="formed-set">
-            <div class="formula">${formatFormula(set.formula)}</div>
-            <div style="font-size:0.8rem; color:#555;">${name}</div>
-            <div class="pts">${set.points}pt</div>
-        </div>
-    `;
-    }).join('');
-    container.classList.remove('hidden');
-}
-
-function renderResult(players) {
-    try {
-        const table = document.getElementById('ranking-list');
-        if (!table) return;
-
-        // Sort by score
-        const sorted = [...players].sort((a, b) => b.score - a.score);
-
-        table.innerHTML = sorted.map((p, i) => `
-            <tr class="${p.id === myId ? 'me' : ''}">
-                <td>${i + 1}</td>
-                <td>${p.name}</td>
-                <td>${p.score}</td>
-                <td style="font-size:0.8rem">
-                    ${(p.formedSets || []).map(s => {
-            const style = s.isDuplicated ? 'text-decoration: line-through; color: red;' : 'color: green;';
-            const suffix = s.isDuplicated ? '(被り💥)' : '';
-            const name = generateCompoundName(s.formula, s.cards || []);
-            return `<div style="${style}">
-                        <b>${formatFormula(s.formula)}</b> ${suffix}<br>
-                        <span style="font-size:0.7em; color:#666">${name}</span>
-                    </div>`;
-        }).join('<hr style="margin:2px 0; border:0; border-top:1px dashed #ccc;">') || 'なし'}
-                    ${p.hasFullBonus ? '<br><span style="color:gold">★FULL BONUS</span>' : ''}
-                </td>
-            </tr>
-        `).join('');
-
-        // Inject Restart Button for Host
-        const bar = document.querySelector('#result-screen .action-bar');
-        if (bar) {
-            bar.innerHTML = role === 'host'
-                ? `<button class="btn primary" onclick="restartGameHost()">もう一度遊ぶ</button>`
-                : `<div style="color:#666">ホストの操作待ち...</div>`;
-        }
-    } catch (e) {
-        alert("Error in Render Result: " + e.message);
-        console.error(e);
-    }
-}
 // --- Common Logic ---
 function generateDeck() {
     let d = [];
@@ -478,7 +286,7 @@ function sendAction(data) {
 
 
 function handleStateUpdate(newState) {
-    // FORCE CLEAR UI if in Exchange Phase (New Game Started)
+    // FORCE CLEAR UI on Restart
     if (newState.phase === 'exchange1') {
         clearGameUI();
         myFormedSets = [];
@@ -517,7 +325,6 @@ function handleStateUpdate(newState) {
             renderMyHand(me);
             updateInstruction();
 
-            // Re-render local formed sets only if in FORM phase
             if (gameState.phase === 'form') {
                 renderFormedSets();
             }
@@ -526,12 +333,6 @@ function handleStateUpdate(newState) {
 }
 
 function updatePhaseIndicator() {
-    const steps = ['exchange1', 'exchange2', 'form'];
-    steps.forEach(s => {
-        const el = document.getElementById(`step-${s === 'form' ? 'form' : (s === 'exchange1' ? 'ex1' : 'ex2')}`);
-        // Simple mapping correction
-    });
-    // Just map manually
     document.querySelector('.step-container').innerHTML = `
         <div class="step ${gameState.phase === 'exchange1' ? 'active' : ''}">交換1</div>
         <div class="step ${gameState.phase === 'exchange2' ? 'active' : ''}">交換2</div>
@@ -554,14 +355,11 @@ function renderOpponents() {
     });
 }
 
-// --- Render Hand with Drag & Drop ---
+// --- Render Hand with SortableJS ---
 let sortableInstance = null;
 
 function renderMyHand(me) {
     const handContainer = document.getElementById('player-hand');
-
-    // Store current state for reconciliation if needed, but for simplicity we rebuild on sort
-    // Just simple render.
     handContainer.innerHTML = '';
 
     myHand.forEach((symbol, idx) => {
@@ -569,39 +367,30 @@ function renderMyHand(me) {
         const isSelected = mySelectedIndices.includes(idx);
         const card = document.createElement('div');
         card.className = `atom-card ${data.type} ${isSelected ? 'selected' : ''}`;
-        card.setAttribute('data-symbol', symbol); // Store symbol for reconstruction
+        card.setAttribute('data-symbol', symbol);
         card.style.borderColor = data.textColor;
         card.style.backgroundColor = data.color;
 
-        // Sup logic
         let displaySym = symbol.replace(/(\d+)([+-])/g, '<sup>$1$2</sup>').replace(/([+-])(?!\d)/g, '<sup>$1</sup>');
-        // Simple fallback cleanup if needed
 
         card.innerHTML = `
             <div class="atom-symbol" style="color:${data.textColor}">${displaySym}</div>
             <div class="atom-name" style="color:${data.textColor}">${data.name}</div>
         `;
 
-        // Click to Select (Conflict with Drag? SortableJS handles this usually)
-        // We use typical click handler. Sortable prevents click if dragged.
         card.onclick = (e) => {
-            // Check if it was a drag (Sortable adds a flag? No, usually timing.)
-            // SortableJS doesn't fire click if dragged.
             toggleSelect(idx);
         };
-
         handContainer.appendChild(card);
     });
 
-    // Initialize Sortable once
     if (!sortableInstance) {
         sortableInstance = new Sortable(handContainer, {
             animation: 150,
             ghostClass: 'sortable-ghost',
-            delay: 100, // Slight delay to prevent accidental drag on touch? 
+            delay: 100,
             delayOnTouchOnly: true,
             onEnd: function (evt) {
-                // Reorder myHand based on DOM
                 const newHand = [];
                 const newSelection = [];
                 const cards = handContainer.children;
@@ -615,15 +404,12 @@ function renderMyHand(me) {
                     }
                 }
 
-                // Update State
                 myHand = newHand;
                 mySelectedIndices = newSelection;
 
-                // Sync to global player object
                 const p = gameState.players.find(pl => pl.id === myId);
                 if (p) p.hand = myHand;
 
-                // Re-render to ensure indices update correctly (onclick handlers need new index)
                 renderMyHand(p);
                 updateInstruction();
             }
@@ -632,20 +418,15 @@ function renderMyHand(me) {
 }
 
 function toggleSelect(idx) {
-    if (gameState.phase === 'result') return; // Locked
+    if (gameState.phase === 'result') return;
 
     const pos = mySelectedIndices.indexOf(idx);
     if (pos >= 0) mySelectedIndices.splice(pos, 1);
     else mySelectedIndices.push(idx);
 
-    // Re-render to show selection
+    // Re-render
     const me = gameState.players.find(p => p.id === myId);
-    renderMyHand(me); // This re-renders (destroying sortable dom), but Sortable is robust? 
-    // Wait, if we re-render, we destroy DOM elements. 
-    // The previous Sortable instance is attached to container.
-    // Container content changes. Sortable should be fine as it monitors children.
-    // BUT onclick handlers are closure-bound to old 'idx'.
-    // Yes, renderMyHand updates 'onclick' with current 'idx'. Correct.
+    renderMyHand(me);
     updateInstruction();
 }
 
@@ -662,7 +443,11 @@ function updateInstruction() {
 
     btn.classList.remove('hidden');
     if (gameState.phase.startsWith('exchange')) {
-        instruction.textContent = "いらないカードを選んで捨ててください";
+        const isSecond = gameState.phase === 'exchange2';
+        instruction.textContent = isSecond
+            ? "2回目(最後)の交換です。いらないカードを捨ててください"
+            : "いらないカードを選んで捨ててください";
+
         btn.textContent = mySelectedIndices.length === 0 ? "交換しない" : "交換する";
         btn.className = "btn danger";
         btn.onclick = () => {
@@ -683,6 +468,7 @@ function updateInstruction() {
             finBtn.id = 'finish-form-btn';
             finBtn.className = 'btn secondary';
             finBtn.textContent = '結合終了 (完了)';
+            finBtn.style.marginLeft = '10px';
             finBtn.onclick = () => {
                 sendAction({ type: 'action_finish_form', formedSets: myFormedSets });
                 document.getElementById('finish-form-btn').remove();
@@ -693,8 +479,7 @@ function updateInstruction() {
 }
 
 // --- Bonding Logic ---
-
-// --- Global Error Handler for Debugging on Mobile ---
+// Global Error Handler 
 window.onerror = function (msg, url, line, col, error) {
     alert("Error: " + msg + "\nLine: " + line);
     return false;
@@ -721,7 +506,7 @@ function attemptBond() {
             return;
         }
 
-        // Check if Cation + Anion logic exists
+        // Strict Rule: 1 Cation Type + 1 Anion Type
         const uniqueCations = [...new Set(selectedCards.filter(c => CARD_DATA[c].type === 'cation'))];
         const uniqueAnions = [...new Set(selectedCards.filter(c => CARD_DATA[c].type === 'anion'))];
 
@@ -730,31 +515,24 @@ function attemptBond() {
             return;
         }
 
-        // Strict Rule: 1 Type of Cation + 1 Type of Anion
         if (uniqueCations.length > 1 || uniqueAnions.length > 1) {
-            alert("混ぜられるのは「1種類の陽イオン」と「1種類の陰イオン」だけです。\n(例: Na+とK+を混ぜたり、Cl-とOH-を混ぜたりはできません)");
+            alert("混ぜられるのは「1種類の陽イオン」と「1種類の陰イオン」だけです。");
             return;
         }
 
-        // Success!
         const formula = generateFormula(selectedCards);
         const points = calculatePoints(selectedCards, formula);
 
-        // Add to local formed sets
         myFormedSets.push({
             formula: formula,
             cards: selectedCards,
             points: points
         });
 
-        // Visualize
         renderFormedSets();
-
-        // Remove from hand
         myHand = myHand.filter((_, i) => !mySelectedIndices.includes(i));
         mySelectedIndices = [];
 
-        // Update UI
         const me = gameState.players.find(p => p.id === myId);
         me.hand = myHand;
         renderMyHand(me);
@@ -764,39 +542,19 @@ function attemptBond() {
     }
 }
 
-
-
 function calculatePoints(cards, formula) {
     let pts = 0;
-    // 1. Count Bonus
     const len = cards.length;
     if (len === 2) pts = 100;
     else if (len === 3) pts = 300;
     else if (len === 4) pts = 600;
     else if (len >= 5) pts = 1200;
 
-    // 2. Special Formula Bonus
-    // Need to normalize formula for lookup (e.g., remove sub HTML if any)
-    // My formula gen outputs plain text like H2O or Al2(SO4)3
-
-    // Check H2O
     if (formula === 'HOH' || formula === 'H2O') { pts += SPECIAL_COMPOUNDS['H2O'].points; formula = 'H2O'; }
     if (SPECIAL_COMPOUNDS[formula]) {
         pts += SPECIAL_COMPOUNDS[formula].points;
     }
-
     return pts;
-}
-
-function renderFormedSets() {
-    const container = document.getElementById('formed-sets-container');
-    container.innerHTML = myFormedSets.map(set => `
-        <div class="formed-set">
-            <span class="formula">${formatFormula(set.formula)}</span>
-            <span class="pts">${set.points}pt</span>
-        </div>
-    `).join('');
-    container.classList.remove('hidden');
 }
 
 function generateFormula(cards) {
@@ -805,28 +563,19 @@ function generateFormula(cards) {
         counts[c] = (counts[c] || 0) + 1;
     });
 
-    // Order: Cations then Anions
     const cations = Object.keys(counts).filter(k => CARD_DATA[k].charge > 0);
     const anions = Object.keys(counts).filter(k => CARD_DATA[k].charge < 0);
 
-    // Helper to format part
     const formatPart = (ionList) => {
         let partStr = "";
         ionList.forEach(ion => {
             let count = counts[ion];
-            // Normalize Unicode Subscripts -> ASCII
+            // Normalize subscripts and strip charges
             let sym = ion.replace(/₀/g, '0').replace(/₁/g, '1').replace(/₂/g, '2').replace(/₃/g, '3')
                 .replace(/₄/g, '4').replace(/₅/g, '5').replace(/₆/g, '6').replace(/₇/g, '7')
                 .replace(/₈/g, '8').replace(/₉/g, '9');
-
-            // Remove Unicode Charge Superscripts (⁺ ⁻ ² ³ etc) and standard + -
-            // \u207A-F (superscripts + -), \u00B2-3 (2,3), + -
-            // Simply remove any non-alphanumeric chars at the end? No, O2- is different.
-            // Target specific charge chars: ⁺ ⁻ ² ³ 
             sym = sym.replace(/[⁺⁻²³¹⁰⁴⁵⁶⁷⁸⁹]+$/g, '').replace(/[+-]+$/g, '');
 
-            // Special Case: H + HCO3 -> H2CO3
-            // Standard chemical nomenclature: Cation(Count) Anion(Count)
             const isPoly = /[A-Z].*[A-Z]/.test(sym) || /\d/.test(sym);
 
             if (count > 1) {
@@ -845,43 +594,110 @@ function generateFormula(cards) {
     let rawC = formatPart(cations);
     let rawA = formatPart(anions);
 
-    // Merge logic for Hydrogen special cases to look like acids
     if (rawC.startsWith('H') && !rawC.includes('(')) {
-        if (rawA.startsWith('H')) {
-            // Hardcode fix for H + HCO3 -> H2CO3
-            if (rawA.startsWith('HCO3')) return 'H2CO3';
-        }
+        if (rawA.startsWith('HCO3')) return 'H2CO3';
     }
 
-    // Default fallback
     return rawC + rawA;
 }
 
-function formatFormula(f) {
-    if (!f) return '';
-    return f.replace(/(\d+)/g, '<sub>$1</sub>');
+function formatFormula(formula) {
+    // Basic H2O -> H₂O formatting for HTML
+    return formula.replace(/(\d+)/g, '<sub>$1</sub>');
 }
 
-// Clear UI helper called on Reset
 function clearGameUI() {
-    document.getElementById('formed-sets-container').innerHTML = '';
-    document.getElementById('result-screen').classList.add('hidden');
-    document.getElementById('ranking-list').innerHTML = '';
+    // Helper to reset specific UI elements
+    const h = document.getElementById('formed-sets-container');
+    if (h) h.innerHTML = '';
 }
 
 function updateLobbyUI() {
-    document.getElementById('player-count').textContent = gameState.players.length;
-    document.getElementById('member-list').innerHTML = gameState.players.map(p => `<li>${p.name}</li>`).join('');
+    const list = document.getElementById('lobby-player-list');
+    if (!list) return;
+    list.innerHTML = gameState.players.map(p => `<li>${p.name} ${p.id === hostId ? '(HOST)' : ''}</li>`).join('');
 
-    // Always enable start button for testing if host
     if (role === 'host') {
-        const btn = document.getElementById('start-btn');
-        if (btn) btn.disabled = false;
+        document.getElementById('start-btn').classList.remove('hidden');
     }
 }
 
-function toggleRuleModal() {
-    const modal = document.getElementById('rule-modal');
-    if (modal) modal.classList.toggle('hidden');
+function generateCompoundName(formula, cards) {
+    if (SPECIAL_COMPOUNDS[formula]) {
+        return SPECIAL_COMPOUNDS[formula].name;
+    }
+    const cations = cards.filter(c => CARD_DATA[c].type === 'cation');
+    const anions = cards.filter(c => CARD_DATA[c].type === 'anion');
+    const cat = cations[0];
+    const ani = anions[0];
+    if (!cat || !ani) return '';
+
+    let catName = CARD_DATA[cat].name.replace('イオン', '');
+    let aniName = CARD_DATA[ani].name.replace('イオン', '');
+
+    if (aniName.endsWith('物')) {
+        aniName = aniName.slice(0, -1);
+    }
+
+    if (cat === 'H⁺') {
+        if (ani === 'Cl⁻') return '塩化水素';
+        if (ani === 'SO₄²⁻') return '硫酸';
+        if (ani === 'NO₃⁻') return '硝酸';
+        if (ani === 'CO₃²⁻') return '炭酸';
+        if (ani === 'PO₄³⁻') return 'リン酸';
+        return aniName + '水素';
+    }
+    return aniName + catName;
 }
 
+function renderFormedSets() {
+    const container = document.getElementById('formed-sets-container');
+    container.innerHTML = myFormedSets.map(set => {
+        const name = generateCompoundName(set.formula, set.cards);
+        return `
+        <div class="formed-set">
+            <div class="formula">${formatFormula(set.formula)}</div>
+            <div style="font-size:0.8rem; color:#555;">${name}</div>
+            <div class="pts">${set.points}pt</div>
+        </div>
+    `;
+    }).join('');
+    container.classList.remove('hidden');
+}
+
+function renderResult(players) {
+    try {
+        const table = document.getElementById('ranking-list');
+        if (!table) return;
+        const sorted = [...players].sort((a, b) => b.score - a.score);
+        table.innerHTML = sorted.map((p, i) => `
+            <tr class="${p.id === myId ? 'me' : ''}">
+                <td>${i + 1}</td>
+                <td>${p.name}</td>
+                <td>${p.score}</td>
+                <td style="font-size:0.8rem">
+                    ${(p.formedSets || []).map(s => {
+            const style = s.isDuplicated ? 'text-decoration: line-through; color: red;' : 'color: green;';
+            const suffix = s.isDuplicated ? '(被り💥)' : '';
+            const name = generateCompoundName(s.formula, s.cards || []);
+            return `<div style="${style}">
+                        <b>${formatFormula(s.formula)}</b> ${suffix}<br>
+                        <span style="font-size:0.7em; color:#666">${name}</span>
+                    </div>`;
+        }).join('<hr style="margin:2px 0; border:0; border-top:1px dashed #ccc;">') || 'なし'}
+                    ${p.hasFullBonus ? '<br><span style="color:gold">★FULL BONUS</span>' : ''}
+                </td>
+            </tr>
+        `).join('');
+
+        const bar = document.querySelector('#result-screen .action-bar');
+        if (bar) {
+            bar.innerHTML = role === 'host'
+                ? `<button class="btn primary" onclick="restartGameHost()">もう一度遊ぶ</button>`
+                : `<div style="color:#666">ホストの操作待ち...</div>`;
+        }
+    } catch (e) {
+        alert("Error in Render Result: " + e.message);
+        console.error(e);
+    }
+}
