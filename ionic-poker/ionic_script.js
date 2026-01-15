@@ -132,204 +132,76 @@ function joinRoom() {
 
 // --- Game Logic (Host) ---
 function startGameHost() {
-    gameState.deck = generateDeck();
-    gameState.phase = 'exchange1';
-    gameState.players.forEach(p => {
-        p.hand = drawFromDeck(7); // 7 Cards Start
-        p.isDone = false;
-        p.formedSets = [];
-        p.score = 0;
-    });
-    broadcastState();
-    handleStateUpdate(gameState);
-}
-
-function handleHostData(peerId, data) {
-    const player = gameState.players.find(p => p.id === peerId);
-    if (!player) return;
-
-    if (data.type === 'action_exchange') {
-        const keeps = data.kept;
-        // Logic: Discard rest, Draw new (Check against Hand Size 7)
-        const countNeeded = 7 - keeps.length;
-
-        const newCards = drawFromDeck(countNeeded);
-        player.hand = [...keeps, ...newCards];
-        player.isDone = true;
-
-        checkPhaseCompletion();
-
-    } else if (data.type === 'action_finish_form') {
-        player.formedSets = data.formedSets;
-        player.isDone = true;
-        checkPhaseCompletion();
-    }
-
-    broadcastState();
-}
-
-function checkPhaseCompletion() {
-    if (gameState.players.every(p => p.isDone)) {
-        if (gameState.phase === 'exchange1') {
-            gameState.phase = 'exchange2';
-            gameState.players.forEach(p => p.isDone = false);
-        } else if (gameState.phase === 'exchange2') {
-            gameState.phase = 'form';
-            gameState.players.forEach(p => p.isDone = false);
-        } else if (gameState.phase === 'form') {
-            resolveShowdown();
-            gameState.phase = 'result';
-        }
+    try {
+        if (!gameState) throw new Error("gameState is null");
+        gameState.deck = generateDeck();
+        gameState.phase = 'exchange1';
+        gameState.players.forEach(p => {
+            p.hand = drawFromDeck(7);
+            p.isDone = false;
+            p.formedSets = [];
+            p.score = 0;
+        });
         broadcastState();
         handleStateUpdate(gameState);
-    }
-}
-
-function resolveShowdown() {
-    try {
-        const allFormulas = [];
-        gameState.players.forEach(p => {
-            if (!p.formedSets) p.formedSets = [];
-            p.formedSets.forEach(set => {
-                allFormulas.push({
-                    formula: set.formula,
-                    playerId: p.id,
-                    setRef: set
-                });
-            });
-        });
-
-        const formulaCounts = {};
-        allFormulas.forEach(item => {
-            formulaCounts[item.formula] = (formulaCounts[item.formula] || 0) + 1;
-        });
-
-        gameState.players.forEach(p => {
-            let totalScore = 0;
-            p.formedSets.forEach(set => {
-                if (formulaCounts[set.formula] > 1) {
-                    set.isDuplicated = true;
-                    set.finalPoints = 0;
-                } else {
-                    set.isDuplicated = false;
-                    set.finalPoints = set.points;
-                }
-                totalScore += set.finalPoints;
-            });
-
-            // Full Bonus Check (7 Cards)
-            const cardsUsed = p.formedSets.reduce((sum, s) => sum + (s.cards ? s.cards.length : 0), 0);
-            if (cardsUsed === 7) {
-                totalScore += 500;
-                p.hasFullBonus = true;
-            } else {
-                p.hasFullBonus = false;
-            }
-
-            p.score = totalScore;
-        });
     } catch (e) {
-        console.error("Showdown Error", e);
+        alert("Error in startGameHost: " + e.message + "\n" + e.stack);
     }
 }
 
-function restartGameHost() {
-    gameState.deck = generateDeck();
-    gameState.phase = 'exchange1';
-    gameState.discards = [];
-
-    gameState.players.forEach(p => {
-        p.hand = drawFromDeck(7); // 7 Cards
-        p.isDone = false;
-        p.formedSets = [];
-        p.score = 0;
-        p.hasFullBonus = false;
-    });
-
-    broadcastState();
-    handleStateUpdate(gameState);
-}
-
-// --- Common Logic ---
-function generateDeck() {
-    let d = [];
-    Object.keys(CARD_DATA).forEach(k => {
-        for (let i = 0; i < CARD_DATA[k].count; i++) d.push(k);
-    });
-    return d.sort(() => Math.random() - 0.5);
-}
-
-function drawFromDeck(n) {
-    const drawn = [];
-    for (let i = 0; i < n; i++) {
-        if (gameState.deck.length > 0) drawn.push(gameState.deck.pop());
-    }
-    return drawn;
-}
-
-function broadcastState() {
-    const s = JSON.stringify(gameState);
-    connections.forEach(c => c.send({ type: 'update', state: s }));
-}
-
-// --- Client Logic ---
-function handleClientData(data) {
-    if (data.type === 'update') {
-        handleStateUpdate(JSON.parse(data.state));
-    }
-}
-
-function sendAction(data) {
-    if (role === 'host') handleHostData(myId, data);
-    else conn.send(data);
-}
-
+// ... handleHostData ...
 
 function handleStateUpdate(newState) {
-    // FORCE CLEAR UI if in Exchange Phase (New Game Started)
-    if (newState.phase === 'exchange1') {
-        clearGameUI();
-        myFormedSets = [];
-        mySelectedIndices = [];
+    try {
+        if (!newState) throw new Error("New State is null");
 
-        const container = document.getElementById('formed-sets-container');
-        if (container) {
-            container.innerHTML = '';
-            container.classList.add('hidden');
-        }
-    }
+        // FORCE CLEAR UI if in Exchange Phase (New Game Started)
+        if (newState.phase === 'exchange1') {
+            clearGameUI();
+            myFormedSets = [];
+            mySelectedIndices = [];
 
-    gameState = newState;
-    const me = gameState.players.find(p => p.id === myId);
-
-    // Switch Screen
-    if (gameState.phase === 'lobby') {
-        lobbyScreen.classList.remove('hidden');
-        gameScreen.classList.add('hidden');
-        resultScreen.classList.add('hidden');
-    } else if (gameState.phase === 'result') {
-        gameScreen.classList.add('hidden');
-        resultScreen.classList.remove('hidden');
-        renderResult(gameState.players);
-    } else {
-        // Game Playing
-        lobbyScreen.classList.add('hidden');
-        gameScreen.classList.remove('hidden');
-        resultScreen.classList.add('hidden');
-
-        updatePhaseIndicator();
-        renderOpponents();
-
-        if (me) {
-            myHand = me.hand;
-            renderMyHand(me);
-            updateInstruction();
-
-            // Re-render local formed sets only if in FORM phase
-            if (gameState.phase === 'form') {
-                renderFormedSets();
+            const container = document.getElementById('formed-sets-container');
+            if (container) {
+                container.innerHTML = '';
+                container.classList.add('hidden');
             }
         }
+
+        gameState = newState;
+        const me = gameState.players.find(p => p.id === myId);
+
+        // Switch Screen
+        if (gameState.phase === 'lobby') {
+            lobbyScreen.classList.remove('hidden');
+            gameScreen.classList.add('hidden');
+            resultScreen.classList.add('hidden');
+        } else if (gameState.phase === 'result') {
+            gameScreen.classList.add('hidden');
+            resultScreen.classList.remove('hidden');
+            renderResult(gameState.players);
+        } else {
+            // Game Playing
+            lobbyScreen.classList.add('hidden');
+            gameScreen.classList.remove('hidden');
+            resultScreen.classList.add('hidden');
+
+            updatePhaseIndicator();
+            renderOpponents();
+
+            if (me) {
+                myHand = me.hand;
+                renderMyHand(me);
+                updateInstruction();
+
+                // Re-render local formed sets only if in FORM phase
+                if (gameState.phase === 'form') {
+                    renderFormedSets();
+                }
+            }
+        }
+    } catch (e) {
+        alert("Error in handleStateUpdate: " + e.message + "\n" + e.stack);
     }
 }
 
