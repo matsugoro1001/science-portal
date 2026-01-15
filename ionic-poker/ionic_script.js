@@ -430,6 +430,12 @@ function toggleSelect(idx) {
     updateInstruction();
 }
 
+function toggleRuleModal() {
+    const el = document.getElementById('rule-modal');
+    if (el.classList.contains('hidden')) el.classList.remove('hidden');
+    else el.classList.add('hidden');
+}
+
 function updateInstruction() {
     const btn = document.getElementById('action-btn');
     const instruction = document.getElementById('game-instruction');
