@@ -588,5 +588,16 @@ function renderResult(players) {
 function updateLobbyUI() {
     document.getElementById('player-count').textContent = gameState.players.length;
     document.getElementById('member-list').innerHTML = gameState.players.map(p => `<li>${p.name}</li>`).join('');
+
+    // Always enable start button for testing if host
+    if (role === 'host') {
+        const btn = document.getElementById('start-btn');
+        if (btn) btn.disabled = false;
+    }
+}
+
+function toggleRuleModal() {
+    const modal = document.getElementById('rule-modal');
+    if (modal) modal.classList.toggle('hidden');
 }
 
