@@ -173,6 +173,11 @@ function handleHostData(peerId, data) {
     }
 
     broadcastState();
+
+    // Fix: If Host, force UI update to show new hand/status
+    if (player.id === myId) {
+        handleStateUpdate(gameState);
+    }
 }
 
 function checkPhaseCompletion() {
@@ -331,7 +336,12 @@ function handleStateUpdate(newState) {
             renderOpponents();
 
             if (me) {
-                myHand = me.hand;
+                // Fix: Do NOT overwrite hand during FORM phase to prevent "Infinite Cards" reset
+                // Clients modify hand locally, server has stale hand.
+                if (gameState.phase !== 'form') {
+                    myHand = me.hand;
+                }
+
                 renderMyHand(me);
                 updateInstruction();
 
@@ -675,6 +685,7 @@ function generateCompoundName(formula, cards) {
         if (ani === 'SO₄²⁻') return '硫酸';
         if (ani === 'NO₃⁻') return '硝酸';
         if (ani === 'CO₃²⁻') return '炭酸';
+        if (ani === 'HCO₃⁻') return '炭酸';
         if (ani === 'PO₄³⁻') return 'リン酸';
         return aniName + '水素';
     }
