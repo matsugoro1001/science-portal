@@ -545,6 +545,28 @@ function updateInstruction() {
     }
 }
 
+// --- Debug Logger ---
+const originalLog = console.log;
+console.log = function (...args) {
+    originalLog.apply(console, args);
+    const debugEl = document.getElementById('debug-console');
+    if (debugEl) {
+        const msg = args.map(a => (typeof a === 'object' ? JSON.stringify(a) : String(a))).join(' ');
+        const line = document.createElement('div');
+        line.textContent = `[${new Date().toLocaleTimeString()}] ${msg}`;
+        debugEl.insertBefore(line, debugEl.firstChild); // Newest top
+    }
+};
+
+window.toggleDebug = () => {
+    const el = document.getElementById('debug-console');
+    if (el.style.display === 'none') {
+        el.style.display = 'block';
+    } else {
+        el.style.display = 'none';
+    }
+};
+
 // --- Bonding Logic ---
 // Global Error Handler 
 window.onerror = function (msg, url, line, col, error) {
