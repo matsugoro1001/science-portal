@@ -157,32 +157,29 @@ function handleHostData(peerId, data) {
 
     if (data.type === 'action_exchange') {
         const keeps = data.kept;
+        console.log(`[Host] Exchange Request from ${player.name} (${peerId}). Kept: ${keeps.length}, Current Deck: ${gameState.deck.length}, Discards: ${gameState.discards.length}`);
 
         // Identify discarded cards to recycle
         const currentHand = player.hand || [];
-        // Simple diff: items in currentHand that are NOT in keeps (by value count)
-        // Actually, just find the difference.
-        // Since we blindly trust 'keeps' from client, we can assume the rest are discards.
-        // But we must know WHICH specific cards were discarded for accounting? 
-        // Actually, for simple poker, just adding the difference count from deck is enough?
-        // NO, we need to recycle the SPECIFIC cards discarded back to deck.
-        // Complexity: 'keeps' is an array of symbols. 'player.hand' is array of symbols.
-        // We need to remove one instance of each 'keep' symbol from 'player.hand' to find discards.
-
         let tempHand = [...currentHand];
         keeps.forEach(k => {
             const idx = tempHand.indexOf(k);
             if (idx > -1) tempHand.splice(idx, 1);
         });
-        // tempHand now contains the discarded cards
+
+        console.log(`[Host] Discarded cards: ${tempHand.join(',')}`);
         gameState.discards.push(...tempHand);
 
         // Logic: Discard rest, Draw new (Check against Hand Size 7)
         const countNeeded = 7 - keeps.length;
 
         const newCards = drawFromDeck(countNeeded);
+        console.log(`[Host] Drew new cards: ${newCards.join(',')}`);
+
         player.hand = [...keeps, ...newCards];
         player.isDone = true;
+
+        console.log(`[Host] New Hand for ${player.name}: ${player.hand.join(',')}`);
 
         checkPhaseCompletion();
 
