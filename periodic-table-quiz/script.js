@@ -667,6 +667,7 @@ window.submitTestAnswer = () => {
         input.style.backgroundColor = "#fee2e2";
         input.style.color = "#ef4444";
         input.value = correctVal; // Show correct answer
+        questionPool.unshift(currentQuestion.element); // Re-queue at the end
     }
 
     isAnswering = false;
