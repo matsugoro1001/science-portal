@@ -157,6 +157,26 @@ function handleHostData(peerId, data) {
 
     if (data.type === 'action_exchange') {
         const keeps = data.kept;
+
+        // Identify discarded cards to recycle
+        const currentHand = player.hand || [];
+        // Simple diff: items in currentHand that are NOT in keeps (by value count)
+        // Actually, just find the difference.
+        // Since we blindly trust 'keeps' from client, we can assume the rest are discards.
+        // But we must know WHICH specific cards were discarded for accounting? 
+        // Actually, for simple poker, just adding the difference count from deck is enough?
+        // NO, we need to recycle the SPECIFIC cards discarded back to deck.
+        // Complexity: 'keeps' is an array of symbols. 'player.hand' is array of symbols.
+        // We need to remove one instance of each 'keep' symbol from 'player.hand' to find discards.
+
+        let tempHand = [...currentHand];
+        keeps.forEach(k => {
+            const idx = tempHand.indexOf(k);
+            if (idx > -1) tempHand.splice(idx, 1);
+        });
+        // tempHand now contains the discarded cards
+        gameState.discards.push(...tempHand);
+
         // Logic: Discard rest, Draw new (Check against Hand Size 7)
         const countNeeded = 7 - keeps.length;
 
@@ -274,7 +294,23 @@ function generateDeck() {
 function drawFromDeck(n) {
     const drawn = [];
     for (let i = 0; i < n; i++) {
-        if (gameState.deck.length > 0) drawn.push(gameState.deck.pop());
+        if (gameState.deck.length === 0) {
+            // Deck empty, try to recycle discards
+            if (gameState.discards.length > 0) {
+                // Reshuffle discards
+                console.log("Deck empty! Reshuffling " + gameState.discards.length + " cards.");
+                gameState.deck = gameState.discards.sort(() => Math.random() - 0.5);
+                gameState.discards = [];
+            } else {
+                // Really empty
+                console.warn("Deck and Discards both empty! Cannot draw.");
+                break;
+            }
+        }
+
+        if (gameState.deck.length > 0) {
+            drawn.push(gameState.deck.pop());
+        }
     }
     return drawn;
 }
