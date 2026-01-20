@@ -342,6 +342,9 @@ function handleStateUpdate(newState) {
 
         // Detect Phase Change
         if (newState.phase !== lastPhase) {
+            // New Phase: Clear previous selections to prevent accidental discards
+            mySelectedIndices = [];
+
             // If entering a new exchange phase or form phase, lock button briefly
             if (newState.phase === 'exchange2' || newState.phase === 'form') {
                 buttonLockedUntil = Date.now() + 1000; // 1s lock
