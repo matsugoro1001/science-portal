@@ -338,6 +338,8 @@ function handleStateUpdate(newState) {
     try {
         if (!newState) throw new Error("New State is null");
 
+        const prevPhase = lastPhase;
+
         // Detect Phase Change
         if (newState.phase !== lastPhase) {
             // If entering a new exchange phase or form phase, lock button briefly
@@ -389,7 +391,9 @@ function handleStateUpdate(newState) {
             if (me) {
                 // Fix: Do NOT overwrite hand during FORM phase to prevent "Infinite Cards" reset
                 // Clients modify hand locally, server has stale hand.
-                if (gameState.phase !== 'form') {
+                // EXCEPTION: If we JUST entered the form phase (from exchange2), we MUST update
+                // to get the result of the last exchange!
+                if (gameState.phase !== 'form' || (gameState.phase === 'form' && prevPhase !== 'form')) {
                     myHand = me.hand;
                 }
 
