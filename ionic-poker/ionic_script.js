@@ -330,15 +330,33 @@ function sendAction(data) {
 }
 
 
+// State for button locking
+let lastPhase = '';
+let buttonLockedUntil = 0;
+
 function handleStateUpdate(newState) {
     try {
         if (!newState) throw new Error("New State is null");
+
+        // Detect Phase Change
+        if (newState.phase !== lastPhase) {
+            // If entering a new exchange phase or form phase, lock button briefly
+            if (newState.phase === 'exchange2' || newState.phase === 'form') {
+                buttonLockedUntil = Date.now() + 1000; // 1s lock
+                setTimeout(updateInstruction, 1000); // Unlock after 1s
+            }
+            lastPhase = newState.phase;
+        }
 
         // FORCE CLEAR UI if in Exchange Phase (New Game Started)
         if (newState.phase === 'exchange1') {
             clearGameUI();
             myFormedSets = [];
             mySelectedIndices = [];
+
+            // Also lock for exchange1 start
+            buttonLockedUntil = Date.now() + 1000;
+            setTimeout(updateInstruction, 1000);
 
             const container = document.getElementById('formed-sets-container');
             if (container) {
@@ -502,6 +520,19 @@ function updateInstruction() {
     const instruction = document.getElementById('game-instruction');
     const me = gameState.players.find(p => p.id === myId);
 
+    // Check Lock
+    const isLocked = Date.now() < buttonLockedUntil;
+    if (isLocked) {
+        btn.disabled = true;
+        btn.textContent = "待機中... (Wait)";
+        btn.classList.remove('primary', 'danger', 'secondary');
+        btn.classList.add('secondary'); // Grey out
+        // instruction.textContent = "準備中..."; 
+        // Keep instruction visible so they know what to do next
+    } else {
+        btn.disabled = false;
+    }
+
     if (me.isDone) {
         instruction.textContent = "他のプレイヤーを待っています...";
         btn.classList.add('hidden');
@@ -515,18 +546,23 @@ function updateInstruction() {
             ? "2回目(最後)の交換です。いらないカードを捨ててください"
             : "いらないカードを選んで捨ててください";
 
-        btn.textContent = mySelectedIndices.length === 0 ? "交換しない" : "交換する";
-        btn.className = "btn danger";
-        btn.onclick = () => {
-            const kept = myHand.filter((_, i) => !mySelectedIndices.includes(i));
-            sendAction({ type: 'action_exchange', kept: kept });
-            mySelectedIndices = [];
-        };
+        if (!isLocked) {
+            btn.textContent = mySelectedIndices.length === 0 ? "交換しない" : "交換する";
+            btn.className = "btn danger";
+            btn.onclick = () => {
+                const kept = myHand.filter((_, i) => !mySelectedIndices.includes(i));
+                sendAction({ type: 'action_exchange', kept: kept });
+                mySelectedIndices = [];
+            };
+        }
     } else if (gameState.phase === 'form') {
         instruction.textContent = "カードを選んで「結合」してください。終わったら「完了」";
-        btn.textContent = "結合する (Bond)";
-        btn.className = "btn primary";
-        btn.onclick = attemptBond;
+
+        if (!isLocked) {
+            btn.textContent = "結合する (Bond)";
+            btn.className = "btn primary";
+            btn.onclick = attemptBond;
+        }
 
         // Add Finish Button if not exists
         let finBtn = document.getElementById('finish-form-btn');
