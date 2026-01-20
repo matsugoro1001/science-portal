@@ -725,13 +725,43 @@ function toSubscript(str) {
     return str.replace(/(\d+)/g, '<sub>$1</sub>');
 }
 
+// --- Common Logic ---
+function shuffleArray(array) {
+    for (let i = array.length - 1; i > 0; i--) {
+        const j = Math.floor(Math.random() * (i + 1));
+        [array[i], array[j]] = [array[j], array[i]];
+    }
+    return array;
+}
+
 function generateDeck() {
     let d = [];
-    Object.keys(CARD_DATA).forEach(symbol => {
-        const count = CARD_DATA[symbol].count;
-        for (let i = 0; i < count; i++) d.push(symbol);
+    Object.keys(CARD_DATA).forEach(k => {
+        for (let i = 0; i < CARD_DATA[k].count; i++) d.push(k);
     });
-    return d.sort(() => Math.random() - 0.5);
+    // Fisher-Yates Shuffle
+    return shuffleArray(d);
+}
+
+function drawFromDeck(n) {
+    // Only host calls this
+    const drawn = [];
+    for (let i = 0; i < n; i++) {
+        if (gameState.deck.length === 0) {
+            // Deck empty, try to recycle discards
+            if (gameState.discards.length > 0) {
+                // Reshuffle discards
+                console.log("Deck empty! Reshuffling " + gameState.discards.length + " cards.");
+                gameState.deck = shuffleArray(gameState.discards);
+                gameState.discards = [];
+            } else {
+                console.warn("Deck and discard pile are both empty. Cannot draw more cards.");
+                break; // Cannot draw more cards
+            }
+        }
+        drawn.push(gameState.deck.pop());
+    }
+    return drawn;
 }
 
 function showResultScreen() {
