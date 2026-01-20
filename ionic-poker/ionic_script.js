@@ -280,12 +280,20 @@ function restartGameHost() {
 }
 
 // --- Common Logic ---
+function shuffleArray(array) {
+    for (let i = array.length - 1; i > 0; i--) {
+        const j = Math.floor(Math.random() * (i + 1));
+        [array[i], array[j]] = [array[j], array[i]];
+    }
+    return array;
+}
+
 function generateDeck() {
     let d = [];
     Object.keys(CARD_DATA).forEach(k => {
         for (let i = 0; i < CARD_DATA[k].count; i++) d.push(k);
     });
-    return d.sort(() => Math.random() - 0.5);
+    return shuffleArray(d);
 }
 
 function drawFromDeck(n) {
@@ -296,7 +304,7 @@ function drawFromDeck(n) {
             if (gameState.discards.length > 0) {
                 // Reshuffle discards
                 console.log("Deck empty! Reshuffling " + gameState.discards.length + " cards.");
-                gameState.deck = gameState.discards.sort(() => Math.random() - 0.5);
+                gameState.deck = shuffleArray(gameState.discards);
                 gameState.discards = [];
             } else {
                 // Really empty
