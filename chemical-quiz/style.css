@@ -604,6 +604,8 @@ h1 {
     border-radius: 8px;
     margin-bottom: 1.5rem;
     transition: border-color 0.3s;
+    background: white;
+    color: #333;
 }
 
 .modal-content input:focus {
