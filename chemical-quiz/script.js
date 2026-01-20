@@ -481,6 +481,8 @@ window.insertChar = (char) => {
     input.selectionStart = input.selectionEnd = start + 1;
 };
 
+// --- Test Mode Functions ---
+
 function initTestQuestionPool() {
     // Chemical Quiz has 40 questions req.
     const shuffled = [...elements].sort(() => Math.random() - 0.5);
@@ -512,7 +514,22 @@ function nextTestQuestion() {
     // Clear Input
     const input = document.getElementById('answer-input');
     input.value = '';
+    input.style.borderColor = "#ddd";
+    input.style.backgroundColor = "white";
+    input.style.color = "inherit";
     input.focus();
+}
+
+// Helper to normalize H<sub>2</sub>O to H₂O for input/display
+function getNormalizedSymbol(symbol) {
+    return symbol
+        .replace(/<sub>/g, '')
+        .replace(/<\/sub>/g, '')
+        .replace(/0/g, '₀').replace(/1/g, '₁').replace(/2/g, '₂').replace(/3/g, '₃').replace(/4/g, '₄')
+        .replace(/5/g, '₅').replace(/6/g, '₆').replace(/7/g, '₇').replace(/8/g, '₈').replace(/9/g, '₉')
+        .replace(/<sup>\+<\/sup>/g, '⁺').replace(/<sup>-<\/sup>/g, '⁻')
+        .replace(/<sup>2\+<\/sup>/g, '²⁺').replace(/<sup>3\+<\/sup>/g, '³⁺')
+        .replace(/<sup>2-<\/sup>/g, '²⁻').replace(/<sup>3-<\/sup>/g, '³⁻');
 }
 
 window.submitTestAnswer = () => {
@@ -521,13 +538,24 @@ window.submitTestAnswer = () => {
     const input = document.getElementById('answer-input');
     const userVal = input.value.trim();
 
-    // Correct Element Symbol usually contains subscripts like H₂O
-    // The user input should match this exactly.
-    const correctVal = currentQuestion.element.symbol;
-
     if (!userVal) return;
 
-    const isCorrect = userVal === correctVal;
+    // Correct Element Symbol usually contains subscripts like H₂O
+    // We normalize the correct symbol from data (which might have tags) to the display format (subscripts)
+    // We also expect the User to input this normalized format (or we compare against it)
+    const normalizedCorrect = getNormalizedSymbol(currentQuestion.element.symbol);
+
+    // If user types 'H2O', it won't match 'H₂O'. 
+    // However, the test input helper buttons insert subscripts. 
+    // So we should assume strict matching against normalized form is fair if tools are provided.
+    // (Also previous code implies strict match).
+
+    // Wait, previous code compared userVal === currentQuestion.element.symbol (Raw).
+    // If raw had tags, userVal (no tags) would fail.
+    // So the previous code was likely broken for tagged elements unless userVal somehow had tags.
+    // I will Fix this by comparing against normalizedCorrect.
+
+    const isCorrect = userVal === normalizedCorrect;
 
     if (isCorrect) {
         testScore++;
@@ -536,6 +564,8 @@ window.submitTestAnswer = () => {
     } else {
         input.style.borderColor = "#ef4444";
         input.style.backgroundColor = "#fee2e2";
+        input.style.color = "#ef4444";
+        input.value = normalizedCorrect; // Show Correct Answer
     }
 
     isAnswering = false;
@@ -544,8 +574,9 @@ window.submitTestAnswer = () => {
     setTimeout(() => {
         input.style.borderColor = "#ddd";
         input.style.backgroundColor = "white";
+        input.style.color = "inherit";
         nextTestQuestion();
-    }, 1000);
+    }, 1500);
 };
 
 document.getElementById('answer-input').addEventListener('keydown', (e) => {
@@ -556,24 +587,10 @@ window.skipTestQuestion = () => {
     if (!isAnswering) return;
 
     const input = document.getElementById('answer-input');
-    // Normalize correct valid for display (convert tags to chars if needed, but chemical quiz uses tags in data)
-    // Actually, chemical quiz 'symbol' usually has <sub> tags. We should strip them or convert for input display?
-    // The input allows raw text. Let's just show the symbol but maybe stripped of tags for cleaner text input value?
-    // Wait, the input logic normalizes USER input to compare with correct symbol.
-    // If we put the correct symbol (with tags) into input, it might look messy if input is plain text.
-    // However, the helper buttons insert subscript chars. So the correct answer should probably be the subscript char version.
-    // Let's use the normalization logic from submitTestAnswer if available, or just helper logic.
+    const normalizedCorrect = getNormalizedSymbol(currentQuestion.element.symbol);
 
-    let correctVal = currentQuestion.element.symbol;
-    // Simple conversion for display
-    correctVal = correctVal
-        .replace(/<sub>/g, '')
-        .replace(/<\/sub>/g, '') // Be careful if we want real subscript chars
-        .replace(/0/g, '₀').replace(/1/g, '₁').replace(/2/g, '₂').replace(/3/g, '₃').replace(/4/g, '₄')
-        .replace(/5/g, '₅').replace(/6/g, '₆').replace(/7/g, '₇').replace(/8/g, '₈').replace(/9/g, '₉');
-
-    // Display
-    input.value = correctVal;
+    // Show correct answer
+    input.value = normalizedCorrect;
     input.style.borderColor = "#ef4444";
     input.style.backgroundColor = "#fee2e2";
     input.style.color = "#ef4444";

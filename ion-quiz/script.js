@@ -540,6 +540,8 @@ window.submitTestAnswer = () => {
     } else {
         input.style.borderColor = "#ef4444";
         input.style.backgroundColor = "#fee2e2";
+        input.style.color = "#ef4444";
+        input.value = normalizedCorrect; // Show Correct Answer
     }
 
     isAnswering = false;
@@ -548,8 +550,9 @@ window.submitTestAnswer = () => {
     setTimeout(() => {
         input.style.borderColor = "#ddd";
         input.style.backgroundColor = "white";
+        input.style.color = "inherit"; // Reset
         nextTestQuestion();
-    }, 1000);
+    }, 1500);
 };
 
 document.getElementById('answer-input').addEventListener('keydown', (e) => {
