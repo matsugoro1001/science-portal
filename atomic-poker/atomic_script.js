@@ -340,11 +340,23 @@ function sendAction(actionData) {
 
 // --- Common Game Logic ---
 
-
+// State for button locking
+let buttonLockedUntil = 0;
 
 function handleStateUpdate(newState) {
     const oldPhase = gameState.phase;
     gameState = newState;
+
+    // Detect Phase Change - Clear selection & Set Lock
+    if (oldPhase !== gameState.phase) {
+        mySelectedIndices = []; // Clear selection to prevent sticky state
+
+        // Lock button for 1s to prevent accidental double clicks/skips
+        if (gameState.phase.startsWith('exchange') || gameState.phase === 'form') {
+            buttonLockedUntil = Date.now() + 1000;
+            setTimeout(updateInstruction, 1000);
+        }
+    }
 
     // Reset local state on new game
     if ((oldPhase === 'lobby' || oldPhase === 'result') && gameState.phase === 'exchange1') {
@@ -422,6 +434,7 @@ function handleStateUpdate(newState) {
     } else {
         // I am waiting
         renderHand(false); // Locked
+        updateInstruction(); // Ensure button is hidden/disabled
 
         if (statusHeader) {
             statusHeader.textContent = waitingText || '待機中...';
@@ -430,13 +443,6 @@ function handleStateUpdate(newState) {
         }
 
         if (gameInstructionEl) gameInstructionEl.textContent = waitingText;
-
-        // Hide action button or disable
-        const btn = document.getElementById('action-btn');
-        if (btn) {
-            btn.classList.add('hidden');
-            btn.disabled = true;
-        }
     }
 
     if (gameState.phase === 'result') {
@@ -474,10 +480,28 @@ function updateInstruction() {
 
     // Default visibility
     if (finishBtn) finishBtn.classList.add('hidden');
+
+    // Check Lock
+    const isLocked = Date.now() < buttonLockedUntil;
+
+    // Determine if I am waiting
+    const me = gameState.players.find(p => p.id === myId);
+    if (!me || me.isDone) {
+        if (btn) btn.classList.add('hidden');
+        return;
+    }
+
     if (btn) {
         btn.classList.remove('hidden');
         btn.disabled = false;
+        if (isLocked) {
+            btn.disabled = true;
+            btn.textContent = '待機中...';
+            btn.className = 'btn secondary'; // Grey out
+        }
     }
+
+    if (isLocked) return; // Stop processing text updates if locked? Or just button.
 
     if (gameState.phase.startsWith('exchange')) {
         if (gameInstructionEl) gameInstructionEl.textContent = 'いらないカードを選んで「交換」を押してください';
@@ -833,7 +857,7 @@ function restartGameHost() {
 
 async function submitScoreToGas(name, score) {
     console.log(`Submitting score for ${name}: ${score}`);
-// fetch(url).then(res => res.json()).then(data => console.log(data)).catch(e => console.error(e));
+    // fetch(url).then(res => res.json()).then(data => console.log(data)).catch(e => console.error(e));
     console.log("Data logging disabled per user request.");
 }
 

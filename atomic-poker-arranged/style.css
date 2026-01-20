@@ -197,7 +197,8 @@ h1 {
     cursor: pointer !important;
     position: relative;
     z-index: 100;
-    border: 2px solid #fbbf24 !important; /* Force Gold Border */
+    border: 2px solid #fbbf24 !important;
+    /* Force Gold Border */
     box-shadow: 0 0 10px #fbbf24;
     transition: all 0.2s;
     animation: pulse 1s infinite;
@@ -209,9 +210,17 @@ h1 {
 }
 
 @keyframes pulse {
-    0% { box-shadow: 0 0 0 0 rgba(251, 191, 36, 0.7); }
-    70% { box-shadow: 0 0 0 6px rgba(251, 191, 36, 0); }
-    100% { box-shadow: 0 0 0 0 rgba(251, 191, 36, 0); }
+    0% {
+        box-shadow: 0 0 0 0 rgba(251, 191, 36, 0.7);
+    }
+
+    70% {
+        box-shadow: 0 0 0 6px rgba(251, 191, 36, 0);
+    }
+
+    100% {
+        box-shadow: 0 0 0 0 rgba(251, 191, 36, 0);
+    }
 }
 
 /* Hand Container updates for responsiveness */
@@ -253,9 +262,14 @@ h1 {
 }
 
 .atom-card.selected {
-    border-color: var(--primary-color);
-    transform: translateY(-10px);
-    box-shadow: 0 0 0 4px rgba(74, 144, 226, 0.3);
+    border-color: #ff9800;
+    /* Vibrant Orange */
+    transform: translateY(-15px);
+    box-shadow: 0 0 15px 4px rgba(255, 152, 0, 0.6);
+    /* Glowing effect */
+    background-color: #fff8e1;
+    /* Light yellow tint */
+    z-index: 10;
 }
 
 .atom-card.discarding {

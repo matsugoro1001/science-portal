@@ -386,11 +386,24 @@ function sendAction(actionData) {
 
 // --- Common Game Logic ---
 
-
+// State for button locking
+let buttonLockedUntil = 0;
 
 function handleStateUpdate(newState) {
     const oldPhase = gameState.phase;
     gameState = newState;
+
+    // Detect Phase Change - Clear selection & Set Lock
+    if (oldPhase !== gameState.phase) {
+        mySelectedIndices = []; // Clear selection to prevent sticky state
+
+        // Lock button for 1s to prevent accidental double clicks/skips
+        // Mahjong has 'scavenge' phase too, so we lock on all interactive phases except result
+        if (gameState.phase !== 'lobby' && gameState.phase !== 'result') {
+            buttonLockedUntil = Date.now() + 1000;
+            setTimeout(updateInstruction, 1000);
+        }
+    }
 
     // Reset local state on new game
     if ((oldPhase === 'lobby' || oldPhase === 'result') && gameState.phase === 'exchange1') {
@@ -535,20 +548,52 @@ function updateInstruction() {
 
     // Default visibility
     if (finishBtn) finishBtn.classList.add('hidden');
+
+    // Check Lock
+    const isLocked = Date.now() < buttonLockedUntil;
+
+    // Determine if I am waiting (Simultaneous Turn logic)
+    // Mahjong has specific wait logic
+    const me = gameState.players.find(p => p.id === myId);
+
+    // Safety check
+    if (!me) return;
+
+    // If I am done, hide action button
+    if (me.isDone) {
+        if (btn) btn.classList.add('hidden');
+        return;
+    }
+
     if (btn) {
         btn.classList.remove('hidden');
         btn.disabled = false;
+        if (isLocked) {
+            btn.disabled = true;
+            btn.textContent = '待機中...';
+            btn.className = 'btn secondary'; // Grey out
+        }
     }
+
+    if (isLocked) return;
 
     if (gameState.phase.startsWith('exchange')) {
         if (gameInstructionEl) gameInstructionEl.textContent = 'いらないカードを選んで「交換」を押してください';
         btn.textContent = 'これらを捨てる (交換)';
         btn.className = 'btn danger';
 
-        // Special: If no cards selected, "Skip Exchange"
         if (mySelectedIndices.length === 0) {
             btn.textContent = '交換せずに次へ';
             btn.className = 'btn primary';
+        }
+    } else if (gameState.phase === 'scavenge') {
+        if (gameInstructionEl) gameInstructionEl.textContent = '欲しいカードがあれば選んで「拾う」ことができます（1枚まで）';
+        btn.textContent = '拾う (Scavenge)';
+        btn.className = 'btn primary';
+
+        if (mySelectedIndices.length === 0) {
+            btn.textContent = '何も拾わない';
+            btn.className = 'btn secondary';
         }
     } else if (gameState.phase === 'form') {
         if (gameInstructionEl) gameInstructionEl.textContent = '手札を選んで「結合」！ 終わったら「終了」ボタン';
@@ -564,12 +609,6 @@ function updateInstruction() {
             finishBtn.style.backgroundColor = '#64748b';
             finishBtn.style.color = 'white';
         }
-    } else if (gameState.phase === 'scavenge') {
-        if (gameInstructionEl) gameInstructionEl.textContent = '欲しいカードがあればタップ！ (早い者勝ち, 最大2枚)';
-        btn.textContent = '選択終了 (次へ)';
-        btn.className = 'btn primary';
-        btn.disabled = false;
-        // The discard pool should be clickable now.
     }
 }
 
