@@ -607,7 +607,7 @@ h1 {
     margin-bottom: 1.5rem;
     transition: border-color 0.3s;
     background: white;
-    color: #333;
+    color: #000000 !important;
 }
 
 .modal-content input:focus {
@@ -645,7 +645,7 @@ h1 {
     outline: none;
     transition: all 0.3s;
     background: white;
-    color: #1a1a2e;
+    color: #000000 !important;
 }
 
 #answer-input:focus {
