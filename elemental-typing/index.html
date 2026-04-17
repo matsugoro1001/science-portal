@@ -1,0 +1,72 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>元素タイピング RPG</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Press+Start+2P&family=Noto+Sans+JP:wght@700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="style.css">
+</head>
+<body>
+    <div id="game-container">
+        
+        <!-- Header: Stats -->
+        <div id="header">
+            <div class="stat">Level: <span id="level-display">1</span></div>
+            <div class="stat">HP: <span id="hp-display">3</span></div>
+            <div class="stat">Score: <span id="score-display">0</span></div>
+        </div>
+
+        <!-- Battle Area -->
+        <div id="battle-area">
+            <div id="player" class="character">
+                <img src="assets/samurai_hero_1776431554166.png" alt="Samurai">
+            </div>
+            <div id="enemy" class="character">
+                <img id="enemy-img" src="assets/monster_lv1_1776431573619.png" alt="Yokai">
+            </div>
+
+            <!-- Projectiles will be injected here -->
+            <div id="projectiles-container"></div>
+            
+            <!-- Slash Effect -->
+            <div id="slash-effect" class="hidden"></div>
+        </div>
+
+        <!-- Typing Area -->
+        <div id="typing-area">
+            <div id="target-word"></div>
+            <div id="input-word"></div>
+            <div class="instruction">迫りくる魔法弾の「元素記号」を大文字・小文字正確にタイピングしろ！<br>(例: ナトリウム → <span>Na</span>)</div>
+        </div>
+
+        <!-- Screens -->
+        <div id="start-screen" class="overlay">
+            <h1>元素記号クイズ<br><span style="font-size:0.6em; color:white;">- タイピングRPG モード -</span></h1>
+            <p>妖怪の攻撃を相殺し、一刃の隙を突け！</p>
+            <p class="warning">※大文字・小文字(Shiftキー)を正確に入力してください</p>
+            <div style="display:flex; gap: 20px; margin-top:20px;">
+                 <button onclick="window.location.href='../periodic-table-quiz/index.html'" style="background:transparent; color:#888; border-color:#555;">← 戻る</button>
+                 <button onclick="startGame()">出陣</button>
+            </div>
+        </div>
+
+        <div id="game-over-screen" class="overlay hidden">
+            <h1>無念...</h1>
+            <p>Score: <span id="final-score">0</span></p>
+            <button onclick="location.reload()">再挑戦</button>
+        </div>
+        
+        <div id="level-up-screen" class="overlay hidden">
+            <h1 style="color: gold;">撃破!!</h1>
+            <p>さらに強力な妖気が迫る...</p>
+        </div>
+
+    </div>
+
+    <script src="data.js"></script>
+    <script src="script.js"></script>
+</body>
+</html>

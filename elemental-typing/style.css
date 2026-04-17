@@ -1,0 +1,278 @@
+* {
+    box-sizing: border-box;
+    margin: 0;
+    padding: 0;
+}
+
+body {
+    background-color: #111;
+    color: white;
+    font-family: 'Noto Sans JP', sans-serif;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    height: 100vh;
+    overflow: hidden;
+}
+
+#game-container {
+    width: 800px;
+    height: 600px;
+    background: linear-gradient(to bottom, #1a1a2e, #16213e);
+    position: relative;
+    border: 4px solid #444;
+    border-radius: 10px;
+    display: flex;
+    flex-direction: column;
+    box-shadow: 0 0 20px rgba(0,0,0,0.8);
+    overflow: hidden;
+}
+
+#header {
+    display: flex;
+    justify-content: space-between;
+    padding: 15px 30px;
+    background: rgba(0,0,0,0.5);
+    font-family: 'Press Start 2P', cursive;
+    font-size: 14px;
+    text-shadow: 2px 2px #000;
+    border-bottom: 2px solid #555;
+    z-index: 10;
+}
+
+#battle-area {
+    flex: 1;
+    position: relative;
+    background: url('data:image/svg+xml;utf8,<svg width="100%" height="100%" xmlns="http://www.w3.org/2000/svg"><rect width="100%" height="100%" fill="%231a1a2e"/><circle cx="50%" cy="50%" r="300" fill="radial-gradient(circle, rgba(100,0,150,0.2) 0%, rgba(0,0,0,0) 70%)"/></svg>');
+    background-size: cover;
+}
+
+/* Floor line */
+#battle-area::after {
+    content: '';
+    position: absolute;
+    bottom: 20%;
+    left: 0;
+    width: 100%;
+    height: 2px;
+    background: rgba(255, 255, 255, 0.2);
+    box-shadow: 0 0 10px rgba(255,255,255,0.5);
+}
+
+.character {
+    position: absolute;
+    bottom: 20%;
+    width: 250px;
+    height: 250px;
+}
+
+.character img {
+    width: 100%;
+    height: 100%;
+    object-fit: contain;
+    filter: drop-shadow(0 0 10px rgba(0,0,0,0.5));
+}
+
+#player {
+    left: 50px;
+    z-index: 5;
+    transition: transform 0.2s;
+}
+
+#enemy {
+    right: 50px;
+    z-index: 4;
+}
+
+/* 攻撃アニメーション時の微動 */
+.shake {
+    animation: shake 0.3s;
+}
+
+@keyframes shake {
+    0% { transform: translateX(0); }
+    25% { transform: translateX(-5px); }
+    50% { transform: translateX(5px); }
+    75% { transform: translateX(-5px); }
+    100% { transform: translateX(0); }
+}
+
+/* Projectiles (魔法弾) */
+.projectile {
+    position: absolute;
+    bottom: 35%;
+    width: auto;
+    min-width: 60px;
+    height: 40px;
+    background: linear-gradient(135deg, #e94560, #900c3f);
+    border: 2px solid #ffb6b9;
+    border-radius: 20px;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    padding: 0 15px;
+    font-weight: bold;
+    font-size: 16px;
+    color: white;
+    box-shadow: 0 0 15px #e94560, inset 0 0 10px rgba(255,255,255,0.5);
+    white-space: nowrap;
+    text-shadow: 1px 1px 2px black;
+    /* CSSによる移動アニメーション(JSで制御) */
+    transition: left 0.1s linear, transform 0.2s;
+    z-index: 6;
+}
+
+/* アクティブなタゲ弾の強調 */
+.projectile.active-target {
+    transform: scale(1.2);
+    box-shadow: 0 0 25px #00ffcc, inset 0 0 10px rgba(255,255,255,0.8);
+    border-color: #00ffcc;
+}
+
+.projectile.destroyed {
+    opacity: 0;
+    transform: scale(1.5);
+    transition: all 0.3s ease-out;
+}
+
+/* 斬撃エフェクト */
+#slash-effect {
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background: linear-gradient(to right, transparent 48%, white 50%, transparent 52%);
+    z-index: 20;
+    opacity: 0;
+    pointer-events: none;
+    transform-origin: center;
+    transform: rotate(45deg) scaleY(0);
+}
+
+.slash-anim {
+    animation: slash 0.4s ease-out forwards;
+}
+
+@keyframes slash {
+    0% { opacity: 0; transform: rotate(45deg) scaleY(0); }
+    50% { opacity: 1; transform: rotate(45deg) scaleY(1); box-shadow: 0 0 30px white; }
+    100% { opacity: 0; transform: rotate(45deg) scaleY(0.1); }
+}
+
+/* Typing Area */
+#typing-area {
+    height: 150px;
+    background: #0f0f1a;
+    border-top: 4px solid #333;
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    align-items: center;
+    padding: 20px;
+    z-index: 10;
+}
+
+#target-word {
+    font-size: 24px;
+    letter-spacing: 2px;
+    margin-bottom: 10px;
+    color: #ffd700;
+    min-height: 30px;
+}
+
+#input-word {
+    font-family: 'Press Start 2P', monospace;
+    font-size: 20px;
+    color: #00ffcc;
+    min-height: 24px;
+    letter-spacing: 5px;
+}
+
+.instruction {
+    margin-top: 15px;
+    font-size: 12px;
+    color: #888;
+    text-align: center;
+}
+
+.instruction span {
+    color: #e94560;
+    font-weight: bold;
+}
+
+/* Overlays */
+.overlay {
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background: rgba(0, 0, 0, 0.85);
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    align-items: center;
+    z-index: 100;
+    text-align: center;
+}
+
+.overlay.hidden {
+    display: none;
+}
+
+.overlay h1 {
+    font-family: 'Press Start 2P', cursive;
+    color: #e94560;
+    margin-bottom: 20px;
+    font-size: 28px;
+    text-shadow: 3px 3px #000;
+}
+
+.overlay p {
+    font-size: 18px;
+    margin-bottom: 30px;
+}
+
+.overlay .warning {
+    color: #ff9800;
+    font-size: 14px;
+}
+
+button {
+    font-family: 'Press Start 2P', cursive;
+    padding: 15px 30px;
+    font-size: 16px;
+    background: #e94560;
+    color: white;
+    border: 2px solid white;
+    cursor: pointer;
+    border-radius: 5px;
+    transition: all 0.2s;
+}
+
+button:hover {
+    background: white;
+    color: #e94560;
+    transform: scale(1.05);
+}
+
+.player-dash {
+    animation: playerDash 0.5s ease-in-out;
+}
+
+@keyframes playerDash {
+    0% { transform: translateX(0); }
+    50% { transform: translateX(500px); }
+    100% { transform: translateX(0); }
+}
+
+.enemy-die {
+    animation: die 1s forwards;
+}
+
+@keyframes die {
+    0% { filter: brightness(1) sepia(0) hue-rotate(0deg); opacity: 1; }
+    50% { filter: brightness(2) sepia(1) hue-rotate(-50deg); opacity: 0.8; transform: translateX(10px) rotate(5deg); }
+    100% { opacity: 0; transform: scale(1.5); filter: brightness(0); }
+}
