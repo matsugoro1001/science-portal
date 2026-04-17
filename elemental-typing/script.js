@@ -36,8 +36,9 @@ const playerEl = document.getElementById('player');
 const slashEffect = document.getElementById('slash-effect');
 
 function getMonsterImageForLevel(lvl) {
-    if (lvl === 1) return 'assets/monster_lv1_1776431573619.png';
-    if (lvl === 2) return 'assets/monster_lv2_1776431589959.png';
+    // 最初のうちは小鬼、中盤から天狗、終盤に巨大鬼へ変わる
+    if (lvl < 3) return 'assets/monster_lv1_1776431573619.png';
+    if (lvl < 6) return 'assets/monster_lv2_1776431589959.png';
     return 'assets/monster_lv3_1776431620893.png';
 }
 
@@ -71,14 +72,24 @@ function startGame() {
 
 function resetLevelParams() {
     waveCount = 0;
-    speedBase = 1.0 + (level * 0.4);
-    spawnRateMs = Math.max(1000, 3500 - (level * 400));
     
-    if (level === 1) maxComplexity = 1;
-    else if (level <= 3) maxComplexity = 2;
-    else maxComplexity = 3;
+    // スピードは初期0.8から、レベルごとに0.15ずつ緩やかに上がる
+    speedBase = 0.8 + (level * 0.15);
+    
+    // スポーン間隔は初期3500msから、レベルごとに250msずつ短くなる
+    spawnRateMs = Math.max(1500, 3500 - ((level - 1) * 250));
+    
+    // 連撃（連結される元素の最大数）も段階を踏んで上がるように
+    if (level <= 3) {
+        maxComplexity = 1;
+    } else if (level <= 6) {
+        maxComplexity = 2; // レベル4から2連撃が混じる
+    } else {
+        maxComplexity = 3; // レベル7から3連撃が混じる
+    }
     
     enemyImg.src = getMonsterImageForLevel(level);
+    enemyImg.classList.remove('enemy-die'); // 前のレベルの撃破アニメによる透明化を解除
 }
 
 function generateTarget() {
