@@ -125,9 +125,9 @@ function renderStock() {
             <div class="molecule-name">${getFormulaHTML(formula)}</div>
             <div class="stock-item-name">${name}</div>
             <div class="stock-controls">
-                <button class="control-btn decrease" onclick="decrementCoefficient('${side}', ${index})">▼</button>
-                <div class="control-count" id="count-${side}-${index}">${currentCoefficients[side][index]}</div>
                 <button class="control-btn increase" onclick="incrementCoefficient('${side}', ${index})">▲</button>
+                <div class="control-count" id="count-${side}-${index}">${currentCoefficients[side][index]}</div>
+                <button class="control-btn decrease" onclick="decrementCoefficient('${side}', ${index})">▼</button>
             </div>
         `;
         return el;

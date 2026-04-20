@@ -38,6 +38,15 @@ body {
 }
 
 /* 1. Header */
+.stock-controls {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    width: 100%;
+    margin-top: 8px;
+    gap: 4px;
+}
+
 .header {
     display: flex;
     justify-content: space-between;
@@ -421,4 +430,99 @@ body {
 
 .btn.secondary {
     background: var(--secondary-color);
+}
+
+/* ======== 新規UIスタイル ======== */
+.stock-item {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    background: white;
+    border-radius: 8px;
+    padding: 10px;
+    box-shadow: 0 4px 6px rgba(0,0,0,0.1);
+    position: relative;
+    width: 140px;
+}
+
+.stock-item-name {
+    font-size: 0.8rem;
+    color: #666;
+    margin-top: 5px;
+    text-align: center;
+    font-weight: 600;
+}
+
+.stock-controls {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    width: 100%;
+    margin-top: 8px;
+    gap: 4px;
+}
+
+.control-btn {
+    background: #4cc9f0;
+    color: white;
+    border: none;
+    border-radius: 4px;
+    width: 40px;
+    height: 30px;
+    font-size: 1.2rem;
+    font-weight: bold;
+    cursor: pointer;
+    box-shadow: 0 2px 4px rgba(0,0,0,0.2);
+    transition: transform 0.1s;
+}
+
+.control-btn:active {
+    transform: scale(0.9);
+}
+
+.control-btn.decrease {
+    background: #f72585;
+}
+
+.control-count {
+    text-align: center;
+    font-weight: 800;
+    font-size: 1.2rem;
+    color: #333;
+}
+
+/* Time & Combo */
+.stats {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 5px;
+}
+
+.time-box {
+    font-size: 1.4rem;
+    font-weight: 800;
+    color: #f72585;
+    background: white;
+    padding: 5px 15px;
+    border-radius: 20px;
+    box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+}
+
+.combo-box {
+    font-size: 1.2rem;
+    font-weight: 800;
+    color: #ff9e00;
+    text-shadow: 1px 1px 0 #fff;
+    transition: transform 0.2s, opacity 0.5s;
+}
+
+.combo-pop {
+    animation: comboPop 0.3s ease-out;
+}
+
+@keyframes comboPop {
+    0% { transform: scale(1); }
+    50% { transform: scale(1.5); }
+    100% { transform: scale(1); }
 }
