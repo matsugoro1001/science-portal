@@ -4,7 +4,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>理科クイズポータル</title>
+    <title>理科基礎学習ポータル</title>
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link
@@ -40,11 +40,27 @@
 
         h1 {
             font-size: 2.5rem;
-            margin-bottom: 3rem;
+            margin-bottom: 1rem;
             text-align: center;
             background: linear-gradient(to right, #4ecca3, #2ecc71);
             -webkit-background-clip: text;
             -webkit-text-fill-color: transparent;
+        }
+
+        .nav-link {
+            display: inline-block;
+            margin-bottom: 3rem;
+            color: var(--primary-color);
+            text-decoration: none;
+            font-weight: bold;
+            padding: 10px 20px;
+            border: 2px solid var(--primary-color);
+            border-radius: 30px;
+            transition: all 0.3s;
+        }
+        .nav-link:hover {
+            background: var(--primary-color);
+            color: #1a1a2e;
         }
 
         .portal-grid {
@@ -108,8 +124,8 @@
 </head>
 
 <body>
-    <h1 style="margin-bottom: 20px;">理科クイズポータル</h1>
-    <a href="basic.html" style="display:inline-block; margin-bottom: 3rem; padding: 12px 24px; background-color: #ffcc00; color: #1a1a2e; text-decoration: none; font-weight: bold; border-radius: 30px; border: 2px solid #fff; box-shadow: 0 4px 15px rgba(255,204,0,0.4); transition: transform 0.2s;">🔰 基礎学習用ポータル（厳選３種）はこちら 🔰</a>
+    <h1>⭐️ 理科基礎学習ポータル ⭐️</h1>
+    <a href="index.html" class="nav-link">👈 全てのアプリ（総合ポータル）を表示</a>
 
     <div class="portal-grid">
         <a href="./periodic-table-quiz/index.html" class="quiz-card">
@@ -130,70 +146,12 @@
             </div>
         </a>
 
-        <a href="./ion-quiz/index.html" class="quiz-card">
-            <div class="icon">⚡️</div>
-            <div class="quiz-title">イオン式クイズ</div>
-            <div class="quiz-desc">
-                イオン名とイオン式を覚えよう！<br>
-                (全18問 / マッチング対応)
-            </div>
-        </a>
-
-        <a href="./atomic-poker/index.html" class="quiz-card">
-            <div class="icon">🃏</div>
-            <div class="quiz-title">原子ポーカー</div>
-            <div class="quiz-desc">
-                原子カードで化学式を作ろう！
-            </div>
-        </a>
-
-        <a href="./atomic-poker-arranged/index.html" class="quiz-card">
-            <div class="icon">🀄️</div>
-            <div class="quiz-title">原子麻雀 (Atomic Mahjong)</div>
-            <div class="quiz-desc">
-                捨て札を拾って役を作ろう！<br>
-                高度な戦略カードバトル。
-            </div>
-        </a>
-
-        <a href="./ionic-poker/index.html" class="quiz-card">
-            <div class="icon">🔋</div>
-            <div class="quiz-title">戦略的イオンポーカー</div>
-            <div class="quiz-desc">
-                イオン結合で高得点を狙え！<br>
-                対消滅ルール搭載
-            </div>
-        </a>
-
-        <a href="./ion-puzzle/index.html" class="quiz-card">
-            <div class="icon">🧲</div>
-            <div class="quiz-title">イオン結合パズル</div>
-            <div class="quiz-desc">
-                イオンを組み合わせて物質を作ろう！
-            </div>
-        </a>
-
-        <a href="./reaction-puzzle/index.html" class="quiz-card">
+        <a href="./reaction-puzzle/index.html" class="quiz-card" style="border-color: #ffdd00; box-shadow: 0 0 15px rgba(255,221,0,0.2);">
             <div class="icon">⚖️</div>
-            <div class="quiz-title">化学反応式係数合わせクイズ</div>
+            <div class="quiz-title">化学反応式係数クリア</div>
             <div class="quiz-desc">
-                天秤を使って化学反応式の係数を合わせよう！
-            </div>
-        </a>
-
-        <a href="./ion-drop/index.html" class="quiz-card">
-            <div class="icon">💧</div>
-            <div class="quiz-title">Ion Drop v2</div>
-            <div class="quiz-desc">
-                イオンを落として結合させるパズルゲーム！
-            </div>
-        </a>
-
-        <a href="./solitary-sagan/index.html" class="quiz-card">
-            <div class="icon">🔋</div>
-            <div class="quiz-title">化学電池シミュレーション</div>
-            <div class="quiz-desc">
-                金属と水溶液を選んで、電池の仕組みを観察しよう
+                天秤を使って化学反応式の係数を合わせよう！<br>
+                (全12問 / ランク攻略対応)
             </div>
         </a>
     </div>
