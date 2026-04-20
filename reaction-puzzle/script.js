@@ -376,22 +376,29 @@ function gameOver(isAllClear = false) {
     let isPassed = false;
     let rankColor = "#a0a0a0"; // default C
 
-    if (score >= 10000) {
-        rank = "S";
-        isPassed = true;
-        rankColor = "#ffdd00"; // gold
-    } else if (score >= 5000) {
-        rank = "A";
-        isPassed = true;
-        rankColor = "#4cc9f0"; // cyan
-    } else if (score >= 2500) {
-        rank = "B";
-        isPassed = false; // 未合格
-        rankColor = "#4ce0b3"; // green-ish
+    if (isAllClear) {
+        // 全問クリアの場合（最低Aランク）
+        if (combo === activeEquations.length) {
+            // ノーミス
+            rank = "S";
+            isPassed = true;
+            rankColor = "#ffdd00"; // gold
+        } else {
+            rank = "A";
+            isPassed = true;
+            rankColor = "#4cc9f0"; // cyan
+        }
     } else {
-        rank = "C";
-        isPassed = false; // 未合格
-        rankColor = "#a0a0a0"; // gray
+        // タイムアップで終了の場合（BまたはCランク）
+        if (currentEquationIndex >= 8) {
+            rank = "B";
+            isPassed = false; // 未合格
+            rankColor = "#4ce0b3"; // green-ish
+        } else {
+            rank = "C";
+            isPassed = false; // 未合格
+            rankColor = "#a0a0a0"; // gray
+        }
     }
     
     // UIの更新
