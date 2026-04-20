@@ -2,7 +2,13 @@
 let currentEquationIndex = 0;
 let currentCoefficients = { left: [], right: [] }; // [0, 0]
 let isPlaying = false;
-let activeEquations = []; // Subset of 10 equations
+let activeEquations = []; 
+
+// Time Attack & Combo State
+let timeLeft = 60.0;
+let score = 0;
+let combo = 0;
+let gameTimer = null;
 
 // CPK Coloring
 const atomColors = {
@@ -14,16 +20,15 @@ const atomColors = {
     'Ag': '#C0C0C0', 'Au': '#FFD123', 'default': '#FF00FF'
 };
 
-// DOM Elements (Global references, populated in initGame)
+// DOM Elements
 let scoreEl, questionTextEl, equationAreaEl, balanceArmEl, balanceDisplayEl;
 let leftCounterEl, rightCounterEl, stockContainerEl, leftPanContentEl, rightPanContentEl;
-let resultScreen, winOverlay, winEquationEl;
+let resultScreen, winOverlay, winEquationEl, timeDisplayEl, comboDisplayEl;
 
 // Initialize
 document.addEventListener('DOMContentLoaded', initGame);
 
 function initGame() {
-    // Select Elements safely after DOM load
     scoreEl = document.getElementById('score');
     questionTextEl = document.getElementById('question-text');
     equationAreaEl = document.getElementById('equation-area');
@@ -37,19 +42,44 @@ function initGame() {
     resultScreen = document.getElementById('result-screen');
     winOverlay = document.getElementById('win-overlay');
     winEquationEl = document.getElementById('win-equation');
+    timeDisplayEl = document.getElementById('time-display');
+    comboDisplayEl = document.getElementById('combo-display');
 
     if (typeof equations === 'undefined') {
         alert("Error: Data not loaded.");
         return;
     }
 
-    // Shuffle and Pick 10
+    // Shuffle and play infinitely or up to max
     shuffleArray(equations);
-    activeEquations = equations.slice(0, 10);
-
+    activeEquations = equations; // Play all available questions
     currentEquationIndex = 0;
+    
+    // Time Attack variables reset
+    timeLeft = 60.0;
+    score = 0;
+    combo = 0;
+    scoreEl.textContent = score;
+    comboDisplayEl.style.opacity = 0;
+    
+    if (gameTimer) clearInterval(gameTimer);
+    gameTimer = setInterval(gameTick, 100);
+
     isPlaying = true;
     loadEquation();
+}
+
+function gameTick() {
+    if (!isPlaying) return;
+    
+    timeLeft -= 0.1;
+    if (timeLeft <= 0) {
+        timeLeft = 0;
+        timeDisplayEl.textContent = "0.0";
+        gameOver();
+    } else {
+        timeDisplayEl.textContent = timeLeft.toFixed(1);
+    }
 }
 
 function shuffleArray(array) {
@@ -60,15 +90,16 @@ function shuffleArray(array) {
 }
 
 function loadEquation() {
+    // If we run out of equations, reshuffle and continue
+    if (currentEquationIndex >= activeEquations.length) {
+        shuffleArray(activeEquations);
+        currentEquationIndex = 0;
+    }
+
     const eq = activeEquations[currentEquationIndex];
     questionTextEl.textContent = eq.name;
-    scoreEl.textContent = currentEquationIndex; // Show current progress (0-9) or completed count?
-    // User said "Clear: /10". Usually means completed count.
-    // Let's show currentEquationIndex (which is 0 at start).
-    // Or maybe 1-based? "Question 1/10"?
-    // The UI says "Clear: 0/10". So 0 is correct for start.
 
-    // Reset Coefficients (0 for all)
+    // Reset Coefficients
     currentCoefficients = {
         left: new Array(eq.left.length).fill(0),
         right: new Array(eq.right.length).fill(0)
@@ -82,23 +113,23 @@ function renderStock() {
     const eq = activeEquations[currentEquationIndex];
     stockContainerEl.innerHTML = '';
 
-    // Helper to create draggable stock item
     const createStockItem = (formula, side, index) => {
         const el = document.createElement('div');
-        el.className = 'molecule-object';
-        el.draggable = true;
-        el.dataset.formula = formula;
-        el.dataset.side = side;
-        el.dataset.index = index;
-        el.dataset.source = 'stock'; // From stock
+        el.className = 'stock-item';
+        
+        // 物質名の取得
+        const name = (typeof formulaNames !== 'undefined' && formulaNames[formula]) ? formulaNames[formula] : "";
 
         el.innerHTML = `
             ${renderMoleculeVisual(formula)}
             <div class="molecule-name">${getFormulaHTML(formula)}</div>
+            <div class="stock-item-name">${name}</div>
+            <div class="stock-controls">
+                <button class="control-btn decrease" onclick="decrementCoefficient('${side}', ${index})">▼</button>
+                <div class="control-count" id="count-${side}-${index}">${currentCoefficients[side][index]}</div>
+                <button class="control-btn increase" onclick="incrementCoefficient('${side}', ${index})">▲</button>
+            </div>
         `;
-
-        el.addEventListener('dragstart', handleDragStart);
-        setupTouchEvents(el); // Add Touch Support
         return el;
     };
 
@@ -116,6 +147,18 @@ function renderStock() {
 function updateGameState() {
     renderEquation();
     updateBalance();
+    
+    // ストック内の個数表示更新
+    const eq = activeEquations[currentEquationIndex];
+    eq.left.forEach((mol, idx) => {
+        const el = document.getElementById(`count-left-${idx}`);
+        if(el) el.textContent = currentCoefficients.left[idx];
+    });
+    eq.right.forEach((mol, idx) => {
+        const el = document.getElementById(`count-right-${idx}`);
+        if(el) el.textContent = currentCoefficients.right[idx];
+    });
+
     checkWin();
 }
 
@@ -125,22 +168,8 @@ function renderEquation() {
     const renderSide = (molecules, side) => {
         return molecules.map((mol, idx) => {
             const coeff = currentCoefficients[side][idx];
-
-            // Logic: 
-            // 0 -> Show "0" (Gray)
-            // 1 -> Show "" (Implied)
-            // >1 -> Show Number
-            let displayCoeff;
-            let coeffClass = 'coeff';
-
-            if (coeff === 0) {
-                displayCoeff = '0';
-                coeffClass += ' zero';
-            } else if (coeff === 1) {
-                displayCoeff = ''; // Don't show 1
-            } else {
-                displayCoeff = coeff;
-            }
+            let displayCoeff = coeff === 0 ? '0' : (coeff === 1 ? '' : coeff);
+            let coeffClass = 'coeff' + (coeff === 0 ? ' zero' : '');
 
             return `
                 <div class="equation-part">
@@ -161,17 +190,14 @@ function renderEquation() {
 function updateBalance() {
     const eq = activeEquations[currentEquationIndex];
 
-    // Calculate Atoms
     const leftAtoms = calculateTotalAtoms(eq.left, currentCoefficients.left);
     const rightAtoms = calculateTotalAtoms(eq.right, currentCoefficients.right);
 
-    // Render Counters
     renderCounter(leftCounterEl, leftAtoms, rightAtoms);
     renderCounter(rightCounterEl, rightAtoms, leftAtoms);
 
-    // Render Pan Contents (Molecule Objects)
-    renderPan(leftPanContentEl, eq.left, currentCoefficients.left, 'left');
-    renderPan(rightPanContentEl, eq.right, currentCoefficients.right, 'right');
+    renderPan(leftPanContentEl, eq.left, currentCoefficients.left);
+    renderPan(rightPanContentEl, eq.right, currentCoefficients.right);
 
     // Calculate Tilt
     const getAtomSum = (atoms) => Object.values(atoms).reduce((a, b) => a + b, 0);
@@ -194,189 +220,39 @@ function updateBalance() {
     }
 }
 
-function renderPan(container, molecules, coeffs, side) {
+function renderPan(container, molecules, coeffs) {
     container.innerHTML = '';
     molecules.forEach((mol, idx) => {
         const count = coeffs[idx];
         for (let i = 0; i < count; i++) {
             const el = document.createElement('div');
-            el.className = 'molecule-object';
-            el.draggable = true;
-            el.dataset.formula = mol;
-            el.dataset.side = side;
-            el.dataset.index = idx;
-            el.dataset.source = 'pan';
-
+            el.className = 'molecule-object pan-object'; // no longer draggable
             el.innerHTML = renderMoleculeVisual(mol);
-
-            el.addEventListener('dragstart', handleDragStart);
-            setupTouchEvents(el); // Add Touch Support
             container.appendChild(el);
         }
     });
 }
 
-// --- Touch Support Logic ---
-let activeTouchGhost = null;
-let activeTouchData = null;
-
-function setupTouchEvents(el) {
-    el.addEventListener('touchstart', handleTouchStart, { passive: false });
-    el.addEventListener('touchmove', handleTouchMove, { passive: false });
-    el.addEventListener('touchend', handleTouchEnd);
-}
-
-function handleTouchStart(e) {
-    if (!isPlaying) return;
-    e.preventDefault(); // Prevent scrolling
-
-    const touch = e.touches[0];
-    const target = e.currentTarget;
-
-    // Create Ghost
-    activeTouchGhost = target.cloneNode(true);
-    activeTouchGhost.style.position = 'absolute';
-    activeTouchGhost.style.opacity = '0.8';
-    activeTouchGhost.style.pointerEvents = 'none'; // Let clicks pass through to detect drop zone
-    activeTouchGhost.style.zIndex = '1000';
-    activeTouchGhost.style.width = `${target.offsetWidth}px`;
-    activeTouchGhost.style.height = `${target.offsetHeight}px`;
-
-    document.body.appendChild(activeTouchGhost);
-    moveGhost(touch.clientX, touch.clientY);
-
-    // Store Data
-    activeTouchData = {
-        formula: target.dataset.formula,
-        side: target.dataset.side,
-        index: parseInt(target.dataset.index),
-        source: target.dataset.source
-    };
-}
-
-function handleTouchMove(e) {
-    if (!activeTouchGhost) return;
-    e.preventDefault();
-    const touch = e.touches[0];
-    moveGhost(touch.clientX, touch.clientY);
-}
-
-function handleTouchEnd(e) {
-    if (!activeTouchGhost) return;
-    e.preventDefault();
-
-    const touch = e.changedTouches[0];
-    const dropTarget = document.elementFromPoint(touch.clientX, touch.clientY);
-
-    // Check if dropped on Pan
-    const pan = dropTarget ? dropTarget.closest('.pan') : null;
-
-    if (pan) {
-        handleDropOnPan(pan, activeTouchData);
-    } else {
-        // Dropped outside
-        if (activeTouchData.source === 'pan') {
-            decrementCoefficient(activeTouchData.side, activeTouchData.index);
-        }
-    }
-
-    // Cleanup
-    activeTouchGhost.remove();
-    activeTouchGhost = null;
-    activeTouchData = null;
-}
-
-function moveGhost(x, y) {
-    if (activeTouchGhost) {
-        activeTouchGhost.style.left = `${x - activeTouchGhost.offsetWidth / 2}px`;
-        activeTouchGhost.style.top = `${y - activeTouchGhost.offsetHeight / 2}px`;
-    }
-}
-
-// Drag & Drop Logic (Mouse)
-function handleDragStart(e) {
-    if (!isPlaying) {
-        e.preventDefault();
-        return;
-    }
-    const data = {
-        formula: e.currentTarget.dataset.formula,
-        side: e.currentTarget.dataset.side,
-        index: parseInt(e.currentTarget.dataset.index),
-        source: e.currentTarget.dataset.source
-    };
-    e.dataTransfer.setData('text/plain', JSON.stringify(data));
-    e.dataTransfer.effectAllowed = data.source === 'stock' ? 'copy' : 'move';
-}
-
-// Drop Zones
-// 1. Pans (Accept from Stock or Pan)
-const pans = [document.getElementById('left-pan'), document.getElementById('right-pan')];
-pans.forEach(pan => {
-    pan.addEventListener('dragover', e => {
-        e.preventDefault();
-        pan.classList.add('drag-over');
-    });
-    pan.addEventListener('dragleave', () => pan.classList.remove('drag-over'));
-    pan.addEventListener('drop', e => {
-        e.preventDefault();
-        pan.classList.remove('drag-over');
-        const data = JSON.parse(e.dataTransfer.getData('text/plain'));
-        handleDropOnPan(pan, data);
-    });
-});
-
-// 2. Global (Drop outside pan to remove if source is pan)
-document.body.addEventListener('dragover', e => e.preventDefault());
-document.body.addEventListener('drop', e => {
-    // Only handle if NOT dropped on a pan (pans handle their own drop)
-    if (e.target.closest('.pan')) return;
-
-    const rawData = e.dataTransfer.getData('text/plain');
-    if (!rawData) return;
-
-    const data = JSON.parse(rawData);
-    if (data.source === 'pan') {
-        // Remove from pan
-        decrementCoefficient(data.side, data.index);
-    }
-});
-
-function handleDropOnPan(panEl, data) {
-    const isLeftPan = panEl.classList.contains('left-pan');
-    const targetSide = isLeftPan ? 'left' : 'right';
-
-    // Validate Side
-    if (data.side !== targetSide) {
-        // Wrong side
-        panEl.classList.add('error-flash');
-        setTimeout(() => panEl.classList.remove('error-flash'), 500);
-        return;
-    }
-
-    if (data.source === 'stock') {
-        // Add new molecule
-        incrementCoefficient(data.side, data.index);
-    } else if (data.source === 'pan') {
-        // Moving within pan? Do nothing or reorder.
-        // If dropped on SAME pan, do nothing.
-        // If dropped on WRONG pan, handled above.
-    }
-}
-
 function incrementCoefficient(side, index) {
+    if (!isPlaying) return;
     currentCoefficients[side][index]++;
     updateGameState();
 }
 
 function decrementCoefficient(side, index) {
+    if (!isPlaying) return;
+    // 減らす操作をしたらコンボが途切れるペナルティ
+    if (combo > 0) {
+        combo = 0;
+        comboDisplayEl.style.opacity = 0;
+    }
+    
     if (currentCoefficients[side][index] > 0) {
         currentCoefficients[side][index]--;
         updateGameState();
     }
 }
 
-// Helpers
 function parseFormula(formula) {
     const counts = {};
     const regex = /([A-Z][a-z]*)(\d*)/g;
@@ -431,14 +307,9 @@ function checkWin() {
 
     const eq = activeEquations[currentEquationIndex];
 
-    // 1. No empty sides (at least 1 molecule total? or all slots filled?)
-    // User spec: "Coefficient 0 is empty".
-    // Usually we need at least 1 of each reactant/product for a valid reaction.
-    // So let's require ALL coefficients > 0.
     const allFilled = [...currentCoefficients.left, ...currentCoefficients.right].every(c => c > 0);
     if (!allFilled) return;
 
-    // 2. Balanced
     const leftAtoms = calculateTotalAtoms(eq.left, currentCoefficients.left);
     const rightAtoms = calculateTotalAtoms(eq.right, currentCoefficients.right);
 
@@ -447,29 +318,37 @@ function checkWin() {
         if ((leftAtoms[atom] || 0) !== (rightAtoms[atom] || 0)) return;
     }
 
-    // Win!
-    isPlaying = false; // Stop interactions
+    // Win! 
+    isPlaying = false;
     balanceDisplayEl.textContent = "PERFECT!";
 
-    // Show Win Overlay
+    // Combo & Score calculation
+    combo++;
+    let baseScore = 100 * combo;
+    score += baseScore;
+    timeLeft = Math.min(99.0, timeLeft + 10.0); // Recover 10 seconds, cap at 99
+    
+    scoreEl.textContent = score;
+    comboDisplayEl.textContent = `${combo} CHAIN!`;
+    comboDisplayEl.style.opacity = 1;
+    
+    // Combo Animation
+    comboDisplayEl.classList.remove('combo-pop');
+    void comboDisplayEl.offsetWidth; // trigger reflow
+    comboDisplayEl.classList.add('combo-pop');
+
     showWinOverlay(eq);
 
     setTimeout(() => {
         winOverlay.classList.add('hidden');
         currentEquationIndex++;
-        scoreEl.textContent = currentEquationIndex;
-
-        if (currentEquationIndex >= activeEquations.length) {
-            gameClear();
-        } else {
-            isPlaying = true;
-            loadEquation();
-        }
-    }, 3000); // 3 seconds delay
+        
+        isPlaying = true;
+        loadEquation();
+    }, 2000); // reduced from 3s to 2s for better flow
 }
 
 function showWinOverlay(eq) {
-    // Construct balanced equation string
     const renderSide = (molecules, side) => {
         return molecules.map((mol, idx) => {
             const coeff = currentCoefficients[side][idx];
@@ -488,9 +367,12 @@ function showWinOverlay(eq) {
     winOverlay.classList.remove('hidden');
 }
 
-function gameClear() {
+function gameOver() {
     isPlaying = false;
-    // Remove timer display from result screen since we don't track time anymore
-    document.querySelector('.final-time').style.display = 'none';
+    clearInterval(gameTimer);
+    
+    document.querySelector('.title').textContent = "TIME UP!";
+    // Result screen can serve as game over screen
+    document.querySelector('.final-time').innerHTML = `Final Score: <span style="color:#f72585">${score}</span><br>Max Combo: ${combo}`;
     resultScreen.classList.remove('hidden');
 }

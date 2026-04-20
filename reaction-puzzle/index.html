@@ -19,12 +19,15 @@
     <div class="game-container">
         <!-- 1. Header -->
         <div class="header">
-            <!-- Timer Removed -->
+            <div class="stats">
+                <div class="time-box">⏱ <span id="time-display">60.0</span>s</div>
+                <div class="combo-box" id="combo-display" style="opacity: 0;">0 CHAIN!</div>
+            </div>
             <div class="prompt">
                 <p>天秤を釣り合わせろ！</p>
                 <h2 id="question-text">Loading...</h2>
             </div>
-            <div class="score">Clear: <span id="score">0</span>/10</div>
+            <div class="score">Score: <span id="score">0</span></div>
         </div>
 
         <!-- Win Overlay (Big Equation) -->
