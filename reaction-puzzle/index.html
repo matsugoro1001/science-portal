@@ -10,9 +10,9 @@
     <link
         href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;800&family=Noto+Sans+JP:wght@400;700&display=swap"
         rel="stylesheet">
-    <link rel="stylesheet" href="style.css?v=2">
-    <script src="data.js?v=2" defer></script>
-    <script src="script.js?v=2" defer></script>
+    <link rel="stylesheet" href="style.css?v=3">
+    <script src="data.js?v=3" defer></script>
+    <script src="script.js?v=3" defer></script>
 </head>
 
 <body>
@@ -90,11 +90,15 @@
 
         <!-- Result Screen -->
         <div id="result-screen" class="hidden">
-            <h1 class="title">BALANCE PERFECT!</h1>
+            <h1 class="title">TIME UP!</h1>
             <div class="result-content">
-                <div class="final-time">Time: <span id="final-time">00:00</span></div>
-                <button class="btn" onclick="location.reload()">Play Again</button>
-                <a href="../index.html" class="btn secondary">Back to Menu</a>
+                <div id="rank-display" class="rank-result" style="display:none;"></div>
+                <div id="pass-display" class="pass-result" style="display:none;"></div>
+                <div class="final-time" style="margin-bottom: 20px;"></div>
+                <div>
+                    <button class="btn" onclick="location.reload()">Play Again</button>
+                    <a href="../index.html" class="btn secondary">Back to Menu</a>
+                </div>
             </div>
         </div>
     </div>
