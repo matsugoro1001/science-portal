@@ -556,3 +556,46 @@ body {
     background-color: #e94560;
     color: #fff;
 }
+
+.rank-guide {
+    background: rgba(255, 255, 255, 0.1);
+    border-radius: 10px;
+    padding: 15px 20px;
+    margin-bottom: 20px;
+    text-align: left;
+}
+
+.rank-guide h3 {
+    margin-bottom: 10px;
+    color: var(--primary-color);
+    text-align: center;
+}
+
+.rank-guide ul {
+    list-style: none;
+    padding: 0;
+}
+
+.rank-guide li {
+    margin-bottom: 8px;
+    font-size: 1rem;
+    display: flex;
+    align-items: center;
+}
+
+.rank-badge {
+    display: inline-block;
+    width: 30px;
+    height: 30px;
+    line-height: 30px;
+    text-align: center;
+    border-radius: 5px;
+    font-weight: bold;
+    margin-right: 10px;
+    color: #000;
+}
+
+.rank-s { background-color: #ffdd00; }
+.rank-a { background-color: #4cc9f0; }
+.rank-b { background-color: #4ce0b3; }
+.rank-c { background-color: #a0a0a0; }

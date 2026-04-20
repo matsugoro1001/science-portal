@@ -10,15 +10,15 @@
     <link
         href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;800&family=Noto+Sans+JP:wght@400;700&display=swap"
         rel="stylesheet">
-    <link rel="stylesheet" href="style.css?v=5">
-    <script src="data.js?v=5" defer></script>
-    <script src="script.js?v=5" defer></script>
+    <link rel="stylesheet" href="style.css?v=6">
+    <script src="data.js?v=6" defer></script>
+    <script src="script.js?v=6" defer></script>
 </head>
 
 <body>
     <div class="game-container">
         <!-- 1. Header -->
-        <div class="header">
+        <div class="header" style="justify-content: flex-start; gap: 20px;">
             <div class="stats">
                 <div class="time-box">⏱ <span id="time-display">60.0</span>s</div>
                 <div class="combo-box" id="combo-display" style="opacity: 0;">0 CHAIN!</div>
@@ -27,7 +27,6 @@
                 <p>天秤を釣り合わせろ！</p>
                 <h2 id="question-text">Loading...</h2>
             </div>
-            <div class="score">Score: <span id="score">0</span></div>
         </div>
 
         <!-- Win Overlay (Big Equation) -->
@@ -95,6 +94,17 @@
                 <div id="rank-display" class="rank-result" style="display:none;"></div>
                 <div id="pass-display" class="pass-result" style="display:none;"></div>
                 <div class="final-time" style="margin-bottom: 20px;"></div>
+                
+                <div class="rank-guide">
+                    <h3>評価基準</h3>
+                    <ul>
+                        <li><span class="rank-badge rank-s">S</span>全12問クリア ＋ 1度も間違えない（▼を押さない）</li>
+                        <li><span class="rank-badge rank-a">A</span>全12問クリア</li>
+                        <li><span class="rank-badge rank-b">B</span>8〜11問クリア</li>
+                        <li><span class="rank-badge rank-c">C</span>0〜7問クリア</li>
+                    </ul>
+                </div>
+
                 <div>
                     <button class="btn" onclick="location.reload()">Play Again</button>
                     <a href="../index.html" class="btn secondary">Back to Menu</a>

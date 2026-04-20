@@ -6,7 +6,6 @@ let activeEquations = [];
 
 // Time Attack & Combo State
 let timeLeft = 60.0;
-let score = 0;
 let combo = 0;
 let gameTimer = null;
 
@@ -57,9 +56,7 @@ function initGame() {
     
     // Time Attack variables reset
     timeLeft = 60.0;
-    score = 0;
     combo = 0;
-    scoreEl.textContent = score;
     comboDisplayEl.style.opacity = 0;
     
     if (gameTimer) clearInterval(gameTimer);
@@ -322,13 +319,10 @@ function checkWin() {
     isPlaying = false;
     balanceDisplayEl.textContent = "PERFECT!";
 
-    // Combo & Score calculation
+    // Combo calculation
     combo++;
-    let baseScore = 100 * combo;
-    score += baseScore;
     timeLeft = Math.min(99.0, timeLeft + 10.0); // Recover 10 seconds, cap at 99
     
-    scoreEl.textContent = score;
     comboDisplayEl.textContent = `${combo} CHAIN!`;
     comboDisplayEl.style.opacity = 1;
     
@@ -417,6 +411,6 @@ function gameOver(isAllClear = false) {
     
     document.querySelector('.title').textContent = isAllClear ? "ALL CLEAR!" : "TIME UP!";
     // Result screen can serve as game over screen
-    document.querySelector('.final-time').innerHTML = `Final Score: <span style="color:#f72585">${score}</span><br>Max Combo: ${combo}`;
+    document.querySelector('.final-time').innerHTML = `クリア問題数: <span style="color:#f72585">${currentEquationIndex}</span> / ${activeEquations.length}<br>MAXコンボ: ${combo}`;
     resultScreen.classList.remove('hidden');
 }
