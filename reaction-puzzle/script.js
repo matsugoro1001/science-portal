@@ -90,10 +90,10 @@ function shuffleArray(array) {
 }
 
 function loadEquation() {
-    // If we run out of equations, reshuffle and continue
+    // If we run out of equations, finish the game
     if (currentEquationIndex >= activeEquations.length) {
-        shuffleArray(activeEquations);
-        currentEquationIndex = 0;
+        gameOver(true);
+        return;
     }
 
     const eq = activeEquations[currentEquationIndex];
@@ -367,7 +367,7 @@ function showWinOverlay(eq) {
     winOverlay.classList.remove('hidden');
 }
 
-function gameOver() {
+function gameOver(isAllClear = false) {
     isPlaying = false;
     clearInterval(gameTimer);
     
@@ -408,7 +408,7 @@ function gameOver() {
         passDisplay.className = "pass-result " + (isPassed ? "passed" : "failed");
     }
     
-    document.querySelector('.title').textContent = "TIME UP!";
+    document.querySelector('.title').textContent = isAllClear ? "ALL CLEAR!" : "TIME UP!";
     // Result screen can serve as game over screen
     document.querySelector('.final-time').innerHTML = `Final Score: <span style="color:#f72585">${score}</span><br>Max Combo: ${combo}`;
     resultScreen.classList.remove('hidden');
