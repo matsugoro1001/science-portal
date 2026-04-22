@@ -539,7 +539,7 @@ function gameOver(isAllClear = false) {
 }
 
 // --- GAS API ---
-const GAS_URL = 'https://script.google.com/macros/s/AKfycbyGtS6zkCFBwf3ymgndBjaEZamV2dWOyz1-nUx7S9dE-t4DQ2oiTzMmULcXMdGCBYrJ/exec';
+const GAS_URL = 'https://script.google.com/macros/s/AKfycbwbCONqVJ7rNU8hFpM22UuoNNC6Eb_9iCGciLDUTdgiIzB-G1FQCVgKBXVmj2sFcl4_Rg/exec';
 const SHEET_TYPE = 'reaction';
 
 async function saveScoreToGas(mode, name, score) {
