@@ -19,6 +19,7 @@
     <!-- Start Screen -->
     <div id="start-screen" class="active" style="display: flex; flex-direction: column; align-items: center; justify-content: center; min-height: 100vh; text-align: center;">
         <h1 class="title" style="margin-bottom: 40px; font-size: 3rem;">化学反応式<br>係数合わせパズル</h1>
+        <div style="font-size: 1rem; color: #888; margin-bottom: 20px;">v7.1</div>
         <div style="display: flex; flex-direction: column; gap: 20px; width: 100%; max-width: 300px;">
             <button class="btn" style="background-color: #4ecca3; font-size: 1.2rem;" onclick="startGame('practice')">練習モード (Practice)</button>
             <button class="btn" style="background-color: #e94560; font-size: 1.2rem;" onclick="startTestModeSetup()">テストモード (Test)</button>
@@ -47,6 +48,7 @@
                 <div class="combo-box" id="combo-display" style="opacity: 0;">0 CHAIN!</div>
             </div>
             <div class="prompt">
+                <div id="question-progress" style="font-size: 1.2rem; font-weight: bold; color: #4cc9f0; margin-bottom: 5px;">Q 1/12</div>
                 <p>天秤を釣り合わせろ！</p>
                 <h2 id="question-text">Loading...</h2>
             </div>

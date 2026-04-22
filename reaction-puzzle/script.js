@@ -142,6 +142,12 @@ function loadEquation() {
 
     const eq = activeEquations[currentEquationIndex];
     questionTextEl.textContent = eq.name;
+    
+    // 問題数の進行度を更新
+    const progressEl = document.getElementById('question-progress');
+    if (progressEl) {
+        progressEl.textContent = `Q ${currentEquationIndex + 1} / ${activeEquations.length}`;
+    }
 
     // Reset Time for this question (1問あたり60秒)
     timeLeft = 60.0;
@@ -488,48 +494,41 @@ function gameOver(isAllClear = false) {
     const titleEl = document.querySelector('#result-screen .title');
     const finalInfoEl = document.querySelector('.final-time');
 
+    // 共通のランク・合否判定
+    let rank = "C";
+    let isPassed = false;
+    let rankColor = "#a0a0a0"; 
+
+    if (correctAnswersCount === activeEquations.length) {
+        if (combo === activeEquations.length && currentMode === 'practice') {
+            rank = "S"; isPassed = true; rankColor = "#ffdd00"; 
+        } else {
+            rank = "A"; isPassed = true; rankColor = "#4cc9f0"; 
+        }
+    } else if (correctAnswersCount >= 8) {
+        rank = "B"; isPassed = false; rankColor = "#4ce0b3"; 
+    } else {
+        rank = "C"; isPassed = false; rankColor = "#a0a0a0"; 
+    }
+
+    // UIへ反映
+    if (rankDisplay && passDisplay) {
+        rankDisplay.style.display = 'block';
+        rankDisplay.textContent = `${rank} ランク`;
+        rankDisplay.style.color = rankColor;
+        
+        passDisplay.style.display = 'inline-block';
+        passDisplay.textContent = isPassed ? "合格！" : "未合格";
+        passDisplay.className = "pass-result " + (isPassed ? "passed" : "failed");
+    }
+
     if (currentMode === 'practice') {
         titleEl.textContent = isAllClear ? "ALL CLEAR!" : "FINISH!";
-        
-        let rank = "C";
-        let isPassed = false;
-        let rankColor = "#a0a0a0"; 
-
-        if (correctAnswersCount === activeEquations.length) {
-            if (combo === activeEquations.length) {
-                rank = "S"; isPassed = true; rankColor = "#ffdd00"; 
-            } else {
-                rank = "A"; isPassed = true; rankColor = "#4cc9f0"; 
-            }
-        } else if (correctAnswersCount >= 8) {
-            rank = "B"; isPassed = false; rankColor = "#4ce0b3"; 
-        } else {
-            rank = "C"; isPassed = false; rankColor = "#a0a0a0"; 
-        }
-
-        if (rankDisplay && passDisplay) {
-            rankDisplay.style.display = 'block';
-            rankDisplay.textContent = `${rank} ランク`;
-            rankDisplay.style.color = rankColor;
-            
-            passDisplay.style.display = 'inline-block';
-            passDisplay.textContent = isPassed ? "合格！" : "未合格";
-            passDisplay.className = "pass-result " + (isPassed ? "passed" : "failed");
-        }
-        
         finalInfoEl.innerHTML = `正解数: <span style="color:#f72585">${correctAnswersCount}</span> / ${activeEquations.length}<br>MAXコンボ: ${combo}`;
     } else {
         // Test Mode Result
         titleEl.textContent = "テスト終了";
-        if (rankDisplay) rankDisplay.style.display = 'none';
-        
-        const isPassed = correctAnswersCount >= 8; // テストの合格基準は任意（今は仮に8とする）
-        if (passDisplay) {
-            passDisplay.style.display = 'inline-block';
-            passDisplay.textContent = isPassed ? "合格！" : "不合格";
-            passDisplay.className = "pass-result " + (isPassed ? "passed" : "failed");
-        }
-        
+        passDisplay.textContent = isPassed ? "合格！" : "不合格"; // テスト専用の文言に上書き
         finalInfoEl.innerHTML = `${testPlayerName}さんの成績<br><br>得点: <span style="color:#4ecca3; font-size: 2rem;">${correctAnswersCount}</span> / ${activeEquations.length}`;
 
         saveScoreToGas('test', testPlayerName, correctAnswersCount);
