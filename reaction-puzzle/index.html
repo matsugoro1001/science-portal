@@ -10,16 +10,16 @@
     <link
         href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;800&family=Noto+Sans+JP:wght@400;700&display=swap"
         rel="stylesheet">
-    <link rel="stylesheet" href="style.css?v=8">
-    <script src="data.js?v=8" defer></script>
-    <script src="script.js?v=8" defer></script>
+    <link rel="stylesheet" href="style.css?v=8.1">
+    <script src="data.js?v=8.1" defer></script>
+    <script src="script.js?v=8.1" defer></script>
 </head>
 
 <body>
     <!-- Start Screen -->
     <div id="start-screen" class="active" style="display: flex; flex-direction: column; align-items: center; justify-content: center; min-height: 100vh; text-align: center;">
         <h1 class="title" style="margin-bottom: 40px; font-size: 3rem;">化学反応式<br>係数合わせパズル</h1>
-        <div style="font-size: 1rem; color: #888; margin-bottom: 20px;">v8.0</div>
+        <div style="font-size: 1rem; color: #888; margin-bottom: 20px;">v8.1</div>
         <div style="display: flex; flex-direction: column; gap: 20px; width: 100%; max-width: 300px;">
             <button class="btn" style="background-color: #4ecca3; font-size: 1.2rem;" onclick="startGame('practice')">練習モード (Practice)</button>
             <button class="btn" style="background-color: #e94560; font-size: 1.2rem;" onclick="startTestModeSetup()">テストモード (Test)</button>
@@ -118,28 +118,29 @@
             <button id="submit-btn" class="btn" style="background-color: #4ecca3; display: none;" onclick="submitAnswer()">決定 (Submit)</button>
         </div>
 
-        <!-- Result Screen -->
-        <div id="result-screen" class="hidden">
-            <h1 class="title">TIME UP!</h1>
-            <div class="result-content">
-                <div id="rank-display" class="rank-result" style="display:none;"></div>
-                <div id="pass-display" class="pass-result" style="display:none;"></div>
-                <div class="final-time" style="margin-bottom: 20px;"></div>
-                
-                <div class="rank-guide">
-                    <h3>評価基準</h3>
-                    <ul>
-                        <li><span class="rank-badge rank-s">S</span>全12問クリア ＋ 1度も間違えない（▼を押さない）</li>
-                        <li><span class="rank-badge rank-a">A</span>全12問クリア</li>
-                        <li><span class="rank-badge rank-b">B</span>8〜11問クリア</li>
-                        <li><span class="rank-badge rank-c">C</span>0〜7問クリア</li>
-                    </ul>
-                </div>
+    </div> <!-- End of quiz-screen -->
 
-                <div>
-                    <button class="btn" onclick="location.reload()">Play Again</button>
-                    <a href="../basic.html" class="btn secondary">Back to Menu</a>
-                </div>
+    <!-- Result Screen -->
+    <div id="result-screen" class="hidden">
+        <h1 class="title">TIME UP!</h1>
+        <div class="result-content">
+            <div id="rank-display" class="rank-result" style="display:none;"></div>
+            <div id="pass-display" class="pass-result" style="display:none;"></div>
+            <div class="final-time" style="margin-bottom: 20px;"></div>
+            
+            <div class="rank-guide">
+                <h3>評価基準</h3>
+                <ul>
+                    <li><span class="rank-badge rank-s">S</span>全12問クリア ＋ 1度も間違えない（▼を押さない）</li>
+                    <li><span class="rank-badge rank-a">A</span>全12問クリア</li>
+                    <li><span class="rank-badge rank-b">B</span>8〜11問クリア</li>
+                    <li><span class="rank-badge rank-c">C</span>0〜7問クリア</li>
+                </ul>
+            </div>
+
+            <div>
+                <button class="btn" onclick="location.reload()">Play Again</button>
+                <a href="../basic.html" class="btn secondary">Back to Menu</a>
             </div>
         </div>
     </div>
