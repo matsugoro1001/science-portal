@@ -540,7 +540,7 @@ function gameOver(isAllClear = false) {
 
 // --- GAS API ---
 const GAS_URL = 'https://script.google.com/macros/s/AKfycbyGtS6zkCFBwf3ymgndBjaEZamV2dWOyz1-nUx7S9dE-t4DQ2oiTzMmULcXMdGCBYrJ/exec';
-const SHEET_TYPE = '化学反応式テスト';
+const SHEET_TYPE = 'reaction';
 
 async function saveScoreToGas(mode, name, score) {
     const statusEl = document.getElementById('save-status');
