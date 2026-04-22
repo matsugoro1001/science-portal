@@ -16,7 +16,30 @@
 </head>
 
 <body>
-    <div class="game-container">
+    <!-- Start Screen -->
+    <div id="start-screen" class="active" style="display: flex; flex-direction: column; align-items: center; justify-content: center; min-height: 100vh; text-align: center;">
+        <h1 class="title" style="margin-bottom: 40px; font-size: 3rem;">化学反応式<br>係数合わせパズル</h1>
+        <div style="display: flex; flex-direction: column; gap: 20px; width: 100%; max-width: 300px;">
+            <button class="btn" style="background-color: #4ecca3; font-size: 1.2rem;" onclick="startGame('practice')">練習モード (Practice)</button>
+            <button class="btn" style="background-color: #e94560; font-size: 1.2rem;" onclick="startTestModeSetup()">テストモード (Test)</button>
+        </div>
+        <a href="../basic.html" class="btn secondary" style="margin-top: 40px;">Back to Menu</a>
+    </div>
+
+    <!-- Name Input Modal -->
+    <div id="name-input-modal" class="hidden" style="position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.8); display: flex; align-items: center; justify-content: center; z-index: 1000;">
+        <div style="background: white; padding: 30px; border-radius: 15px; text-align: center; max-width: 400px; width: 90%;">
+            <h3 style="color: #1a1a2e; margin-bottom: 10px;">名前入力</h3>
+            <p style="color: #555; margin-bottom: 20px;">成績を記録するための名前を入力してください。</p>
+            <input type="text" id="test-player-name" placeholder="Name" style="width: 100%; padding: 10px; font-size: 1.2rem; margin-bottom: 20px; border: 2px solid #ddd; border-radius: 8px;">
+            <div style="display: flex; gap: 10px;">
+                <button class="btn secondary" onclick="closeNameInput()" style="flex: 1; padding: 10px;">キャンセル</button>
+                <button class="btn primary" onclick="confirmTestStart()" style="flex: 1; padding: 10px;">テスト開始</button>
+            </div>
+        </div>
+    </div>
+
+    <div class="game-container hidden" id="quiz-screen">
         <!-- 1. Header -->
         <div class="header" style="justify-content: flex-start; gap: 20px;">
             <div class="stats">
@@ -85,6 +108,12 @@
             <div class="stock-container" id="stock-container">
                 <!-- Injected by JS: Infinite draggable molecules -->
             </div>
+        </div>
+
+        <!-- 5. Game Actions -->
+        <div class="game-actions" style="display: flex; justify-content: center; gap: 20px; align-items: center; margin-top: 20px;">
+            <button class="btn" style="background-color: #6c757d;" onclick="skipQuestion()">パス (Skip)</button>
+            <button id="submit-btn" class="btn" style="background-color: #4ecca3; display: none;" onclick="submitAnswer()">決定 (Submit)</button>
         </div>
 
         <!-- Result Screen -->
