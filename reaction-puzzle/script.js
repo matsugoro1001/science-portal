@@ -543,12 +543,26 @@ const GAS_URL = 'https://script.google.com/macros/s/AKfycbyGtS6zkCFBwf3ymgndBjaE
 const SHEET_TYPE = '化学反応式テスト';
 
 async function saveScoreToGas(mode, name, score) {
+    const statusEl = document.getElementById('save-status');
+    if (statusEl) {
+        statusEl.textContent = "成績を送信中...";
+        statusEl.style.color = "#4cc9f0";
+    }
+
     try {
         const url = `${GAS_URL}?type=${encodeURIComponent(SHEET_TYPE)}&action=save&gameMode=${encodeURIComponent(mode)}&name=${encodeURIComponent(name)}&score=${score}&t=${Date.now()}`;
         console.log("Saving to GAS:", url);
         await fetch(url, { mode: 'no-cors' });
-        console.log("Data sent to GAS.");
+        
+        if (statusEl) {
+            statusEl.textContent = "成績の送信が完了しました";
+            statusEl.style.color = "#4ecca3";
+        }
     } catch (e) {
         console.error('GAS Save Error:', e);
+        if (statusEl) {
+            statusEl.textContent = "送信エラーが発生しました";
+            statusEl.style.color = "#ff0d0d";
+        }
     }
 }
