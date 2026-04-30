@@ -70,6 +70,9 @@ window.closeNameInput = () => {
     nameInputModal.classList.add('hidden');
 };
 
+let wrongQuestions = [];
+let isRetryMode = false;
+
 window.confirmTestStart = () => {
     const nameInput = document.getElementById('test-player-name');
     if (!nameInput.value.trim()) {
@@ -78,6 +81,8 @@ window.confirmTestStart = () => {
     }
     testPlayerName = nameInput.value.trim();
     closeNameInput();
+    isRetryMode = false;
+    wrongQuestions = [];
     window.startGame('test');
 };
 
@@ -452,6 +457,8 @@ function processWrongAnswer() {
         combo = 0;
         comboDisplayEl.style.opacity = 0;
     }
+    
+    wrongQuestions.push(activeEquations[currentEquationIndex]);
 
     // ちょっとだけ見せてから次へ
     setTimeout(() => {
@@ -522,7 +529,13 @@ function gameOver(isAllClear = false) {
         passDisplay.className = "pass-result " + (isPassed ? "passed" : "failed");
     }
 
-    if (currentMode === 'practice') {
+    if (isRetryMode) {
+        titleEl.textContent = "やり直し完了！";
+        passDisplay.textContent = "全問クリア！";
+        passDisplay.className = "pass-result passed";
+        rankDisplay.style.display = 'none';
+        finalInfoEl.innerHTML = ``;
+    } else if (currentMode === 'practice') {
         titleEl.textContent = isAllClear ? "ALL CLEAR!" : "FINISH!";
         finalInfoEl.innerHTML = `正解数: <span style="color:#f72585">${correctAnswersCount}</span> / ${activeEquations.length}<br>MAXコンボ: ${combo}`;
     } else {
@@ -534,9 +547,46 @@ function gameOver(isAllClear = false) {
         saveScoreToGas('test', testPlayerName, correctAnswersCount, rank);
     }
     
+    // やり直しボタンの追加・表示制御
+    const resultBox = document.querySelector('#result-screen .result-box');
+    let retryBtn = document.getElementById('retry-btn');
+    if (!retryBtn) {
+        retryBtn = document.createElement('button');
+        retryBtn.id = 'retry-btn';
+        retryBtn.className = 'btn';
+        retryBtn.style.backgroundColor = '#e94560';
+        retryBtn.style.marginTop = '15px';
+        retryBtn.textContent = '間違えた問題をやり直す';
+        retryBtn.onclick = window.startRetryMode;
+        resultBox.appendChild(retryBtn);
+    }
+
+    if (wrongQuestions.length > 0 && currentMode === 'test') {
+        retryBtn.style.display = 'inline-block';
+    } else {
+        retryBtn.style.display = 'none';
+    }
+    
     resultScreen.classList.remove('hidden');
     quizScreen.classList.add('hidden');
 }
+
+window.startRetryMode = () => {
+    isRetryMode = true;
+    activeEquations = [...wrongQuestions]; // 間違えた問題だけを対象にする
+    wrongQuestions = [];
+    currentEquationIndex = 0;
+    correctAnswersCount = 0;
+    
+    resultScreen.classList.add('hidden');
+    quizScreen.classList.remove('hidden');
+    
+    if (gameTimer) clearInterval(gameTimer);
+    gameTimer = setInterval(gameTick, 100);
+
+    isPlaying = true;
+    loadEquation();
+};
 
 // --- GAS API ---
 const GAS_URL = 'https://script.google.com/macros/s/AKfycbwbCONqVJ7rNU8hFpM22UuoNNC6Eb_9iCGciLDUTdgiIzB-G1FQCVgKBXVmj2sFcl4_Rg/exec';

@@ -78,6 +78,9 @@
             <div id="test-input-area" class="input-area hidden">
                 <input type="text" id="answer-input" placeholder="元素記号を入力 (例: H)" autocomplete="off">
                 <button class="btn-submit" onclick="submitTestAnswer()">回答</button>
+                <button class="btn secondary" onclick="skipTestQuestion()" style="margin-left: 10px;">パス</button>
+                
+                <div id="correct-answer-display" class="hidden" style="margin-top: 10px; color: #ef4444; font-weight: bold; font-size: 1.2rem;"></div>
 
                 <!-- Helper Buttons -->
                 <div class="helper-buttons">
@@ -119,6 +122,17 @@
 
                     <div id="test-result-details" class="hidden">
                         <h3 id="test-pass-fail">合格 / 不合格</h3>
+                        
+                        <div class="rank-guide" style="margin: 15px auto; text-align: left; max-width: 250px; background: rgba(255,255,255,0.1); padding: 10px; border-radius: 8px;">
+                            <h4 style="margin:0 0 5px 0; font-size: 0.9rem;">評価基準</h4>
+                            <ul style="list-style: none; padding: 0; margin: 0; font-size: 0.8rem; line-height: 1.5;">
+                                <li><span style="color:#ffdd00; font-weight:bold; width:20px; display:inline-block;">S</span> 25問 (全問正解)</li>
+                                <li><span style="color:#4cc9f0; font-weight:bold; width:20px; display:inline-block;">A</span> 20〜24問 (合格)</li>
+                                <li><span style="color:#4ce0b3; font-weight:bold; width:20px; display:inline-block;">B</span> 15〜19問 (未合格)</li>
+                                <li><span style="color:#a0a0a0; font-weight:bold; width:20px; display:inline-block;">C</span> 0〜14問 (未合格)</li>
+                            </ul>
+                        </div>
+
                         <div id="save-status" style="font-size: 0.9rem; color: #888; margin-bottom: 5px;"></div>
                         <p>Score: <span id="test-score-display">0</span> / 25</p>
                     </div>
@@ -179,10 +193,10 @@
             <button class="btn primary" onclick="resetGame()">Play Again</button>
         </div>
     </div>
-    <div style="position: fixed; bottom: 5px; right: 5px; opacity: 0.5; font-size: 0.8rem; color: #aaa;">Ver: fix28
+    <div style="position: fixed; bottom: 5px; right: 5px; opacity: 0.5; font-size: 0.8rem; color: #aaa;">Ver: fix29
     </div>
-    <script src="data.js?v=fix26"></script>
-    <script src="script.js?v=fix26"></script>
+    <script src="data.js?v=fix29"></script>
+    <script src="script.js?v=fix29"></script>
 </body>
 
 </html>

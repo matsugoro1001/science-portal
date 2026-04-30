@@ -387,19 +387,55 @@ function endGame() {
         document.getElementById('test-score-display').textContent = testScore;
         const passFailEl = document.getElementById('test-pass-fail');
 
-        if (testScore >= PASSING_SCORE) {
-            passFailEl.textContent = `${testName}: 合格！ (PASS)`;
-            passFailEl.className = "pass-text";
+        // SABC ランク判定
+        let rank = "C";
+        let isPassed = false;
+        let rankColor = "#a0a0a0"; 
+
+        if (testScore === TEST_QUESTION_COUNT) {
+            rank = "S"; isPassed = true; rankColor = "#ffdd00";
+        } else if (testScore >= TEST_QUESTION_COUNT * 0.8) {
+            rank = "A"; isPassed = true; rankColor = "#4cc9f0";
+        } else if (testScore >= TEST_QUESTION_COUNT * 0.6) {
+            rank = "B"; isPassed = false; rankColor = "#4ce0b3";
         } else {
-            passFailEl.textContent = `${testName}: 不合格 (FAIL)`;
-            passFailEl.className = "fail-text";
+            rank = "C"; isPassed = false; rankColor = "#a0a0a0";
         }
 
-        // Show Test Name at the top
-        document.querySelector('#certificate-screen h2').textContent = "イオン式テスト";
+        // リトライモードの場合は判定やGAS送信をスキップ
+        if (isRetryMode) {
+            document.querySelector('#certificate-screen h2').textContent = "やり直し完了！";
+            passFailEl.textContent = "全問クリア！";
+            passFailEl.style.color = "#4cc9f0";
+            document.getElementById('test-score-display').parentElement.style.display = 'none';
+        } else {
+            document.querySelector('#certificate-screen h2').textContent = "イオン式テスト結果";
+            passFailEl.innerHTML = `<span style="color: ${rankColor}; font-size: 1.5em; margin-right: 10px;">${rank} ランク</span> <br> ${isPassed ? '合格！' : '未合格'}`;
+            passFailEl.className = isPassed ? "pass-text" : "fail-text";
+            document.getElementById('test-score-display').parentElement.style.display = 'block';
 
-        // Save Result to GAS
-        saveScoreToGas('test', testName, testScore);
+            // Save Result to GAS
+            saveScoreToGas('test', testName, testScore, null, rank);
+        }
+
+        // やり直しボタンの追加・表示制御
+        let retryBtn = document.getElementById('retry-btn');
+        if (!retryBtn) {
+            retryBtn = document.createElement('button');
+            retryBtn.id = 'retry-btn';
+            retryBtn.className = 'btn';
+            retryBtn.style.backgroundColor = '#e94560';
+            retryBtn.style.marginTop = '15px';
+            retryBtn.textContent = '間違えた問題をやり直す';
+            retryBtn.onclick = window.startRetryMode;
+            resultDiv.appendChild(retryBtn);
+        }
+
+        if (wrongQuestions.length > 0) {
+            retryBtn.style.display = 'inline-block';
+        } else {
+            retryBtn.style.display = 'none';
+        }
 
         document.getElementById('new-record-form').classList.add('hidden');
         document.getElementById('ranking-section').classList.add('hidden');
@@ -437,6 +473,9 @@ let testScore = 0;
 const PASSING_SCORE = 18;
 const TEST_QUESTION_COUNT = 18;
 
+let wrongQuestions = [];
+let isRetryMode = false;
+
 window.startTestModeSetup = () => {
     document.getElementById('name-input-modal').classList.remove('hidden');
     document.getElementById('test-player-name').focus();
@@ -454,6 +493,8 @@ window.confirmTestStart = () => {
     }
     testName = nameInput.value.trim();
     closeNameInput();
+    isRetryMode = false;
+    wrongQuestions = [];
     startGame('test');
 };
 
@@ -532,8 +573,14 @@ window.submitTestAnswer = () => {
         input.style.borderColor = "#ef4444";
         input.style.backgroundColor = "#fee2e2";
         input.style.color = "#ef4444";
-        input.value = normalizedCorrect; // Show Correct Answer
-        questionPool.unshift(currentQuestion.element); // Re-queue at the end
+        
+        // 正解を下部に表示
+        const ansDisplay = document.getElementById('correct-answer-display');
+        ansDisplay.textContent = `正解: ${normalizedCorrect}`;
+        ansDisplay.classList.remove('hidden');
+        
+        // 間違えた問題をリストに保存
+        wrongQuestions.push(currentQuestion.element);
     }
 
     isAnswering = false;
@@ -543,6 +590,8 @@ window.submitTestAnswer = () => {
         input.style.borderColor = "#ddd";
         input.style.backgroundColor = "white";
         input.style.color = "inherit"; // Reset
+        const ansDisplay = document.getElementById('correct-answer-display');
+        ansDisplay.classList.add('hidden');
         nextTestQuestion();
     }, 1500);
 };
@@ -566,10 +615,15 @@ window.skipTestQuestion = () => {
         .replace(/<sup>2-<\/sup>/g, '²⁻').replace(/<sup>3-<\/sup>/g, '³⁻');
 
     // Show correct answer
-    input.value = correctVal;
+    const ansDisplay = document.getElementById('correct-answer-display');
+    ansDisplay.textContent = `正解: ${correctVal}`;
+    ansDisplay.classList.remove('hidden');
+    
     input.style.borderColor = "#ef4444";
     input.style.backgroundColor = "#fee2e2";
     input.style.color = "#ef4444";
+    
+    wrongQuestions.push(currentQuestion.element);
 
     isAnswering = false;
     questionsAnswered++;
@@ -578,8 +632,31 @@ window.skipTestQuestion = () => {
         input.style.borderColor = "#ddd";
         input.style.backgroundColor = "white";
         input.style.color = "inherit";
+        const ansDisplay = document.getElementById('correct-answer-display');
+        ansDisplay.classList.add('hidden');
         nextTestQuestion();
     }, 1500);
+};
+
+window.startRetryMode = () => {
+    isRetryMode = true;
+    questionPool = [...wrongQuestions]; // 間違えた問題をプールに入れる
+    wrongQuestions = []; // 今回間違える分を記録するためにクリア
+    
+    // リセット
+    testScore = 0;
+    questionsAnswered = 0;
+    
+    // UI非表示・表示切り替え
+    certificateScreen.classList.remove('active');
+    setTimeout(() => {
+        certificateScreen.classList.add('hidden');
+        quizScreen.classList.remove('hidden');
+        quizScreen.classList.add('active');
+        
+        // 最初の問題を出題
+        nextTestQuestion();
+    }, 300);
 };
 
 // --- Ranking System ---
@@ -598,13 +675,13 @@ async function getRankings(mode) {
     }
 }
 
-async function saveScoreToGas(mode, name, score, typeOverride = null) {
+async function saveScoreToGas(mode, name, score, typeOverride = null, rank = '-') {
     const statusEl = document.getElementById('save-status');
     if (statusEl) statusEl.textContent = "データを送信中... (Sending data...)";
 
     try {
         const type = typeOverride || SHEET_TYPE;
-        const url = `${GAS_URL}?type=${encodeURIComponent(type)}&action=save&gameMode=${encodeURIComponent(mode)}&name=${encodeURIComponent(name)}&score=${score}&t=${Date.now()}`;
+        const url = `${GAS_URL}?type=${encodeURIComponent(type)}&action=save&gameMode=${encodeURIComponent(mode)}&name=${encodeURIComponent(name)}&score=${score}&rank=${encodeURIComponent(rank)}&t=${Date.now()}`;
         console.log("Saving to GAS:", url);
         await fetch(url, { mode: 'no-cors' });
         if (statusEl) {
