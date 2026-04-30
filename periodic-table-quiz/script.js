@@ -105,9 +105,9 @@ window.startGame = (mode) => {
         testScore = 0;
         quizScreen.classList.remove('hidden');
 
-        // Hide Timer for Test Mode
-        document.getElementById('timer-container').style.visibility = 'hidden';
-
+        // Show Timer for Test Mode (User Request)
+        document.getElementById('timer-container').style.visibility = 'visible';
+        timerEl.textContent = "00.00";
         // Show Input Area, Hide Options
         document.getElementById('test-input-area').classList.remove('hidden');
         document.getElementById('options-grid').classList.add('hidden');
