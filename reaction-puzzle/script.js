@@ -528,7 +528,7 @@ function gameOver(isAllClear = false) {
     } else {
         // Test Mode Result
         titleEl.textContent = "テスト終了";
-        passDisplay.textContent = isPassed ? "合格！" : "不合格"; // テスト専用の文言に上書き
+        passDisplay.textContent = isPassed ? "合格！" : "未合格"; // テスト専用の文言に上書き
         finalInfoEl.innerHTML = `${testPlayerName}さんの成績<br><br>得点: <span style="color:#4ecca3; font-size: 2rem;">${correctAnswersCount}</span> / ${activeEquations.length}`;
 
         saveScoreToGas('test', testPlayerName, correctAnswersCount, rank);
