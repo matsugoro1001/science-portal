@@ -531,7 +531,7 @@ function gameOver(isAllClear = false) {
         passDisplay.textContent = isPassed ? "合格！" : "不合格"; // テスト専用の文言に上書き
         finalInfoEl.innerHTML = `${testPlayerName}さんの成績<br><br>得点: <span style="color:#4ecca3; font-size: 2rem;">${correctAnswersCount}</span> / ${activeEquations.length}`;
 
-        saveScoreToGas('test', testPlayerName, correctAnswersCount);
+        saveScoreToGas('test', testPlayerName, correctAnswersCount, rank);
     }
     
     resultScreen.classList.remove('hidden');
@@ -542,7 +542,7 @@ function gameOver(isAllClear = false) {
 const GAS_URL = 'https://script.google.com/macros/s/AKfycbwbCONqVJ7rNU8hFpM22UuoNNC6Eb_9iCGciLDUTdgiIzB-G1FQCVgKBXVmj2sFcl4_Rg/exec';
 const SHEET_TYPE = 'reaction';
 
-async function saveScoreToGas(mode, name, score) {
+async function saveScoreToGas(mode, name, score, rank) {
     const statusEl = document.getElementById('save-status');
     if (statusEl) {
         statusEl.textContent = "成績を送信中...";
@@ -550,7 +550,7 @@ async function saveScoreToGas(mode, name, score) {
     }
 
     try {
-        const url = `${GAS_URL}?type=${encodeURIComponent(SHEET_TYPE)}&action=save&gameMode=${encodeURIComponent(mode)}&name=${encodeURIComponent(name)}&score=${score}&t=${Date.now()}`;
+        const url = `${GAS_URL}?type=${encodeURIComponent(SHEET_TYPE)}&action=save&gameMode=${encodeURIComponent(mode)}&name=${encodeURIComponent(name)}&score=${score}&rank=${encodeURIComponent(rank || '')}&t=${Date.now()}`;
         console.log("Saving to GAS:", url);
         await fetch(url, { mode: 'no-cors' });
         
