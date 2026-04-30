@@ -397,12 +397,10 @@ function endGame() {
 
         if (testScore === TEST_QUESTION_COUNT) {
             rank = "S"; isPassed = true; rankColor = "#ffdd00";
-        } else if (testScore >= TEST_QUESTION_COUNT * 0.8) {
+        } else if (testScore >= 32) {
             rank = "A"; isPassed = true; rankColor = "#4cc9f0";
-        } else if (testScore >= TEST_QUESTION_COUNT * 0.6) {
-            rank = "B"; isPassed = false; rankColor = "#4ce0b3";
         } else {
-            rank = "C"; isPassed = false; rankColor = "#a0a0a0";
+            rank = "未合格"; isPassed = false; rankColor = "#a0a0a0";
         }
 
         // リトライモードの場合は判定やGAS送信をスキップ

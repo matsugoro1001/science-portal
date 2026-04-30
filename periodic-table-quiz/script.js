@@ -385,14 +385,16 @@ function endGame() {
         let isPassed = false;
         let rankColor = "#a0a0a0"; 
 
+        const finalTime = parseFloat(timerEl.textContent);
+
         if (testScore === TEST_QUESTION_COUNT) {
-            rank = "S"; isPassed = true; rankColor = "#ffdd00";
-        } else if (testScore >= TEST_QUESTION_COUNT * 0.8) {
-            rank = "A"; isPassed = true; rankColor = "#4cc9f0";
-        } else if (testScore >= TEST_QUESTION_COUNT * 0.6) {
-            rank = "B"; isPassed = false; rankColor = "#4ce0b3";
+            if (finalTime <= 30.0) {
+                rank = "S"; isPassed = true; rankColor = "#ffdd00";
+            } else {
+                rank = "A"; isPassed = true; rankColor = "#4cc9f0";
+            }
         } else {
-            rank = "C"; isPassed = false; rankColor = "#a0a0a0";
+            rank = "未合格"; isPassed = false; rankColor = "#a0a0a0";
         }
 
         // リトライモードの場合は判定やGAS送信をスキップ
@@ -657,6 +659,10 @@ function initTestQuestionPool() {
 function nextTestQuestion() {
     isAnswering = true;
 
+    // 念のため正解表示を隠す
+    const ansDisplay = document.getElementById('correct-answer-display');
+    if (ansDisplay) ansDisplay.classList.add('hidden');
+
     if (questionPool.length === 0) {
         endGame();
         return;
@@ -736,6 +742,8 @@ window.submitTestAnswer = () => {
         input.style.borderColor = "#ddd";
         input.style.backgroundColor = "white";
         input.style.color = "inherit"; // Reset color
+        const ansDisplay = document.getElementById('correct-answer-display');
+        ansDisplay.classList.add('hidden');
         nextTestQuestion();
     }, 1500); // 1.5s delay to read
 };
