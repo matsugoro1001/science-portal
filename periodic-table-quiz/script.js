@@ -440,6 +440,9 @@ function endGame() {
             retryBtn.style.display = 'none';
         }
 
+        testResultScreen.classList.remove('hidden');
+        testResultScreen.style.display = 'flex';
+
         // Hide Ranking stuff for Test Mode
         document.getElementById('new-record-form').classList.add('hidden');
         document.getElementById('ranking-section').classList.add('hidden');
