@@ -548,7 +548,7 @@ function gameOver(isAllClear = false) {
     }
     
     // やり直しボタンの追加・表示制御
-    const resultBox = document.querySelector('#result-screen .result-box');
+    const resultBox = document.querySelector('#result-screen .result-content');
     let retryBtn = document.getElementById('retry-btn');
     if (!retryBtn) {
         retryBtn = document.createElement('button');
