@@ -374,18 +374,12 @@ function endGame() {
         quizScreen.classList.add('hidden');
         quizScreen.classList.remove('active');
 
-        certificateScreen.classList.remove('hidden');
-        setTimeout(() => certificateScreen.classList.add('active'), 50);
-
-        // Hide Time Display, Show Score
-        document.getElementById('final-time').style.display = 'none';
-        document.querySelector('#certificate-screen p').style.display = 'none';
-
-        const resultDiv = document.getElementById('test-result-details');
-        resultDiv.classList.remove('hidden');
-
-        document.getElementById('test-score-display').textContent = testScore;
-        const passFailEl = document.getElementById('test-pass-fail');
+        // テストモード時は新しい結果画面を表示する
+        const testResultScreen = document.getElementById('test-result-screen');
+        const rankDisplay = document.getElementById('test-rank-display');
+        const passDisplay = document.getElementById('test-pass-display');
+        const titleEl = document.querySelector('#test-result-screen .title');
+        const finalInfoEl = document.getElementById('test-final-info');
 
         // SABC ランク判定
         let rank = "C";
@@ -397,26 +391,39 @@ function endGame() {
         } else if (testScore >= 15) { // 8割（約14.4点 -> 15点）
             rank = "A"; isPassed = true; rankColor = "#4cc9f0";
         } else {
-            rank = "未合格"; isPassed = false; rankColor = "#a0a0a0";
+            rank = "C"; isPassed = false; rankColor = "#a0a0a0";
         }
 
         // リトライモードの場合は判定やGAS送信をスキップ
         if (isRetryMode) {
-            document.querySelector('#certificate-screen h2').textContent = "やり直し完了！";
-            passFailEl.textContent = "全問クリア！";
-            passFailEl.style.color = "#4cc9f0";
-            document.getElementById('test-score-display').parentElement.style.display = 'none';
+            titleEl.textContent = "やり直し完了！";
+            passDisplay.textContent = "全問クリア！";
+            passDisplay.className = "pass-result passed";
+            passDisplay.style.backgroundColor = "#4ecca3";
+            passDisplay.style.color = "#fff";
+            rankDisplay.style.display = 'none';
+            finalInfoEl.innerHTML = ``;
         } else {
-            document.querySelector('#certificate-screen h2').textContent = "イオン式テスト結果";
-            passFailEl.innerHTML = `<span style="color: ${rankColor}; font-size: 1.5em; margin-right: 10px;">${rank} ランク</span> <br> ${isPassed ? '合格！' : '未合格'}`;
-            passFailEl.className = isPassed ? "pass-text" : "fail-text";
-            document.getElementById('test-score-display').parentElement.style.display = 'block';
+            titleEl.textContent = "テスト終了";
+            
+            rankDisplay.style.display = 'block';
+            rankDisplay.textContent = `${rank} ランク`;
+            rankDisplay.style.color = rankColor;
+            
+            passDisplay.style.display = 'inline-block';
+            passDisplay.textContent = isPassed ? "合格！" : "未合格";
+            passDisplay.className = "pass-result " + (isPassed ? "passed" : "failed");
+            passDisplay.style.backgroundColor = isPassed ? "#4ecca3" : "#e94560";
+            passDisplay.style.color = "#fff";
+            
+            finalInfoEl.innerHTML = `${testName}さんの成績<br><br>得点: <span style="color:#4ecca3; font-size: 2rem;">${testScore}</span> / ${TEST_QUESTION_COUNT}`;
 
             // Save Result to GAS
             saveScoreToGas('test', testName, testScore, null, rank);
         }
 
         // やり直しボタンの追加・表示制御
+        const resultButtonsBox = document.getElementById('test-result-buttons');
         let retryBtn = document.getElementById('retry-btn');
         if (!retryBtn) {
             retryBtn = document.createElement('button');
@@ -426,18 +433,18 @@ function endGame() {
             retryBtn.style.marginTop = '15px';
             retryBtn.textContent = '間違えた問題をやり直す';
             retryBtn.onclick = window.startRetryMode;
-            resultDiv.appendChild(retryBtn);
+            // Play Again の前に挿入
+            resultButtonsBox.insertBefore(retryBtn, resultButtonsBox.firstChild);
         }
 
-        if (wrongQuestions.length > 0) {
+        if (wrongQuestions.length > 0 && currentMode === 'test') {
             retryBtn.style.display = 'inline-block';
         } else {
             retryBtn.style.display = 'none';
         }
 
-        document.getElementById('new-record-form').classList.add('hidden');
-        document.getElementById('ranking-section').classList.add('hidden');
-        document.querySelector('.history-section').classList.add('hidden');
+        testResultScreen.classList.remove('hidden');
+        testResultScreen.style.display = 'flex';
 
     } else {
         // Normal
@@ -645,6 +652,9 @@ window.startRetryMode = () => {
     testScore = 0;
     questionsAnswered = 0;
     
+    document.getElementById('test-result-screen').classList.add('hidden');
+    document.getElementById('test-result-screen').style.display = '';
+
     // UI非表示・表示切り替え
     certificateScreen.classList.remove('active');
     setTimeout(() => {

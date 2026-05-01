@@ -190,6 +190,37 @@
             <button class="btn primary" onclick="resetGame()">Play Again</button>
         </div>
     </div>
+
+    <!-- Test Mode Result Screen -->
+    <div id="test-result-screen" class="screen hidden" style="background: rgba(0, 0, 0, 0.9); flex-direction: column; justify-content: center; align-items: center; z-index: 100;">
+        <div class="result-content" style="text-align: center; color: white;">
+            <h1 class="title" style="font-size: 3rem; color: #4ecca3; margin-bottom: 2rem; text-shadow: 0 0 20px #4ecca3; font-weight: 800;">テスト終了</h1>
+            
+            <div id="test-rank-display" class="rank-result" style="display:none; font-size: 4rem; font-weight: 800; margin-bottom: 10px; text-shadow: 2px 2px 4px rgba(0,0,0,0.5);"></div>
+            <div id="test-pass-display" class="pass-result" style="display:none; font-size: 2.5rem; font-weight: 800; margin-bottom: 20px; padding: 10px 40px; border-radius: 50px; display: inline-block; box-shadow: 0 4px 15px rgba(0,0,0,0.3);"></div>
+            
+            <div class="final-time" id="test-final-info" style="margin-bottom: 20px; font-size: 1.2rem;"></div>
+            
+            <div class="rank-guide" style="background: rgba(255, 255, 255, 0.1); border-radius: 10px; padding: 15px 20px; margin-bottom: 20px; text-align: left; display: inline-block;">
+                <h3 style="margin-bottom: 10px; color: #4ecca3; text-align: center;">評価基準</h3>
+                <ul style="list-style: none; padding: 0;">
+                    <li style="margin-bottom: 8px; font-size: 1rem; display: flex; align-items: center;"><span class="rank-badge rank-s" style="background-color: #ffdd00; display: inline-block; width: 30px; height: 30px; line-height: 30px; text-align: center; border-radius: 5px; font-weight: bold; margin-right: 10px; color: #000;">S</span>18問 (全問正解)</li>
+                    <li style="margin-bottom: 8px; font-size: 1rem; display: flex; align-items: center;"><span class="rank-badge rank-a" style="background-color: #4cc9f0; display: inline-block; width: 30px; height: 30px; line-height: 30px; text-align: center; border-radius: 5px; font-weight: bold; margin-right: 10px; color: #000;">A</span>15〜17問</li>
+                    <li style="margin-bottom: 8px; font-size: 1rem; display: flex; align-items: center;"><span class="rank-badge rank-c" style="background-color: #a0a0a0; display: inline-block; width: 30px; height: 30px; line-height: 30px; text-align: center; border-radius: 5px; font-weight: bold; margin-right: 10px; color: #000;">C</span>0〜14問</li>
+                </ul>
+            </div>
+
+            <div id="test-save-status" style="margin-bottom: 15px; font-size: 0.9rem; font-weight: bold;"></div>
+
+            <div id="test-result-buttons" style="display: flex; flex-direction: column; align-items: center; gap: 10px;">
+                <!-- Retry button injected here if needed -->
+                <div>
+                    <button class="btn primary" onclick="resetGame()" style="padding: 1rem 2rem; font-size: 1.2rem; background: #4ecca3; color: #fff; border: none; border-radius: 50px; cursor: pointer; transition: transform 0.2s; margin: 5px;">Play Again</button>
+                    <a href="../basic.html" class="btn secondary" style="padding: 1rem 2rem; font-size: 1.2rem; background: #e94560; color: #fff; border: none; border-radius: 50px; cursor: pointer; transition: transform 0.2s; margin: 5px; text-decoration: none; display: inline-block;">Back to Menu</a>
+                </div>
+            </div>
+        </div>
+    </div>
     <div style="position: fixed; bottom: 5px; right: 5px; opacity: 0.5; font-size: 0.8rem; color: #aaa;">Ver: fix30
     </div>
     <script src="data.js?v=fix30"></script>
