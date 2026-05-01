@@ -708,8 +708,10 @@ window.startRetryMode = () => {
     testScore = 0;
     questionsAnswered = 0;
     
-    document.getElementById('test-result-screen').classList.add('hidden');
-    document.getElementById('test-result-screen').style.display = '';
+    const testResultScreen = document.getElementById('test-result-screen');
+    testResultScreen.classList.add('hidden');
+    testResultScreen.classList.remove('active');
+    testResultScreen.style.display = '';
     
     // UI非表示・表示切り替え
     certificateScreen.classList.remove('active');
