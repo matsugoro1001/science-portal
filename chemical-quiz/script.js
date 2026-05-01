@@ -448,6 +448,7 @@ function endGame() {
 
         testResultScreen.classList.remove('hidden');
         testResultScreen.style.display = 'flex';
+        setTimeout(() => testResultScreen.classList.add('active'), 50);
 
     } else {
         // Normal Mode End
