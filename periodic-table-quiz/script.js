@@ -382,11 +382,13 @@ function endGame() {
         const finalTime = parseFloat(timerEl.textContent);
 
         if (testScore === TEST_QUESTION_COUNT) {
-            if (finalTime <= 30.0) {
+            if (finalTime <= 60.0) {
                 rank = "S"; isPassed = true; rankColor = "#ffdd00";
             } else {
                 rank = "A"; isPassed = true; rankColor = "#4cc9f0";
             }
+        } else if (testScore >= 20) {
+            rank = "B"; isPassed = true; rankColor = "#4ce0b3";
         } else {
             rank = "C"; isPassed = false; rankColor = "#a0a0a0";
         }
