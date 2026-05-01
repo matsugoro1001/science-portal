@@ -125,7 +125,7 @@ function updateTimer() {
     const totalTime = elapsed + penaltyTime;
     const timeStr = totalTime.toFixed(2);
 
-    if (currentMode === 'choice') {
+    if (currentMode === 'choice' || currentMode === 'test') {
         timerEl.textContent = timeStr;
     } else {
         matchTimerEl.textContent = timeStr;
