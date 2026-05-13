@@ -148,6 +148,79 @@
             </div>
         </a>
     </div>
+
+    <!-- ユーザー情報表示エリア -->
+    <div id="user-info-display" style="position: fixed; top: 20px; right: 20px; background: rgba(0,0,0,0.5); padding: 10px 20px; border-radius: 20px; color: white; display: none; align-items: center; gap: 10px; z-index: 100;">
+        <span id="display-user-text"></span>
+        <button onclick="showNameModal()" style="background: var(--primary-color); border: none; padding: 5px 10px; border-radius: 5px; color: #1a1a2e; cursor: pointer; font-weight: bold; font-size: 0.8rem;">変更</button>
+    </div>
+
+    <!-- 名前入力モーダル -->
+    <div id="portal-name-modal" style="position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.8); display: flex; align-items: center; justify-content: center; z-index: 1000; display: none;">
+        <div style="background: white; padding: 30px; border-radius: 15px; text-align: center; max-width: 400px; width: 90%;">
+            <h3 style="color: #1a1a2e; margin-bottom: 20px; font-size: 1.5rem;">ユーザー情報の登録</h3>
+            <p style="color: #555; margin-bottom: 20px; font-size: 0.9rem;">クイズの成績を記録するための情報を入力してください。一度登録すると次回以降は入力不要です。</p>
+            <select id="portal-player-grade" style="width: 100%; padding: 10px; font-size: 1rem; margin-bottom: 15px; border: 2px solid #ddd; border-radius: 8px;">
+                <option value="" disabled selected>学年を選択</option>
+                <option value="1">1年</option>
+                <option value="2">2年</option>
+                <option value="3">3年</option>
+            </select>
+            <select id="portal-player-group" style="width: 100%; padding: 10px; font-size: 1rem; margin-bottom: 15px; border: 2px solid #ddd; border-radius: 8px;">
+                <option value="" disabled selected>グループを選択</option>
+                <option value="A">A</option>
+                <option value="B">B</option>
+                <option value="C">C</option>
+                <option value="D">D</option>
+            </select>
+            <input type="text" id="portal-player-name" placeholder="名前（フルネームで）" maxlength="20" style="width: 100%; padding: 10px; font-size: 1rem; margin-bottom: 20px; border: 2px solid #ddd; border-radius: 8px; box-sizing: border-box;">
+            <button onclick="saveUserInfo()" style="width: 100%; padding: 12px; background: var(--primary-color); color: #1a1a2e; border: none; border-radius: 8px; font-size: 1.1rem; font-weight: bold; cursor: pointer;">保存して進む</button>
+        </div>
+    </div>
+
+    <script>
+        function checkUserInfo() {
+            const grade = localStorage.getItem('portalPlayerGrade');
+            const group = localStorage.getItem('portalPlayerGroup');
+            const name = localStorage.getItem('portalPlayerName');
+
+            if (grade && group && name) {
+                document.getElementById('portal-name-modal').style.display = 'none';
+                document.getElementById('user-info-display').style.display = 'flex';
+                document.getElementById('display-user-text').textContent = `${grade}年 ${group}グループ ${name} さん`;
+            } else {
+                showNameModal();
+            }
+        }
+
+        function showNameModal() {
+            document.getElementById('portal-name-modal').style.display = 'flex';
+            document.getElementById('user-info-display').style.display = 'none';
+            // 既存の値をセット（もしあれば）
+            document.getElementById('portal-player-grade').value = localStorage.getItem('portalPlayerGrade') || "";
+            document.getElementById('portal-player-group').value = localStorage.getItem('portalPlayerGroup') || "";
+            document.getElementById('portal-player-name').value = localStorage.getItem('portalPlayerName') || "";
+        }
+
+        function saveUserInfo() {
+            const grade = document.getElementById('portal-player-grade').value;
+            const group = document.getElementById('portal-player-group').value;
+            const name = document.getElementById('portal-player-name').value.trim();
+
+            if (!grade || !group || !name) {
+                alert("学年、グループ、名前をすべて入力してください");
+                return;
+            }
+
+            localStorage.setItem('portalPlayerGrade', grade);
+            localStorage.setItem('portalPlayerGroup', group);
+            localStorage.setItem('portalPlayerName', name);
+
+            checkUserInfo();
+        }
+
+        window.onload = checkUserInfo;
+    </script>
 </body>
 
 </html>

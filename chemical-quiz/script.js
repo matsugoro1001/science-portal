@@ -58,6 +58,21 @@ function updateFont() {
 
 // Expose to window for HTML buttons
 window.startGame = (mode) => {
+    // ユーザー情報のチェック
+    const grade = localStorage.getItem('portalPlayerGrade');
+    const group = localStorage.getItem('portalPlayerGroup');
+    const name = localStorage.getItem('portalPlayerName');
+
+    if (!grade || !group || !name) {
+        alert("ユーザー情報が登録されていません。ポータル画面に戻ります。");
+        window.location.href = '../index.html';
+        return;
+    }
+
+    testGrade = grade;
+    testGroup = group;
+    testName = name;
+
     currentMode = mode;
     questionsAnswered = 0;
     penaltyTime = 0;
@@ -472,6 +487,9 @@ function endGame() {
 
         saveLocalHistory(parseFloat(finalTime), currentMode);
         checkRanking(parseFloat(finalTime));
+
+        // Auto save to GAS for all modes
+        saveScoreToGas(currentMode, testName, testGrade, testGroup, parseFloat(finalTime), null, "-");
     }
 }
 
@@ -482,35 +500,11 @@ let testGrade = "";
 let testGroup = "";
 let isRetryMode = false;
 let wrongQuestions = [];
-
-window.startTestModeSetup = () => {
-    document.getElementById('name-input-modal').classList.remove('hidden');
-    document.getElementById('test-player-name').focus();
-};
-
-window.closeNameInput = () => {
-    document.getElementById('name-input-modal').classList.add('hidden');
-};
+let testScore = 0;
 
 const TEST_QUESTION_COUNT = 40;
 
-window.submitName = () => {
-    const gradeInput = document.getElementById('test-player-grade');
-    const groupInput = document.getElementById('test-player-group');
-    const nameInput = document.getElementById('test-player-name');
-    
-    if (!gradeInput.value || !groupInput.value || !nameInput.value.trim()) {
-        alert("学年、グループ、名前をすべて入力してください");
-        return;
-    }
-    testGrade = gradeInput.value;
-    testGroup = groupInput.value;
-    testName = nameInput.value.trim();
-    closeNameInput();
-    isRetryMode = false;
-    wrongQuestions = [];
-    startGame('test');
-};
+
 
 // Helper for inserting characters
 window.insertChar = (char) => {

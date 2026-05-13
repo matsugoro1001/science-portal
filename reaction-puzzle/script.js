@@ -61,38 +61,25 @@ function initDOM() {
 }
 
 // UI Functions for Start up
-window.startTestModeSetup = () => {
-    nameInputModal.classList.remove('hidden');
-    document.getElementById('test-player-name').focus();
-};
-
-window.closeNameInput = () => {
-    nameInputModal.classList.add('hidden');
-};
-
 let wrongQuestions = [];
 let isRetryMode = false;
 
-window.submitName = () => {
-    const gradeInput = document.getElementById('test-player-grade');
-    const groupInput = document.getElementById('test-player-group');
-    const nameInput = document.getElementById('test-player-name');
+window.startGame = (mode) => {
+    // ユーザー情報のチェック
+    const grade = localStorage.getItem('portalPlayerGrade');
+    const group = localStorage.getItem('portalPlayerGroup');
+    const name = localStorage.getItem('portalPlayerName');
 
-    if (!gradeInput.value || !groupInput.value || !nameInput.value.trim()) {
-        alert("学年、グループ、名前をすべて入力してください");
+    if (!grade || !group || !name) {
+        alert("ユーザー情報が登録されていません。ポータル画面に戻ります。");
+        window.location.href = '../index.html';
         return;
     }
-    testGrade = gradeInput.value;
-    testGroup = groupInput.value;
-    testPlayerName = nameInput.value.trim();
-    
-    closeNameInput();
-    isRetryMode = false;
-    wrongQuestions = [];
-    window.startGame('test');
-};
 
-window.startGame = (mode) => {
+    testGrade = grade;
+    testGroup = group;
+    testPlayerName = name;
+
     currentMode = mode;
     correctAnswersCount = 0;
     
@@ -544,6 +531,8 @@ function gameOver(isAllClear = false) {
     } else if (currentMode === 'practice') {
         titleEl.textContent = isAllClear ? "ALL CLEAR!" : "FINISH!";
         finalInfoEl.innerHTML = `正解数: <span style="color:#f72585">${correctAnswersCount}</span> / ${activeEquations.length}<br>MAXコンボ: ${combo}`;
+        
+        saveScoreToGas('practice', testPlayerName, testGrade, testGroup, correctAnswersCount, rank);
     } else {
         // Test Mode Result
         titleEl.textContent = "テスト終了";
