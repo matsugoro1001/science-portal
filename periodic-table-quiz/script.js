@@ -418,7 +418,7 @@ function endGame() {
             finalInfoEl.innerHTML = `${testName}さんの成績<br><br>得点: <span style="color:#4ecca3; font-size: 2rem;">${testScore}</span> / ${TEST_QUESTION_COUNT}<br>タイム: ${finalTime.toFixed(1)}秒`;
 
             // Save Result to GAS
-            saveScoreToGas('test', testName, testScore, null, rank);
+            saveScoreToGas('test', testName, testGrade, testGroup, testScore, null, rank);
         }
 
         // やり直しボタンの追加・表示制御
@@ -493,24 +493,32 @@ async function getRankings(mode) {
     }
 }
 
-async function saveScoreToGas(mode, name, score, typeOverride = null, rank = '-') {
-    const statusEl = document.getElementById('save-status');
-    if (statusEl) statusEl.textContent = "データを送信中... (Sending data...)";
+async function saveScoreToGas(mode, name, grade, group, score, typeOverride = null, rank = '-') {
+    const statusEl = document.getElementById('test-save-status');
+    if (statusEl) {
+        statusEl.textContent = "成績を送信中...";
+        statusEl.style.color = "#4cc9f0";
+    }
 
     try {
-        const type = typeOverride || SHEET_TYPE;
-        const url = `${GAS_URL}?type=${encodeURIComponent(type)}&action=save&gameMode=${encodeURIComponent(mode)}&name=${encodeURIComponent(name)}&score=${score}&rank=${encodeURIComponent(rank)}&t=${Date.now()}`;
+        let type = typeOverride || 'element';
+        
+        // Use matching specific sheet structure if needed, else default test
+        if (mode === 'matching') type = 'matching_element';
+
+        const url = `${GAS_URL}?type=${encodeURIComponent(type)}&action=save&gameMode=${encodeURIComponent(mode)}&name=${encodeURIComponent(name)}&grade=${encodeURIComponent(grade || '')}&group=${encodeURIComponent(group || '')}&score=${score}&rank=${encodeURIComponent(rank)}&t=${Date.now()}`;
         console.log("Saving to GAS:", url);
-        await fetch(url, { mode: 'no-cors' });
+        const response = await fetch(url, { mode: 'no-cors' });
+        
         if (statusEl) {
-            statusEl.textContent = "データ送信完了 (Data Sent)";
-            statusEl.style.color = "green";
+            statusEl.textContent = "成績の送信が完了しました";
+            statusEl.style.color = "#4ecca3";
         }
     } catch (e) {
-        console.error('Ranking Save Error:', e);
+        console.error('GAS Save Error:', e);
         if (statusEl) {
-            statusEl.textContent = "送信エラー (Error): " + e.message;
-            statusEl.style.color = "red";
+            statusEl.textContent = "送信エラーが発生しました";
+            statusEl.style.color = "#ff0d0d";
         }
     }
 }
@@ -544,7 +552,7 @@ window.submitScore = async () => {
     btn.textContent = '送信中...';
 
     // 1. Send to Server (Fire and forget-ish, we await but ignore response content)
-    await saveScoreToGas(currentMode, name, score);
+    await saveScoreToGas(currentMode, name, "", "", score);
 
     document.getElementById('new-record-form').classList.add('hidden');
 
@@ -621,13 +629,14 @@ function renderLocalHistory() {
 
 // --- Test Mode Logic ---
 
-let testName = "";
 let testScore = 0;
+let testName = "";
+let testGrade = "";
+let testGroup = "";
+let isRetryMode = false;
+let wrongQuestions = [];
 const PASSING_SCORE = 25;
 const TEST_QUESTION_COUNT = 25;
-
-let wrongQuestions = [];
-let isRetryMode = false;
 
 window.startTestModeSetup = () => {
     document.getElementById('name-input-modal').classList.remove('hidden');
@@ -638,12 +647,17 @@ window.closeNameInput = () => {
     document.getElementById('name-input-modal').classList.add('hidden');
 };
 
-window.confirmTestStart = () => {
+window.submitName = () => {
+    const gradeInput = document.getElementById('test-player-grade');
+    const groupInput = document.getElementById('test-player-group');
     const nameInput = document.getElementById('test-player-name');
-    if (!nameInput.value.trim()) {
-        alert("名前を入力してください");
+    
+    if (!gradeInput.value || !groupInput.value || !nameInput.value.trim()) {
+        alert("学年、グループ、名前をすべて入力してください");
         return;
     }
+    testGrade = gradeInput.value;
+    testGroup = groupInput.value;
     testName = nameInput.value.trim();
     closeNameInput();
     isRetryMode = false;

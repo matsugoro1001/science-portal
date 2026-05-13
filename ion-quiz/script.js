@@ -419,7 +419,7 @@ function endGame() {
             finalInfoEl.innerHTML = `${testName}さんの成績<br><br>得点: <span style="color:#4ecca3; font-size: 2rem;">${testScore}</span> / ${TEST_QUESTION_COUNT}`;
 
             // Save Result to GAS
-            saveScoreToGas('test', testName, testScore, null, rank);
+            saveScoreToGas('test', testName, testGrade, testGroup, testScore, null, rank);
         }
 
         // やり直しボタンの追加・表示制御
@@ -475,12 +475,11 @@ function endGame() {
 // --- Test Mode Logic ---
 
 let testName = "";
+let testGrade = "";
+let testGroup = "";
 let testScore = 0;
-const PASSING_SCORE = 18;
-const TEST_QUESTION_COUNT = 18;
-
-let wrongQuestions = [];
 let isRetryMode = false;
+let wrongQuestions = [];
 
 window.startTestModeSetup = () => {
     document.getElementById('name-input-modal').classList.remove('hidden');
@@ -491,12 +490,19 @@ window.closeNameInput = () => {
     document.getElementById('name-input-modal').classList.add('hidden');
 };
 
-window.confirmTestStart = () => {
+const TEST_QUESTION_COUNT = 18;
+
+window.submitName = () => {
+    const gradeInput = document.getElementById('test-player-grade');
+    const groupInput = document.getElementById('test-player-group');
     const nameInput = document.getElementById('test-player-name');
-    if (!nameInput.value.trim()) {
-        alert("名前を入力してください");
+    
+    if (!gradeInput.value || !groupInput.value || !nameInput.value.trim()) {
+        alert("学年、グループ、名前をすべて入力してください");
         return;
     }
+    testGrade = gradeInput.value;
+    testGroup = groupInput.value;
     testName = nameInput.value.trim();
     closeNameInput();
     isRetryMode = false;
@@ -686,19 +692,21 @@ async function getRankings(mode) {
     }
 }
 
-async function saveScoreToGas(mode, name, score, typeOverride = null, rank = '-') {
-    const statusEl = document.getElementById('save-status');
-    if (statusEl) statusEl.textContent = "データを送信中... (Sending data...)";
+async function saveScoreToGas(mode, name, grade, group, score, typeOverride = null, rank = '-') {
+    const statusEl = document.getElementById('test-save-status');
+    if (statusEl) {
+        statusEl.textContent = "成績を送信中...";
+        statusEl.style.color = "#4cc9f0";
+    }
 
     try {
-        const type = typeOverride || SHEET_TYPE;
-        const url = `${GAS_URL}?type=${encodeURIComponent(type)}&action=save&gameMode=${encodeURIComponent(mode)}&name=${encodeURIComponent(name)}&score=${score}&rank=${encodeURIComponent(rank)}&t=${Date.now()}`;
+        let type = typeOverride || 'ion';
+        
+        // Use matching specific sheet structure if needed, else default test
+        if (mode === 'matching') type = 'matching_ion';
+
+        const url = `${GAS_URL}?type=${encodeURIComponent(type)}&action=save&gameMode=${encodeURIComponent(mode)}&name=${encodeURIComponent(name)}&grade=${encodeURIComponent(grade || '')}&group=${encodeURIComponent(group || '')}&score=${score}&rank=${encodeURIComponent(rank)}&t=${Date.now()}`;
         console.log("Saving to GAS:", url);
-        await fetch(url, { mode: 'no-cors' });
-        if (statusEl) {
-            statusEl.textContent = "データ送信完了 (Data Sent)";
-            statusEl.style.color = "green";
-        }
     } catch (e) {
         console.error('Ranking Save Error:', e);
         if (statusEl) {

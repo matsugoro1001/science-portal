@@ -30,12 +30,24 @@
     <!-- Name Input Modal -->
     <div id="name-input-modal" class="hidden" style="position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.8); display: flex; align-items: center; justify-content: center; z-index: 1000;">
         <div style="background: white; padding: 30px; border-radius: 15px; text-align: center; max-width: 400px; width: 90%;">
-            <h3 style="color: #1a1a2e; margin-bottom: 10px;">名前入力</h3>
-            <p style="color: #555; margin-bottom: 20px;">成績を記録するための名前を入力してください。</p>
-            <input type="text" id="test-player-name" placeholder="Name" style="width: 100%; padding: 10px; font-size: 1.2rem; margin-bottom: 20px; border: 2px solid #ddd; border-radius: 8px;">
+            <h3 style="color: #1a1a2e; margin-bottom: 20px;">テスト開始</h3>
+            <select id="test-player-grade" style="width: 100%; padding: 10px; font-size: 1rem; margin-bottom: 15px; border: 2px solid #ddd; border-radius: 8px;">
+                <option value="" disabled selected>学年を選択</option>
+                <option value="1">1年</option>
+                <option value="2">2年</option>
+                <option value="3">3年</option>
+            </select>
+            <select id="test-player-group" style="width: 100%; padding: 10px; font-size: 1rem; margin-bottom: 15px; border: 2px solid #ddd; border-radius: 8px;">
+                <option value="" disabled selected>グループを選択</option>
+                <option value="A">A</option>
+                <option value="B">B</option>
+                <option value="C">C</option>
+                <option value="D">D</option>
+            </select>
+            <input type="text" id="test-player-name" placeholder="名前（フルネームで）" style="width: 100%; padding: 10px; font-size: 1rem; margin-bottom: 20px; border: 2px solid #ddd; border-radius: 8px; box-sizing: border-box;">
             <div style="display: flex; gap: 10px;">
                 <button class="btn secondary" onclick="closeNameInput()" style="flex: 1; padding: 10px;">キャンセル</button>
-                <button class="btn primary" onclick="confirmTestStart()" style="flex: 1; padding: 10px;">テスト開始</button>
+                <button class="btn primary" onclick="submitName()" style="flex: 1; padding: 10px;">テスト開始</button>
             </div>
         </div>
     </div>
