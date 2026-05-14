@@ -384,7 +384,7 @@ function showPenalty(el) {
     }, 1000);
 }
 
-function endGame() {
+async function endGame() {
     clearInterval(timerInterval);
 
     if (currentMode === 'test') {
@@ -485,16 +485,16 @@ function endGame() {
         certificateScreen.classList.remove('hidden');
         setTimeout(() => certificateScreen.classList.add('active'), 50);
 
-        saveLocalHistory(parseFloat(finalTime), currentMode);
-        checkRanking(parseFloat(finalTime));
-
         // Auto save to GAS for all modes
         const certTitle = document.querySelector('#certificate-screen p.subtitle');
-        if (certTitle) certTitle.textContent = "成績を送信中...";
+        if (certTitle) certTitle.textContent = "成績を自動送信しています...";
         
-        saveScoreToGas(currentMode, testName, testGrade, testGroup, parseFloat(finalTime), null, "-").then(() => {
-             if (certTitle) certTitle.textContent = "スプレッドシートへの記録が完了しました！";
-        });
+        await saveScoreToGas(currentMode, testName, testGrade, testGroup, parseFloat(finalTime), null, "-");
+        
+        if (certTitle) certTitle.textContent = "スプレッドシートへの記録が完了しました！";
+
+        saveLocalHistory(parseFloat(finalTime), currentMode);
+        await checkRanking(parseFloat(finalTime));
     }
 }
 
@@ -733,47 +733,9 @@ async function saveScoreToGas(mode, name, grade, group, score, typeOverride = nu
 }
 
 async function checkRanking(score) {
-    const newRecordForm = document.getElementById('new-record-form');
     const rankings = await getRankings(currentMode);
-
-    if (rankings.length < 10 || score < rankings[rankings.length - 1].score) {
-        newRecordForm.classList.remove('hidden');
-        document.getElementById('player-name').value = '';
-        document.getElementById('player-name').focus();
-    } else {
-        newRecordForm.classList.add('hidden');
-    }
-
     renderRankingList(rankings);
 }
-
-window.submitScore = async () => {
-    const nameInput = document.getElementById('player-name');
-    const name = nameInput.value.trim() || 'Anonymous';
-    const score = parseFloat(finalTimeEl.textContent);
-
-    const btn = document.querySelector('#new-record-form button');
-    btn.disabled = true;
-    btn.textContent = '送信中...';
-
-    await saveScoreToGas(currentMode, name, testGrade, testGroup, score);
-
-    document.getElementById('new-record-form').classList.add('hidden');
-
-    // Optimistic Update
-    let rankings = await getRankings(currentMode);
-    const alreadyExists = rankings.some(r => r.name === name && Math.abs(r.score - score) < 0.001);
-
-    if (!alreadyExists) {
-        rankings.push({ name, score, date: new Date().toISOString() });
-    }
-
-    rankings.sort((a, b) => a.score - b.score);
-    renderRankingList(rankings);
-
-    btn.disabled = false;
-    btn.textContent = '登録';
-};
 
 async function renderRankingList(rankingsData = null) {
     const listEl = document.getElementById('ranking-list');

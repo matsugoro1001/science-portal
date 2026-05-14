@@ -374,7 +374,7 @@ function showPenalty(el) {
     }, 1000);
 }
 
-function endGame() {
+async function endGame() {
     clearInterval(timerInterval);
 
     if (currentMode === 'test') {
@@ -462,7 +462,6 @@ function endGame() {
         setTimeout(() => testResultScreen.classList.add('active'), 50);
 
         // Hide Ranking stuff for Test Mode
-        document.getElementById('new-record-form').classList.add('hidden');
         document.getElementById('ranking-section').classList.add('hidden');
         document.querySelector('.history-section').classList.add('hidden');
 
@@ -486,16 +485,16 @@ function endGame() {
         certificateScreen.classList.remove('hidden');
         setTimeout(() => certificateScreen.classList.add('active'), 50);
 
-        saveLocalHistory(parseFloat(finalTime), currentMode);
-        checkRanking(parseFloat(finalTime));
-        
         // Auto save to GAS for all modes (add visual feedback if possible)
         const certTitle = document.querySelector('#certificate-screen p.subtitle');
-        if (certTitle) certTitle.textContent = "成績を送信中...";
+        if (certTitle) certTitle.textContent = "成績を自動送信しています...";
         
-        saveScoreToGas(currentMode, testName, testGrade, testGroup, parseFloat(finalTime), null, "-").then(() => {
-             if (certTitle) certTitle.textContent = "スプレッドシートへの記録が完了しました！";
-        });
+        await saveScoreToGas(currentMode, testName, testGrade, testGroup, parseFloat(finalTime), null, "-");
+        
+        if (certTitle) certTitle.textContent = "スプレッドシートへの記録が完了しました！";
+
+        saveLocalHistory(parseFloat(finalTime), currentMode);
+        await checkRanking(parseFloat(finalTime));
     }
 }
 
@@ -544,55 +543,8 @@ async function saveScoreToGas(mode, name, grade, group, score, typeOverride = nu
 }
 
 async function checkRanking(score) {
-    const newRecordForm = document.getElementById('new-record-form');
-    // Show Loading state?
-
     const rankings = await getRankings(currentMode);
-
-    // Check if score qualifies for top 10 (or if fewer than 10 exist)
-    if (rankings.length < 10 || score < rankings[rankings.length - 1].score) {
-        newRecordForm.classList.remove('hidden');
-        document.getElementById('player-name').value = '';
-        document.getElementById('player-name').focus();
-    } else {
-        newRecordForm.classList.add('hidden');
-    }
-
     renderRankingList(rankings);
-}
-
-window.submitScore = async () => {
-    const nameInput = document.getElementById('player-name');
-    const name = nameInput.value.trim() || 'Anonymous';
-    const score = parseFloat(finalTimeEl.textContent);
-
-    // Disable button to prevent double submit
-    const btn = document.querySelector('#new-record-form button');
-    btn.disabled = true;
-    btn.textContent = '送信中...';
-
-    // 1. Send to Server (Fire and forget-ish, we await but ignore response content)
-    await saveScoreToGas(currentMode, name, testGrade, testGroup, score);
-
-    document.getElementById('new-record-form').classList.add('hidden');
-
-    // 2. Fetch latest data (might be old if GAS is slow)
-    let rankings = await getRankings(currentMode);
-
-    // 3. Optimistically append the new score
-    // Check if it's already there (to avoid duplication if GAS was super fast)
-    // Simple check: same name and exact same score (timestamp might differ so ignore)
-    const alreadyExists = rankings.some(r => r.name === name && Math.abs(r.score - score) < 0.001);
-
-    if (!alreadyExists) {
-        rankings.push({ name, score, date: new Date().toISOString() });
-    }
-
-    // 4. Re-sort and slice
-    rankings.sort((a, b) => a.score - b.score);
-    // rankings = rankings.slice(0, 10); // Optional: if we want to show it even if it pushes others out
-
-    renderLocalHistory();
 }
 
 // --- Local History System ---
