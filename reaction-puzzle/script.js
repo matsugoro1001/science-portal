@@ -584,7 +584,7 @@ window.startRetryMode = () => {
 };
 
 // --- GAS API ---
-const GAS_URL = 'https://script.google.com/macros/s/AKfycbwHkxgSAKH2QHLslC7Mm0wbBqqJbjEGkKafB4ELEtp-x9boxLGaCE5LfBf1nFXEyJEhJg/exec';
+const GAS_URL = 'https://script.google.com/macros/s/AKfycbxYqbIOI62_RXFKBBMKQxKr4kgGyA8o28QrJA3_lEt4sK1L1A5HBLutw0P7tlBvHPjzHA/exec';
 const SHEET_TYPE = 'reaction';
 
 async function saveScoreToGas(mode, name, grade, group, score, rank) {

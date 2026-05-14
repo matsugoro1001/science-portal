@@ -667,7 +667,7 @@ window.startRetryMode = () => {
 
 // --- Ranking System ---
 // --- Ranking System (Google Sheets) ---
-const GAS_URL = 'https://script.google.com/macros/s/AKfycbwHkxgSAKH2QHLslC7Mm0wbBqqJbjEGkKafB4ELEtp-x9boxLGaCE5LfBf1nFXEyJEhJg/exec';
+const GAS_URL = 'https://script.google.com/macros/s/AKfycbxYqbIOI62_RXFKBBMKQxKr4kgGyA8o28QrJA3_lEt4sK1L1A5HBLutw0P7tlBvHPjzHA/exec';
 const SHEET_TYPE = 'ion'; // 'イオン式' template
 
 async function getRankings(mode) {
