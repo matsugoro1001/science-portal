@@ -489,8 +489,13 @@ function endGame() {
         saveLocalHistory(parseFloat(finalTime), currentMode);
         checkRanking(parseFloat(finalTime));
         
-        // Auto save to GAS for all modes
-        saveScoreToGas(currentMode, testName, testGrade, testGroup, parseFloat(finalTime), null, "-");
+        // Auto save to GAS for all modes (add visual feedback if possible)
+        const certTitle = document.querySelector('#certificate-screen p.subtitle');
+        if (certTitle) certTitle.textContent = "成績を送信中...";
+        
+        saveScoreToGas(currentMode, testName, testGrade, testGroup, parseFloat(finalTime), null, "-").then(() => {
+             if (certTitle) certTitle.textContent = "スプレッドシートへの記録が完了しました！";
+        });
     }
 }
 
@@ -567,7 +572,7 @@ window.submitScore = async () => {
     btn.textContent = '送信中...';
 
     // 1. Send to Server (Fire and forget-ish, we await but ignore response content)
-    await saveScoreToGas(currentMode, name, "", "", score);
+    await saveScoreToGas(currentMode, name, testGrade, testGroup, score);
 
     document.getElementById('new-record-form').classList.add('hidden');
 

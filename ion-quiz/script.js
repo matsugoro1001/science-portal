@@ -486,7 +486,12 @@ function endGame() {
         checkRanking(parseFloat(finalTime));
 
         // Auto save to GAS for all modes
-        saveScoreToGas(currentMode, testName, testGrade, testGroup, parseFloat(finalTime), null, "-");
+        const certTitle = document.querySelector('#certificate-screen p.subtitle');
+        if (certTitle) certTitle.textContent = "成績を送信中...";
+        
+        saveScoreToGas(currentMode, testName, testGrade, testGroup, parseFloat(finalTime), null, "-").then(() => {
+             if (certTitle) certTitle.textContent = "スプレッドシートへの記録が完了しました！";
+        });
     }
 }
 
@@ -732,7 +737,7 @@ window.submitScore = async () => {
     btn.disabled = true;
     btn.textContent = '送信中...';
 
-    await saveScoreToGas(currentMode, name, score);
+    await saveScoreToGas(currentMode, name, testGrade, testGroup, score);
 
     document.getElementById('new-record-form').classList.add('hidden');
 
