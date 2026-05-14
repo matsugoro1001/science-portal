@@ -686,7 +686,7 @@ window.startRetryMode = () => {
 
 // --- Ranking System ---
 // --- Ranking System (Google Sheets) ---
-const GAS_URL = 'https://script.google.com/macros/s/AKfycbwbCONqVJ7rNU8hFpM22UuoNNC6Eb_9iCGciLDUTdgiIzB-G1FQCVgKBXVmj2sFcl4_Rg/exec';
+const GAS_URL = 'https://script.google.com/macros/s/AKfycbwHkxgSAKH2QHLslC7Mm0wbBqqJbjEGkKafB4ELEtp-x9boxLGaCE5LfBf1nFXEyJEhJg/exec';
 const SHEET_TYPE = 'chemical'; // '化学式' template
 
 async function getRankings(mode) {
@@ -709,12 +709,15 @@ async function saveScoreToGas(mode, name, grade, group, score, typeOverride = nu
 
     try {
         let type = typeOverride || 'chemical';
-        
-        // Use matching specific sheet structure if needed, else default test
-        if (mode === 'matching') type = 'matching_chemical';
 
         const url = `${GAS_URL}?type=${encodeURIComponent(type)}&action=save&gameMode=${encodeURIComponent(mode)}&name=${encodeURIComponent(name)}&grade=${encodeURIComponent(grade || '')}&group=${encodeURIComponent(group || '')}&score=${score}&rank=${encodeURIComponent(rank)}&t=${Date.now()}`;
         console.log("Saving to GAS:", url);
+        await fetch(url, { mode: 'no-cors' });
+        
+        if (statusEl) {
+            statusEl.textContent = "成績の送信が完了しました";
+            statusEl.style.color = "#4ecca3";
+        }
     } catch (e) {
         console.error('Ranking Save Error:', e);
         if (statusEl) {
@@ -802,3 +805,14 @@ async function renderRankingList(rankingsData = null) {
         `;
     }
 }
+
+// --- Debug Shortcut ---
+document.addEventListener('keydown', (e) => {
+    if (e.key === 'Escape') {
+        console.log('Force end game triggered');
+        if (typeof correctAnswersCount !== 'undefined') correctAnswersCount = 20;
+        if (typeof testScore !== 'undefined') testScore = 100;
+        if (typeof questionsAnswered !== 'undefined') questionsAnswered = 20;
+        if (typeof endGame === 'function') endGame();
+    }
+});

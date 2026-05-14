@@ -584,7 +584,7 @@ window.startRetryMode = () => {
 };
 
 // --- GAS API ---
-const GAS_URL = 'https://script.google.com/macros/s/AKfycbwbCONqVJ7rNU8hFpM22UuoNNC6Eb_9iCGciLDUTdgiIzB-G1FQCVgKBXVmj2sFcl4_Rg/exec';
+const GAS_URL = 'https://script.google.com/macros/s/AKfycbwHkxgSAKH2QHLslC7Mm0wbBqqJbjEGkKafB4ELEtp-x9boxLGaCE5LfBf1nFXEyJEhJg/exec';
 const SHEET_TYPE = 'reaction';
 
 async function saveScoreToGas(mode, name, grade, group, score, rank) {
@@ -611,3 +611,13 @@ async function saveScoreToGas(mode, name, grade, group, score, rank) {
         }
     }
 }
+
+// --- Debug Shortcut ---
+document.addEventListener('keydown', (e) => {
+    if (e.key === 'Escape') {
+        console.log('Force end game triggered');
+        if (typeof correctAnswersCount !== 'undefined') correctAnswersCount = 12;
+        if (typeof testScore !== 'undefined') testScore = 100;
+        if (typeof endGame === 'function') endGame();
+    }
+});

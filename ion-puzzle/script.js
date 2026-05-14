@@ -387,7 +387,7 @@ function gameClear() {
 }
 
 // --- Ranking System (Google Sheets) ---
-const GAS_URL = 'https://script.google.com/macros/s/AKfycbwbCONqVJ7rNU8hFpM22UuoNNC6Eb_9iCGciLDUTdgiIzB-G1FQCVgKBXVmj2sFcl4_Rg/exec';
+const GAS_URL = 'https://script.google.com/macros/s/AKfycbx1TV5wIn5FpRrTKyFGJkkf_577rp_QoXzt61kKeBxIDoaOKxnmr5SkcenCK6Ejgiefhw/exec';
 const SHEET_TYPE = 'ion_puzzle';
 
 async function getRankings() {
