@@ -145,6 +145,48 @@ const ctx = canvas.getContext("2d");
 let animationFrameId = null;
 let electronRotationAngles = [0, 0, 0, 0]; // 4つの殻の回転角度
 let ionizedAnimations = []; // イオン化アニメーション中の電子エフェクト { x, y, vx, vy, color, alpha, size, type: 'in' | 'out' }
+let nucleusParticles = []; // 現在選択中の元素の原子核内粒子リスト
+
+// 原子核内の陽子と中性子の粒子配置を決定的に生成（フィボナッチ螺旋を使用）
+function generateNucleusParticles(protons, neutrons) {
+    const particles = [];
+    const pool = [];
+    for (let i = 0; i < protons; i++) pool.push('proton');
+    for (let i = 0; i < neutrons; i++) pool.push('neutron');
+    
+    // 決定的な疑似乱数シードを使ってシャッフル（元素切り替え時に毎回同じ形状にするため）
+    let seed = 42;
+    function random() {
+        let x = Math.sin(seed++) * 10000;
+        return x - Math.floor(x);
+    }
+    
+    for (let i = pool.length - 1; i > 0; i--) {
+        const j = Math.floor(random() * (i + 1));
+        const temp = pool[i];
+        pool[i] = pool[j];
+        pool[j] = temp;
+    }
+
+    const N = pool.length;
+    // 粒子数が多い場合はサイズを小さくして、原子核の範囲に収まるようにする
+    const pRadius = N > 25 ? 3.0 : (N > 10 ? 3.8 : 4.8); 
+    const c = N > 25 ? 5.5 : (N > 10 ? 6.5 : 8.0); // フィボナッチ螺旋の間隔係数
+    
+    for (let i = 0; i < N; i++) {
+        const theta = i * 137.5 * (Math.PI / 180);
+        const r = c * Math.sqrt(i + 0.5);
+        
+        particles.push({
+            x: Math.cos(theta) * r,
+            y: Math.sin(theta) * r,
+            type: pool[i],
+            radius: pRadius
+        });
+    }
+    
+    return particles;
+}
 
 // DOM 要素
 const elementButtonsContainer = document.getElementById("element-buttons");
@@ -228,6 +270,9 @@ function selectElement(index) {
     currentElementIndex = index;
     const el = ELEMENTS_DATA[index];
     currentElectrons = el.protons; // 初期状態は中性原子（陽子数＝電子数）
+
+    // 原子核内の粒子位置を決定
+    nucleusParticles = generateNucleusParticles(el.protons, el.neutrons);
 
     // ボタンのactiveクラスを更新
     const buttons = elementButtonsContainer.querySelectorAll(".element-btn");
@@ -722,36 +767,75 @@ function draw() {
     ctx.shadowBlur = 0;
 
     // 4. 原子核（中心）の描画
-    // 原子核の本体円
-    const nucleusRadius = 24;
+    // 粒子数に応じた原子核の外枠の半径
+    const totalParticlesCount = el.protons + el.neutrons;
+    const nucleusRadius = Math.max(24, Math.min(36, 16 + Math.sqrt(totalParticlesCount) * 3));
     
-    // グラデーションで立体感を出す
-    const grad = ctx.createRadialGradient(centerX - 4, centerY - 4, 2, centerX, centerY, nucleusRadius);
-    grad.addColorStop(0, "#ff7979");
-    grad.addColorStop(0.3, "#ff5252");
-    grad.addColorStop(1, "#b33939");
-
-    ctx.shadowBlur = 15;
+    // 原子核のバックグラウンド（うっすらとした赤い半透明の膜）
+    ctx.shadowBlur = 20;
     ctx.shadowColor = "rgba(255, 71, 87, 0.4)";
-    
     ctx.beginPath();
     ctx.arc(centerX, centerY, nucleusRadius, 0, Math.PI * 2);
-    ctx.fillStyle = grad;
+    ctx.fillStyle = "rgba(255, 71, 87, 0.15)";
+    ctx.strokeStyle = "rgba(255, 71, 87, 0.3)";
+    ctx.lineWidth = 1.5;
     ctx.fill();
-    
+    ctx.stroke();
     ctx.shadowBlur = 0;
 
-    // 陽子（＋）の数と中性子の数を原子核に重ねて表示
-    ctx.fillStyle = "#ffffff";
-    ctx.font = "bold 9px sans-serif";
+    // 原子核内の粒子（陽子・中性子）の描画
+    nucleusParticles.forEach(p => {
+        const px = centerX + p.x;
+        const py = centerY + p.y;
+        const radius = p.radius;
+        
+        ctx.beginPath();
+        ctx.arc(px, py, radius, 0, Math.PI * 2);
+        
+        if (p.type === 'proton') {
+            // 陽子のグラデーション（ネオンレッド）
+            const pGrad = ctx.createRadialGradient(px - radius/3, py - radius/3, radius/10, px, py, radius);
+            pGrad.addColorStop(0, "#ff7675");
+            pGrad.addColorStop(0.3, "#d63031");
+            pGrad.addColorStop(1, "#800000");
+            ctx.fillStyle = pGrad;
+            ctx.fill();
+            
+            // 陽子の「＋」マーク（極小）
+            ctx.fillStyle = "#ffffff";
+            ctx.font = `bold ${radius * 1.5}px sans-serif`;
+            ctx.textAlign = "center";
+            ctx.textBaseline = "middle";
+            ctx.fillText("+", px, py - 0.5);
+        } else {
+            // 中性子のグラデーション（グレー）
+            const nGrad = ctx.createRadialGradient(px - radius/3, py - radius/3, radius/10, px, py, radius);
+            nGrad.addColorStop(0, "#ced6e0");
+            nGrad.addColorStop(0.5, "#747d8c");
+            nGrad.addColorStop(1, "#2f3542");
+            ctx.fillStyle = nGrad;
+            ctx.fill();
+        }
+    });
+
+    // 原子核から少し離れた下部に、テキストで陽子数・中性子数を補足（中学生向けに正確な情報も提示）
+    ctx.fillStyle = "rgba(15, 23, 42, 0.75)";
+    ctx.font = "bold 11px 'Noto Sans JP', sans-serif";
     ctx.textAlign = "center";
+    ctx.textBaseline = "middle";
     
-    // 陽子数
-    ctx.fillText(`陽子:${el.protons}+`, centerX, centerY - 4);
-    // 中性子数
-    ctx.fillStyle = "#ced6e0";
-    ctx.font = "8px sans-serif";
-    ctx.fillText(`中性子:${el.neutrons}`, centerX, centerY + 6);
+    const textY = centerY + nucleusRadius + 18;
+    ctx.beginPath();
+    // 丸角座布団の描画
+    if (ctx.roundRect) {
+        ctx.roundRect(centerX - 65, textY - 10, 130, 20, 10);
+    } else {
+        ctx.rect(centerX - 65, textY - 10, 130, 20); // フォールバック
+    }
+    ctx.fill();
+    
+    ctx.fillStyle = "#ffffff";
+    ctx.fillText(`陽子: ${el.protons} (＋) / 中性子: ${el.neutrons}`, centerX, textY);
 }
 
 // 起動
