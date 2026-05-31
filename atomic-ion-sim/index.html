@@ -1,0 +1,145 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>電子配置とイオンシミュレーター</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700&family=Noto+Sans+JP:wght@400;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="style.css">
+</head>
+<body>
+    <header>
+        <a href="../index.html" class="back-btn">← ポータルへ戻る</a>
+        <h1>電子配置とイオンシミュレーター</h1>
+        <p class="subtitle">原子のつくりと、イオンができる仕組みをシミュレーションで学ぼう！</p>
+    </header>
+
+    <main class="sim-container">
+        <!-- 左側：元素選択エリア -->
+        <section class="panel element-panel">
+            <h2>1. 元素を選ぼう</h2>
+            <div class="element-grid" id="element-buttons">
+                <!-- JavaScript で動的に生成 -->
+            </div>
+            
+            <div class="element-info-card" id="element-info">
+                <h3 id="info-name">---</h3>
+                <div class="info-row">
+                    <span>原子番号:</span>
+                    <strong id="info-number">-</strong>
+                </div>
+                <div class="info-row">
+                    <span>元素記号:</span>
+                    <strong id="info-symbol">-</strong>
+                </div>
+                <div class="info-row">
+                    <span>陽子 (＋):</span>
+                    <span id="info-protons" class="badge proton">- 個</span>
+                </div>
+                <div class="info-row">
+                    <span>中性子:</span>
+                    <span id="info-neutrons" class="badge neutron">- 個</span>
+                </div>
+                <div class="info-row">
+                    <span>電子 (ー):</span>
+                    <span id="info-electrons" class="badge electron">- 個</span>
+                </div>
+            </div>
+        </section>
+
+        <!-- 中央：シミュレータービュー -->
+        <section class="panel sim-view-panel">
+            <div class="mode-selector">
+                <button id="mode-sandbox" class="mode-btn active">じゆうに操作（シミュレーター）</button>
+                <button id="mode-mission" class="mode-btn">ミッションに挑戦（ゲーム）</button>
+            </div>
+
+            <div id="mission-box" class="mission-box hidden">
+                <div class="mission-header">ミッション！</div>
+                <div id="mission-text" class="mission-text">ナトリウムを安定なイオンにしよう！</div>
+                <div id="mission-hint" class="mission-hint">ヒント：一番外側の電子に注目してね。</div>
+                <div id="mission-status" class="mission-status">未クリア</div>
+            </div>
+
+            <div class="canvas-container">
+                <canvas id="atom-canvas"></canvas>
+                <div id="canvas-overlay-text" class="canvas-overlay"></div>
+            </div>
+
+            <div class="control-panel">
+                <div class="electron-controls">
+                    <button id="btn-sub-electron" class="control-btn minus">電子を1個取る (ー)</button>
+                    <button id="btn-add-electron" class="control-btn plus">電子を1個入れる (＋)</button>
+                </div>
+                <div class="auto-controls">
+                    <button id="btn-auto-ionize" class="action-btn">イオン化のアニメーション</button>
+                    <button id="btn-reset" class="action-btn secondary">リセット（元の原子）</button>
+                </div>
+            </div>
+        </section>
+
+        <!-- 右側：状態・解説エリア -->
+        <section class="panel status-panel">
+            <h2>2. 状態を見てみよう</h2>
+            
+            <div class="status-card">
+                <div class="status-label">現在の電気のバランス（電荷）</div>
+                <div class="charge-display">
+                    <div class="charge-value-box">
+                        <span class="formula-display" id="formula-output">H</span>
+                        <span class="status-badge" id="status-badge">中性原子</span>
+                    </div>
+                </div>
+
+                <div class="balance-container">
+                    <div class="balance-bar">
+                        <div id="proton-bar" class="bar proton-bar" style="width: 50%;"></div>
+                        <div id="electron-bar" class="bar electron-bar" style="width: 50%;"></div>
+                    </div>
+                    <div class="balance-labels">
+                        <span>陽子のプラス: <strong id="balance-protons">0</strong></span>
+                        <span>電子のマイナス: <strong id="balance-electrons">0</strong></span>
+                    </div>
+                    <div class="net-charge-desc" id="charge-description">
+                        ＋ と ー の数が同じで、打ち消し合っています。
+                    </div>
+                </div>
+            </div>
+
+            <div class="stability-card" id="stability-card">
+                <div class="stability-header">
+                    <span>電子配置の安定度:</span>
+                    <strong id="stability-text">不安定</strong>
+                </div>
+                <div class="stability-desc" id="stability-desc">
+                    一番外側の電子殻（最外殻）が満タンではないか、安定する数（8個）になっていません。
+                </div>
+            </div>
+
+            <div class="explanation-card">
+                <h3>解説と豆知識</h3>
+                <div id="explanation-text" class="explanation-text">
+                    元素を選択すると、解説が表示されます。
+                </div>
+            </div>
+        </section>
+    </main>
+
+    <!-- ミッションクリアモーダル -->
+    <div id="clear-modal" class="modal hidden">
+        <div class="modal-content">
+            <h2>🎉 ミッションクリア！ 🎉</h2>
+            <p id="modal-clear-text"></p>
+            <div class="trivia-box">
+                <h4>💡 このイオンの豆知識</h4>
+                <p id="modal-trivia-text"></p>
+            </div>
+            <button id="modal-next-btn" class="action-btn">次のミッションへ</button>
+        </div>
+    </div>
+
+    <script src="script.js"></script>
+</body>
+</html>
