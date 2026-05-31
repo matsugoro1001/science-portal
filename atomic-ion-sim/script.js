@@ -568,59 +568,76 @@ function createIonizedEffect(isIn) {
     const centerX = canvas.width / 2;
     const centerY = canvas.height / 2;
     
-    // 殻の半径
-    const el = ELEMENTS_DATA[currentElementIndex];
-    const shellsCount = getShellsAllocation(currentElectrons).length;
-    const targetRadius = Math.max(50, Math.min(4, shellsCount) * 40 + 10);
-
+    const dist = Math.max(canvas.width, canvas.height) / 2 + 50;
+    
     if (isIn) {
-        // 外部から吸い込まれる電子（複数パーティクル）
-        for (let i = 0; i < 5; i++) {
-            const angle = Math.random() * Math.PI * 2;
-            const dist = canvas.width / 2 + Math.random() * 50;
-            const startX = centerX + Math.cos(angle) * dist;
-            const startY = centerY + Math.sin(angle) * dist;
-            
-            const targetX = centerX + Math.cos(angle) * targetRadius;
-            const targetY = centerY + Math.sin(angle) * targetRadius;
-
-            ionizedAnimations.push({
-                x: startX,
-                y: startY,
-                tx: targetX,
-                ty: targetY,
-                vx: (targetX - startX) / 20,
-                vy: (targetY - startY) / 20,
-                size: 4 + Math.random() * 3,
-                alpha: 1,
-                life: 20,
-                type: 'in',
-                color: '#00d2d3'
-            });
-        }
-    } else {
-        // 内部から吹き出す電子
+        // 電子を入れる（currentElectronsはすでに+1されている）
         const shells = getShellsAllocation(currentElectrons);
-        const maxShellRadius = shells.length * 40 + 10;
-        const angle = Math.random() * Math.PI * 2;
-        const startX = centerX + Math.cos(angle) * maxShellRadius;
-        const startY = centerY + Math.sin(angle) * maxShellRadius;
-
-        for (let i = 0; i < 8; i++) {
-            const speed = 3 + Math.random() * 4;
-            const pAngle = angle + (Math.random() - 0.5) * 0.5;
-            ionizedAnimations.push({
-                x: startX,
-                y: startY,
-                vx: Math.cos(pAngle) * speed,
-                vy: Math.sin(pAngle) * speed,
-                size: 2 + Math.random() * 3,
-                alpha: 1,
-                life: 30 + Math.random() * 20,
-                type: 'out',
-                color: '#ff4757'
-            });
-        }
+        const shellIndex = shells.length - 1;
+        const count = shells[shellIndex];
+        const electronIndex = count - 1;
+        
+        const angle = electronRotationAngles[shellIndex] + (electronIndex * (Math.PI * 2) / count);
+        const radius = (shellIndex + 1) * 40 + 10;
+        
+        // 画面外の開始位置
+        const startX = centerX + Math.cos(angle) * dist;
+        const startY = centerY + Math.sin(angle) * dist;
+        
+        const targetX = centerX + Math.cos(angle) * radius;
+        const targetY = centerY + Math.sin(angle) * radius;
+        
+        ionizedAnimations.push({
+            startX: startX,
+            startY: startY,
+            x: startX,
+            y: startY,
+            tx: targetX,
+            ty: targetY,
+            shellIndex: shellIndex,
+            totalInShell: count,
+            electronIndex: electronIndex,
+            size: 6, // 実際の電子と同じサイズ
+            alpha: 1,
+            life: 25,
+            maxLife: 25,
+            type: 'in',
+            color: '#00d2d3'
+        });
+    } else {
+        // 電子を取る（currentElectronsはすでに-1されている）
+        // 削除される前の電子数を仮定
+        const prevElectrons = currentElectrons + 1;
+        const shells = getShellsAllocation(prevElectrons);
+        const shellIndex = shells.length - 1;
+        const count = shells[shellIndex];
+        const electronIndex = count - 1;
+        
+        const angle = electronRotationAngles[shellIndex] + (electronIndex * (Math.PI * 2) / count);
+        const radius = (shellIndex + 1) * 40 + 10;
+        
+        // 軌道上から開始
+        const startX = centerX + Math.cos(angle) * radius;
+        const startY = centerY + Math.sin(angle) * radius;
+        
+        // 画面外の終了位置
+        const targetX = centerX + Math.cos(angle) * dist;
+        const targetY = centerY + Math.sin(angle) * dist;
+        
+        ionizedAnimations.push({
+            startX: startX,
+            startY: startY,
+            x: startX,
+            y: startY,
+            vx: (targetX - startX) / 25,
+            vy: (targetY - startY) / 25,
+            size: 6,
+            alpha: 1,
+            life: 25,
+            maxLife: 25,
+            type: 'out',
+            color: '#ff4757'
+        });
     }
 }
 
@@ -666,18 +683,30 @@ function startAnimationLoop() {
 
 // パーティクルの状態更新
 function updateParticles() {
+    const centerX = canvas.width / 2;
+    const centerY = canvas.height / 2;
+
     for (let i = ionizedAnimations.length - 1; i >= 0; i--) {
         const p = ionizedAnimations[i];
         p.life--;
 
         if (p.type === 'in') {
-            p.x += p.vx;
-            p.y += p.vy;
-            p.alpha = p.life / 20;
+            // 公転で動くターゲット軌道座標に追従
+            const radius = (p.shellIndex + 1) * 40 + 10;
+            const angle = electronRotationAngles[p.shellIndex] + (p.electronIndex * (Math.PI * 2) / p.totalInShell);
+            p.tx = centerX + Math.cos(angle) * radius;
+            p.ty = centerY + Math.sin(angle) * radius;
+            
+            // 進行度 (0 から 1)
+            const t = 1 - (p.life / p.maxLife);
+            p.x = p.startX + (p.tx - p.startX) * t;
+            p.y = p.startY + (p.ty - p.startY) * t;
+            p.alpha = 1.0;
         } else {
+            // 画面外へ直線移動
             p.x += p.vx;
             p.y += p.vy;
-            p.alpha = p.life / 50;
+            p.alpha = p.life / p.maxLife;
         }
 
         if (p.life <= 0) {
@@ -727,6 +756,15 @@ function draw() {
         const baseAngle = electronRotationAngles[shellIndex];
 
         for (let i = 0; i < count; i++) {
+            // もしこの電子が現在「進入（in）アニメーション中」なら、軌道上での描画をスキップする
+            const isEntering = ionizedAnimations.some(p => 
+                p.type === 'in' && 
+                p.shellIndex === shellIndex && 
+                p.electronIndex === i &&
+                p.totalInShell === count
+            );
+            if (isEntering) continue;
+
             // 円周上に等間隔で配置
             const angle = baseAngle + (i * (Math.PI * 2) / count);
             const x = centerX + Math.cos(angle) * radius;
