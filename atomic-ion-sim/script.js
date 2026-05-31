@@ -1,4 +1,4 @@
-// 元素データ
+// 元素データ（原子番号1〜20）
 const ELEMENTS_DATA = [
     {
         number: 1,
@@ -9,6 +9,8 @@ const ELEMENTS_DATA = [
         stableElectrons: 0,
         stableCharge: 1,
         shells: [1],
+        row: 1,
+        col: 1,
         description: "水素原子は最もシンプルで、電子を1個持っています。この電子を放出して陽イオン（水素イオン H⁺）になります。水溶液の中で酸性を示す原因になる、とても重要なイオンです。",
         trivia: "水素イオン（H⁺）は実際には水溶液中で水分子と合体してオキソニウムイオン（H₃O⁺）として存在しますが、中学校では「水素イオン H⁺」として学習します。酸っぱさの正体です！"
     },
@@ -21,6 +23,8 @@ const ELEMENTS_DATA = [
         stableElectrons: 2,
         stableCharge: 0,
         shells: [2],
+        row: 1,
+        col: 18,
         description: "ヘリウムはK殻（一番内側の殻）に最大数の2個の電子がぴったり入っています（閉殻）。この状態は極めて安定しているため、電子を失ったり受け取ったりせず、イオンになりません（希ガス）。",
         trivia: "ヘリウムは非常に安定していて他の物質と絶対に反応しないため、風船や気球に安全なガスとして使われています。宇宙で2番目に多い元素です。"
     },
@@ -33,8 +37,66 @@ const ELEMENTS_DATA = [
         stableElectrons: 2,
         stableCharge: 1,
         shells: [2, 1],
+        row: 2,
+        col: 1,
         description: "リチウムは一番外側のL殻に電子が1個だけあります。この1個を捨てることで、内側のK殻（電子2個で満タン）が最外殻になり、ヘリウムと同じ安定した電子配置の陽イオン（リチウムイオン Li⁺）になります。",
         trivia: "リチウムイオンは、スマホやゲーム機、電気自動車に使われる「リチウムイオン電池」の中で、電気を運ぶ主役として大活躍しています！"
+    },
+    {
+        number: 4,
+        symbol: "Be",
+        name: "ベリリウム",
+        protons: 4,
+        neutrons: 5,
+        stableElectrons: 2,
+        stableCharge: 2,
+        shells: [2, 2],
+        row: 2,
+        col: 2,
+        description: "ベリリウムは一番外側のL殻に電子が2個あります。この2個を捨てることで、内側のK殻（電子2個で満タン）が最外殻になり、ヘリウムと同じ安定した電子配置の陽イオン（ベリリウムイオン Be²⁺）になります。",
+        trivia: "ベリリウムは非常に軽くて硬い金属です。宇宙望遠鏡の鏡や、航空宇宙産業の特殊な合金に広く使われています。"
+    },
+    {
+        number: 5,
+        symbol: "B",
+        name: "ホウ素 (ほうそ)",
+        protons: 5,
+        neutrons: 6,
+        stableElectrons: 2,
+        stableCharge: 3,
+        shells: [2, 3],
+        row: 2,
+        col: 13,
+        description: "ホウ素は一番外側のL殻に電子が3個あります。通常はイオンになりにくいですが、これらを失うとヘリウムと同じ電子配置の陽イオン（ホウ素イオン B³⁺）になります。",
+        trivia: "ホウ素化合物（ホウ酸）は、ゴキブリ駆除の団子や、目の洗浄剤（防腐剤）、耐熱ガラスの原料として身近に使われています。"
+    },
+    {
+        number: 6,
+        symbol: "C",
+        name: "炭素 (たんそ)",
+        protons: 6,
+        neutrons: 6,
+        stableElectrons: 6,
+        stableCharge: 0,
+        shells: [2, 4],
+        row: 2,
+        col: 14,
+        description: "炭素は一番外側のL殻に4個の電子を持っています。4個の電子を捨てることも、新しく4個得ることもエネルギー的に難しいため、通常は電子のやり取りによるイオンにはならず、共有結合を作ります。",
+        trivia: "炭素はすべての有機物（プラスチック、紙、私たちの体など）の骨格をなす元素です。また、ダイヤモンドと鉛筆の芯（黒鉛）はどちらも炭素だけでできています！"
+    },
+    {
+        number: 7,
+        symbol: "N",
+        name: "窒素 (ちっそ)",
+        protons: 7,
+        neutrons: 7,
+        stableElectrons: 10,
+        stableCharge: -3,
+        shells: [2, 5],
+        row: 2,
+        col: 15,
+        description: "窒素は一番外側のL殻に5個の電子を持っています。あと3個電子を受け取ると、L殻が満タン（8個）になり、ネオンと同じ安定した電子配置の陰イオン（窒化物イオン N³⁻）になります。",
+        trivia: "窒素イオン（N³⁻）は、アンモニアやアミノ酸、DNAの塩基など、生命活動に必要な窒素化合物の基礎となります。空気の約78%は窒素分子です。"
     },
     {
         number: 8,
@@ -45,8 +107,10 @@ const ELEMENTS_DATA = [
         stableElectrons: 10,
         stableCharge: -2,
         shells: [2, 6],
+        row: 2,
+        col: 16,
         description: "酸素は一番外側のL殻に6個の電子を持っています。あと2個電子を受け取ると、L殻が満タン（8個）になり、ネオンと同じ安定した電子配置の陰イオン（酸化物イオン O²⁻）になります。",
-        trivia: "酸化物イオン（O²⁻）は、金属と結びついて「酸化鉄（さび）」や「酸化銅」などの化合物を作ります。私たちの身の回りの岩石やガラスの主成分でもあります。"
+        trivia: "酸化物イオン（O²⁻）は、金属と結びついて「さび」や酸化銅などの化合物を作ります。私たちの身の回りの岩石やガラスの主成分でもあります。"
     },
     {
         number: 9,
@@ -57,6 +121,8 @@ const ELEMENTS_DATA = [
         stableElectrons: 10,
         stableCharge: -1,
         shells: [2, 7],
+        row: 2,
+        col: 17,
         description: "フッ素は一番外側のL殻に7個の電子を持っています。あと1個電子を受け取ると、L殻が満タン（8個）になり、ネオンと同じ安定した電子配置の陰イオン（フッ化物イオン F⁻）になります。",
         trivia: "フッ化物イオン（F⁻）は、歯を強くして虫歯を予防する効果があるため、歯磨き粉によく配合されています。"
     },
@@ -69,6 +135,8 @@ const ELEMENTS_DATA = [
         stableElectrons: 10,
         stableCharge: 0,
         shells: [2, 8],
+        row: 2,
+        col: 18,
         description: "ネオンはL殻に最大数の8個の電子がぴったり入っています（オクテット）。この状態は極めて安定しているため、電子を失ったり受け取ったりせず、イオンになりません（希ガス）。",
         trivia: "ネオンガスをガラス管に閉じ込めて電気を流すと、美しい赤オレンジ色に光ります。これが街を彩る「ネオンサイン」の仕組みです。"
     },
@@ -81,6 +149,8 @@ const ELEMENTS_DATA = [
         stableElectrons: 10,
         stableCharge: 1,
         shells: [2, 8, 1],
+        row: 3,
+        col: 1,
         description: "ナトリウムは一番外側のM殻に電子が1個だけあります。この1個を捨てることで、内側のL殻（電子8個で満タン）が最外殻になり、ネオンと同じ安定した電子配置の陽イオン（ナトリウムイオン Na⁺）になります。",
         trivia: "ナトリウムイオン（Na⁺）は、食塩（塩化ナトリウム NaCl）の成分です。私たちの体の中で、神経の命令を伝えたり、水分バランスを保ったりする非常に重要な役割を持っています。"
     },
@@ -93,8 +163,66 @@ const ELEMENTS_DATA = [
         stableElectrons: 10,
         stableCharge: 2,
         shells: [2, 8, 2],
+        row: 3,
+        col: 2,
         description: "マグネシウムは一番外側のM殻に電子が2個あります。この2個を捨てることで、内側のL殻（電子8個で満タン）が最外殻になり、ネオンと同じ安定した電子配置の陽イオン（マグネシウムイオン Mg²⁺）になります。",
         trivia: "マグネシウムイオン（Mg²⁺）は、海水やにがりに多く含まれます。また、植物が光合成を行うための緑色色素「クロロフィル（葉緑素）」の中心にもマグネシウムが位置しています。"
+    },
+    {
+        number: 13,
+        symbol: "Al",
+        name: "アルミニウム",
+        protons: 13,
+        neutrons: 14,
+        stableElectrons: 10,
+        stableCharge: 3,
+        shells: [2, 8, 3],
+        row: 3,
+        col: 13,
+        description: "アルミニウムは一番外側のM殻に電子が3個あります。この3個を捨てることで、内側のL殻（電子8個で満タン）が最外殻になり、ネオンと同じ安定した電子配置 of 陽イオン（アルミニウムイオン Al³⁺）になります。",
+        trivia: "アルミニウムは非常に軽くて頑丈な金属で、一円玉やアルミホイル、缶ジュース、新幹線や飛行機の機体など、現代社会に欠かせない金属です。"
+    },
+    {
+        number: 14,
+        symbol: "Si",
+        name: "ケイ素 (けいそ)",
+        protons: 14,
+        neutrons: 14,
+        stableElectrons: 14,
+        stableCharge: 0,
+        shells: [2, 8, 4],
+        row: 3,
+        col: 14,
+        description: "ケイ素は一番外側のM殻に4個の電子を持っています。炭素と同様、4個の電子を完全に失うか得ることは難しいため、イオンにはならず、主に共有結合を作ります。",
+        trivia: "ケイ素は「シリコン」とも呼ばれ、パソコンやスマホの頭脳である半導体チップの原料として極めて重要な元素です。地球の地殻に酸素の次に多く含まれます。"
+    },
+    {
+        number: 15,
+        symbol: "P",
+        name: "リン",
+        protons: 15,
+        neutrons: 16,
+        stableElectrons: 18,
+        stableCharge: -3,
+        shells: [2, 8, 5],
+        row: 3,
+        col: 15,
+        description: "リンは一番外側のM殻に5個の電子を持っています。あと3個電子を受け取ることで、M殻が満タン（8個）になり、アルゴンと同じ安定した電子配置の陰イオン（リン化物イオン P³⁻）になります。",
+        trivia: "リンは骨や歯、さらに遺伝物質であるDNAや生物のエネルギー源であるATPの主成分として、すべての生物の生命維持に必要不可欠な元素です。"
+    },
+    {
+        number: 16,
+        symbol: "S",
+        name: "硫黄 (いおう)",
+        protons: 16,
+        neutrons: 16,
+        stableElectrons: 18,
+        stableCharge: -2,
+        shells: [2, 8, 6],
+        row: 3,
+        col: 16,
+        description: "硫黄は一番外側のM殻に6個の電子を持っています。あと2個電子を受け取ることで、M殻が満タン（8個）になり、アルゴンと同じ安定した電子配置の陰イオン（硫化物イオン S²⁻）になります。",
+        trivia: "硫化物イオン（S²⁻）は温泉地で見られる特有の卵の腐ったような臭いの原因物質（硫化水素など）になります。体の中では、タンパク質を作るアミノ酸に含まれています。"
     },
     {
         number: 17,
@@ -105,8 +233,38 @@ const ELEMENTS_DATA = [
         stableElectrons: 18,
         stableCharge: -1,
         shells: [2, 8, 7],
+        row: 3,
+        col: 17,
         description: "塩素は一番外側のM殻に7個の電子を持っています。あと1個電子を受け取ると、M殻が満タン（8個）になり、アルゴンと同じ安定した電子配置の陰イオン（塩化物イオン Cl⁻）になります。",
         trivia: "塩化物イオン（Cl⁻）は、ナトリウムイオンとともに食塩の主成分です。また、胃の中で分泌される強い酸「胃液（塩酸）」の主成分でもあり、食べ物の消化や殺菌を助けています。"
+    },
+    {
+        number: 18,
+        symbol: "Ar",
+        name: "アルゴン",
+        protons: 18,
+        neutrons: 22,
+        stableElectrons: 18,
+        stableCharge: 0,
+        shells: [2, 8, 8],
+        row: 3,
+        col: 18,
+        description: "アルゴンはM殻に8個の電子がぴったり入っています（閉殻・オクテット）。この状態は極めて安定しているため、電子を失ったり受け取ったりせず、イオンになりません（希ガス）。",
+        trivia: "アルゴンは、反応しない性質を利用して、電球の内部に封入されるガスや、高品質な溶接の保護ガス、古い美術品を劣化から守る保存ガスとして使われています。"
+    },
+    {
+        number: 19,
+        symbol: "K",
+        name: "カリウム",
+        protons: 19,
+        neutrons: 20,
+        stableElectrons: 18,
+        stableCharge: 1,
+        shells: [2, 8, 8, 1],
+        row: 4,
+        col: 1,
+        description: "カリウムは一番外側のN殻に電子が1個あります。この1個を捨てることで、内側のM殻（電子8個で満タン）が最外殻になり、アルゴンと同じ安定した電子配置の陽イオン（カリウムイオン K⁺）になります。",
+        trivia: "カリウムイオン（K⁺）は、バナナや野菜に多く含まれ、体内のナトリウムイオンとバランスを取りながら、筋肉の動きや血圧を調整する重要な栄養素です。"
     },
     {
         number: 20,
@@ -117,6 +275,8 @@ const ELEMENTS_DATA = [
         stableElectrons: 18,
         stableCharge: 2,
         shells: [2, 8, 8, 2],
+        row: 4,
+        col: 2,
         description: "カルシウムは一番外側のN殻に電子が2個あります。この2個を捨てることで、内側のM殻（電子8個で満タン）が最外殻になり、アルゴンと同じ安定した電子配置の陽イオン（カルシウムイオン Ca²⁺）になります。",
         trivia: "カルシウムイオン（Ca²⁺）は、骨や歯を作る主成分です。また、筋肉を動かしたり、脳からの情報を細胞に伝えたりするシグナルとしても欠かせないイオンです。"
     }
@@ -130,12 +290,12 @@ let isSandboxMode = true;
 // ミッションモードの状態
 let currentMissionIndex = 0;
 const MISSIONS = [
-    { elIndex: 6, targetElectrons: 10, text: "ナトリウム原子 (Na) をイオンにしよう！", hint: "ナトリウムは一番外側の電子が1個邪魔です。電子を1個取ってみましょう。" },
-    { elIndex: 8, targetElectrons: 18, text: "塩素原子 (Cl) をイオンにしよう！", hint: "塩素は一番外側の電子があと1個で満タンになります。電子を1個入れてみましょう。" },
+    { elIndex: 10, targetElectrons: 10, text: "ナトリウム原子 (Na) をイオンにしよう！", hint: "ナトリウムは一番外側の電子が1個邪魔です。電子を1個取ってみましょう。" },
+    { elIndex: 16, targetElectrons: 18, text: "塩素原子 (Cl) をイオンにしよう！", hint: "塩素は一番外側の電子があと1個で満タンになります。電子を1個入れてみましょう。" },
     { elIndex: 0, targetElectrons: 0, text: "水素原子 (H) をイオンにしよう！", hint: "水素は持っている1個の電子を失って H⁺ になります。電子を1個取ってみましょう。" },
-    { elIndex: 3, targetElectrons: 10, text: "酸素原子 (O) をイオンにしよう！", hint: "酸素は一番外側の電子があと2個で満タンになります。電子を2個入れてみましょう。" },
-    { elIndex: 7, targetElectrons: 10, text: "マグネシウム原子 (Mg) をイオンにしよう！", hint: "マグネシウムは一番外側の電子が2個邪魔です。電子を2個取ってみましょう。" },
-    { elIndex: 4, targetElectrons: 10, text: "フッ素原子 (F) をイオンにしよう！", hint: "フッ素は一番外側の電子があと1個で満タンになります。電子を1個入れてみましょう。" },
+    { elIndex: 7, targetElectrons: 10, text: "酸素原子 (O) をイオンにしよう！", hint: "酸素は一番外側の電子があと2個で満タンになります。電子を2個入れてみましょう。" },
+    { elIndex: 11, targetElectrons: 10, text: "マグネシウム原子 (Mg) をイオンにしよう！", hint: "マグネシウムは一番外側の電子が2個邪魔です。電子を2個取ってみましょう。" },
+    { elIndex: 8, targetElectrons: 10, text: "フッ素原子 (F) をイオンにしよう！", hint: "フッ素は一番外側の電子があと1個で満タンになります。電子を1個入れてみましょう。" },
     { elIndex: 1, targetElectrons: 2, text: "ヘリウム (He) を安定させよう！", hint: "ヘリウムはもともと安定しています。現在の状態で「判定」するか「リセット」してみましょう。" }
 ];
 
@@ -251,6 +411,8 @@ function createInterface() {
     ELEMENTS_DATA.forEach((el, index) => {
         const btn = document.createElement("button");
         btn.className = "element-btn";
+        btn.style.gridRow = el.row;
+        btn.style.gridColumn = el.col;
         btn.innerHTML = `
             <span class="el-num">${el.number}</span>
             <span class="el-symbol">${el.symbol}</span>
@@ -408,15 +570,22 @@ function getIonName(el, charge) {
     if (charge > 0) {
         if (el.symbol === "H") return "水素イオン";
         if (el.symbol === "Li") return "リチウムイオン";
+        if (el.symbol === "Be") return "ベリリウムイオン";
+        if (el.symbol === "B") return "ホウ素イオン";
         if (el.symbol === "Na") return "ナトリウムイオン";
         if (el.symbol === "Mg") return "マグネシウムイオン";
+        if (el.symbol === "Al") return "アルミニウムイオン";
+        if (el.symbol === "K") return "カリウムイオン";
         if (el.symbol === "Ca") return "カルシウムイオン";
         return `${el.name.split(" ")[0]}イオン (価数: +${charge})`;
     }
     
     // 陰イオン
+    if (el.symbol === "N") return "窒化物イオン";
     if (el.symbol === "O") return "酸化物イオン";
     if (el.symbol === "F") return "フッ化物イオン";
+    if (el.symbol === "P") return "リン化物イオン";
+    if (el.symbol === "S") return "硫化物イオン";
     if (el.symbol === "Cl") return "塩化物イオン";
     return `${el.name.split(" ")[0]}化物イオン (価数: ${charge})`;
 }

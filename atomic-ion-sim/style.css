@@ -71,10 +71,11 @@ h1 {
 /* メインコンテナ */
 .sim-container {
     display: grid;
-    grid-template-columns: 280px 1fr 340px;
+    grid-template-columns: 1.2fr 1fr;
+    grid-template-rows: auto 1fr;
     gap: 1.5rem;
     flex-grow: 1;
-    max-width: 1400px;
+    max-width: 1200px;
     width: 100%;
     margin: 0 auto;
 }
@@ -99,23 +100,26 @@ h1 {
     color: var(--text-main);
 }
 
-/* 左側：元素パネル */
+/* 元素パネル (上部配置) */
 .element-panel {
-    max-height: calc(100vh - 120px);
-    overflow-y: auto;
+    grid-column: span 2;
+    max-height: none !important;
 }
 
 .element-grid {
     display: grid;
-    grid-template-columns: repeat(3, 1fr);
-    gap: 0.5rem;
+    grid-template-columns: repeat(18, 1fr);
+    grid-template-rows: repeat(4, 1fr);
+    gap: 0.35rem;
+    overflow-x: auto;
+    padding-bottom: 0.5rem;
 }
 
 .element-btn {
     background: rgba(255, 255, 255, 0.05);
     border: 1px solid var(--border-color);
-    border-radius: 8px;
-    padding: 0.75rem 0.25rem;
+    border-radius: 6px;
+    padding: 0.35rem 0.15rem;
     color: var(--text-main);
     font-family: var(--font-primary);
     cursor: pointer;
@@ -123,7 +127,8 @@ h1 {
     display: flex;
     flex-direction: column;
     align-items: center;
-    gap: 0.2rem;
+    gap: 0.1rem;
+    min-width: 45px;
 }
 
 .element-btn:hover {
@@ -152,19 +157,19 @@ h1 {
 }
 
 .el-symbol {
-    font-size: 1.3rem;
+    font-size: 1.1rem;
     font-weight: 700;
 }
 
 .el-name {
-    font-size: 0.75rem;
+    font-size: 0.65rem;
     color: var(--text-muted);
 }
 
 .el-num {
-    font-size: 0.7rem;
+    font-size: 0.6rem;
     align-self: flex-start;
-    padding-left: 0.3rem;
+    padding-left: 0.2rem;
     opacity: 0.6;
 }
 
@@ -172,27 +177,27 @@ h1 {
     background: rgba(15, 23, 42, 0.6);
     border: 1px solid var(--border-color);
     border-radius: 12px;
-    padding: 1rem;
+    padding: 0.6rem 1.25rem;
     margin-top: 0.5rem;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    flex-wrap: wrap;
+    gap: 0.75rem;
 }
 
 .element-info-card h3 {
-    font-size: 1.3rem;
-    margin-bottom: 0.75rem;
-    text-align: center;
+    font-size: 1.2rem;
+    margin-bottom: 0;
     color: var(--color-electron);
 }
 
 .info-row {
     display: flex;
-    justify-content: space-between;
     align-items: center;
-    margin-bottom: 0.5rem;
-    font-size: 0.9rem;
-}
-
-.info-row:last-child {
+    gap: 0.5rem;
     margin-bottom: 0;
+    font-size: 0.9rem;
 }
 
 .badge {
@@ -682,14 +687,14 @@ h1 {
     background: rgba(255, 255, 255, 0.2);
 }
 
-/* メディアクエリ（1024px以下で2カラム、768px以下で1カラム） */
-@media (max-width: 1100px) {
+/* メディアクエリ（画面幅が狭いときのレイアウト調整） */
+@media (max-width: 1024px) {
     .sim-container {
-        grid-template-columns: 240px 1fr;
+        grid-template-columns: 1fr;
+        grid-template-rows: auto auto auto;
     }
-    .status-panel {
-        grid-column: span 2;
-        max-height: none;
+    .element-panel {
+        grid-column: span 1;
     }
 }
 
@@ -699,14 +704,5 @@ h1 {
     }
     h1 {
         font-size: 1.6rem;
-    }
-    .sim-container {
-        grid-template-columns: 1fr;
-    }
-    .element-panel {
-        max-height: 250px;
-    }
-    .status-panel {
-        grid-column: span 1;
     }
 }
