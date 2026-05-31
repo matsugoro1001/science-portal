@@ -512,16 +512,16 @@ function updateUI() {
     if (isStable) {
         stabilityCard.className = "stability-card stable";
         if (el.stableCharge === 0) {
-            stabilityText.textContent = "安定（希ガス原子）";
+            stabilityText.textContent = "✨ 安定（希ガス配置）";
             stabilityDesc.textContent = "一番外側の電子殻（最外殻）が電子で完全に満たされており、非常に安定しています。他の物質と反応したりイオンになったりしません。";
         } else {
             const ionName = getIonName(el, charge);
-            stabilityText.textContent = `安定（イオン: ${ionName}）`;
+            stabilityText.textContent = `✨ 安定（イオン: ${ionName}）`;
             stabilityDesc.textContent = `一番外側の電子殻が、安定な希ガス（${el.stableElectrons === 2 ? 'ヘリウム' : (el.stableElectrons === 10 ? 'ネオン' : 'アルゴン')}）と同じ満タンの電子配置になり、とても安定したイオンです。`;
         }
     } else {
         stabilityCard.className = "stability-card";
-        stabilityText.textContent = "不安定";
+        stabilityText.textContent = "⚠️ 不安定";
         
         let targetText = "";
         if (el.stableElectrons < el.protons) {
@@ -899,19 +899,46 @@ function draw() {
     const shells = getShellsAllocation(currentElectrons);
 
     // 1. 電子殻（同心円）の描画
+    const isElementStable = (currentElectrons === el.stableElectrons);
+    const capacities = [2, 8, 8, 2];
+
     shells.forEach((count, index) => {
         const radius = (index + 1) * 40 + 10; // K殻:50px, L殻:90px, M殻:130px...
         
         ctx.beginPath();
         ctx.arc(centerX, centerY, radius, 0, Math.PI * 2);
-        ctx.strokeStyle = "rgba(56, 189, 248, 0.15)";
-        ctx.lineWidth = 1.5;
-        ctx.setLineDash([4, 4]); // 点線にする
-        ctx.stroke();
-        ctx.setLineDash([]); // 実線に戻す
+        
+        const isLastShell = (index === shells.length - 1);
+        const isShellFull = (count === capacities[index]);
+
+        if (isElementStable) {
+            // 全体が安定：すべての殻が輝く緑の実線
+            ctx.strokeStyle = "rgba(16, 185, 129, 0.6)";
+            ctx.lineWidth = 2.0;
+            ctx.shadowBlur = 8;
+            ctx.shadowColor = "#10b981";
+            ctx.stroke();
+            ctx.shadowBlur = 0; // シャドウをリセット
+        } else {
+            // 不安定な状態
+            if (isLastShell && !isShellFull) {
+                // 最外殻かつ不足：警告の赤点線（点滅アニメーション）
+                const alpha = 0.25 + 0.25 * Math.sin(Date.now() / 200);
+                ctx.strokeStyle = `rgba(239, 68, 68, ${alpha})`;
+                ctx.lineWidth = 2.0;
+                ctx.setLineDash([4, 4]);
+                ctx.stroke();
+                ctx.setLineDash([]);
+            } else {
+                // 内側の満タンの殻：おだやかな緑の実線
+                ctx.strokeStyle = "rgba(16, 185, 129, 0.25)";
+                ctx.lineWidth = 1.0;
+                ctx.stroke();
+            }
+        }
 
         // 殻のラベル（K, L, M, N）
-        ctx.fillStyle = "rgba(94, 114, 228, 0.4)";
+        ctx.fillStyle = isElementStable ? "rgba(16, 185, 129, 0.7)" : "rgba(94, 114, 228, 0.4)";
         ctx.font = "10px sans-serif";
         ctx.textAlign = "center";
         ctx.textBaseline = "middle";
