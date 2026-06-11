@@ -526,6 +526,9 @@ function updateInstruction() {
             finishBtn.className = 'btn secondary';
             finishBtn.style.backgroundColor = '#64748b';
             finishBtn.style.color = 'white';
+            finishBtn.disabled = false;
+            finishBtn.textContent = '役作り終了';
+            finishBtn.style.cursor = '';
         }
     }
 }
